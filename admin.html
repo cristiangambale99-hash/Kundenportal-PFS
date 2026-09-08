@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Kundenportal Clean Service</title>
+<style>
+  :root{
+    --navy:#0b2740; --teal:#2bb6b7; --teal-pale:#bee2e9;
+    --paper:#f4f6f8; --panel:#ffffff; --line:#e2e6ea;
+    --ink:#1b2a35; --grey:#5b6b76;
+    --amber:#b3541e; --amber-soft:#fbeee4;
+    --ok:#1c7a5e; --ok-soft:#e6f4ef;
+    --rot:#c0392b; --rot-soft:#fbeaea;
+    --font: -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); line-height:1.5;}
+
+  #login-screen{max-width:340px; margin:100px auto; padding:32px; background:var(--panel); border:1px solid var(--line); border-radius:14px;}
+  #login-screen h1{font-size:18px; margin:0 0 18px; color:var(--navy);}
+  #login-screen input{width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; margin-bottom:12px;}
+  #login-screen button{width:100%; padding:12px; border:none; border-radius:8px; background:var(--navy); color:#fff; font-size:14px; font-weight:600; cursor:pointer;}
+  #login-error{color:var(--amber); font-size:13px; margin-bottom:10px;}
+
+  #dashboard{display:none; max-width:1200px; margin:0 auto; padding:32px 24px 80px;}
+  header{display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;}
+  header h1{font-size:20px; color:var(--navy); margin:0;}
+  header button{border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:12.5px;}
+
+  .stats{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px;}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px;}
+  .stat .num{font-size:22px; font-weight:700; color:var(--teal);}
+  .stat .label{font-size:11px; color:var(--grey); margin-top:2px;}
+
+  .ampel-legende{display:flex; gap:18px; margin-bottom:16px; font-size:12px; color:var(--grey); align-items:center;}
+  .ampel-legende .dot{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px;}
+
+  .dot{display:inline-block; width:12px; height:12px; border-radius:50%;}
+  .dot.rot{background:var(--rot);}
+  .dot.gelb{background:#e0a530;}
+  .dot.gruen{background:var(--ok);}
+
+  table{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  th, td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:middle;}
+  th{font-size:11px; text-transform:uppercase; color:var(--grey); background:#f9fafb;}
+  tr.kunde-row{cursor:pointer;}
+  tr.kunde-row:hover{background:#f9fafb;}
+  .num-cell{text-align:center; font-variant-numeric:tabular-nums;}
+  .badge-offen{background:var(--amber-soft); color:var(--amber); font-size:10.5px; padding:2px 8px; border-radius:20px; font-weight:600;}
+
+  /* Kunden-Detail Panel (Slide-over) */
+  #detail-overlay{display:none; position:fixed; inset:0; background:rgba(11,39,64,.35); z-index:50;}
+  #detail-panel{
+    position:fixed; top:0; right:0; height:100%; width:560px; max-width:92vw;
+    background:var(--panel); z-index:51; overflow-y:auto; padding:28px;
+    box-shadow:-8px 0 30px rgba(0,0,0,.15);
+  }
+  #detail-panel h2{margin:0 0 4px; font-size:18px; color:var(--navy);}
+  #detail-panel .close-btn{position:absolute; top:20px; right:24px; border:none; background:none; font-size:20px; cursor:pointer; color:var(--grey);}
+  .detail-meta{font-size:12.5px; color:var(--grey); margin-bottom:18px;}
+  .history-item{border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:12px;}
+  .history-item .top-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .history-item .kat{font-weight:700; font-size:13px;}
+  .history-item .datum{font-size:11.5px; color:var(--grey);}
+  .history-item .details{font-size:12.5px; color:var(--grey); white-space:pre-wrap; margin-bottom:8px;}
+  .badge{font-size:10.5px; padding:3px 8px; border-radius:20px; font-weight:600;}
+  .badge.neu{background:var(--amber-soft); color:var(--amber);}
+  .badge.erledigt, .badge.akzeptieren{background:var(--ok-soft); color:var(--ok);}
+  .badge.ablehnen{background:var(--rot-soft); color:var(--rot);}
+
+  .actions{display:flex; gap:6px; flex-wrap:wrap;}
+  .actions button{font-size:11.5px; padding:6px 10px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer;}
+  .actions button.accept{border-color:var(--ok); color:var(--ok);}
+  .actions button.reject{border-color:var(--rot); color:var(--rot);}
+  .actions textarea{width:100%; font-size:12px; padding:6px; border:1px solid var(--line); border-radius:6px; min-height:44px; margin-top:6px;}
+  .row-msg{font-size:11px; color:var(--grey); margin-top:4px;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h1>Admin-Bereich — Kundenportal</h1>
+  <div id="login-error" role="alert"></div>
+  <label for="login-password" style="font-size:13px; display:block; margin-bottom:6px;">Passwort</label>
+  <input type="password" id="login-password" placeholder="Passwort" onkeydown="if(event.key==='Enter') login()">
+  <button onclick="login()">Anmelden</button>
+</div>
+
+<div id="dashboard">
+  <header>
+    <h1>Kunden-Dashboard</h1>
+    <button onclick="loadAll()">↻ Aktualisieren</button>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="ampel-legende">
+    <span><span class="dot rot"></span>Auffällig / möglicherweise kündigungsgefährdet</span>
+    <span><span class="dot gelb"></span>Beobachten</span>
+    <span><span class="dot gruen"></span>Unauffällig</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th></th><th>Kunde</th><th>Objekt</th><th class="num-cell">Verschieb.</th><th class="num-cell">Absagen</th><th class="num-cell">Reklam.</th><th class="num-cell">Schäden</th><th class="num-cell">Zusatz</th><th>Letzte Meldung</th><th></th></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div id="detail-overlay" onclick="closeDetail()"></div>
+<div id="detail-panel">
+  <button class="close-btn" onclick="closeDetail()">✕</button>
+  <h2 id="detail-name"></h2>
+  <div class="detail-meta" id="detail-meta"></div>
+  <div id="detail-history"></div>
+</div>
+
+<script>
+const KAT_LABEL = {verschiebung:'Terminverschiebung', absage:'Absage', reklamation:'Reklamation', schaden:'Schadenmeldung', zusatz:'Zusatzauftrag'};
+let kundenDaten = [];
+
+async function login(){
+  const password = document.getElementById('login-password').value.trim();
+  const errBox = document.getElementById('login-error');
+  errBox.style.display = 'none';
+  try{
+    const resp = await fetch('/api/admin?action=login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password})});
+    const data = await resp.json();
+    if(!resp.ok) throw new Error((data.error || 'Anmeldung fehlgeschlagen.') + (data.diagnose ? ' (' + data.diagnose + ')' : ''));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadAll();
+  } catch(err){
+    errBox.textContent = err.message;
+    errBox.style.display = 'block';
+  }
+}
+
+async function loadAll(){
+  await Promise.all([loadStats(), loadCustomers()]);
+}
+
+async function loadStats(){
+  const resp = await fetch('/api/admin?action=stats');
+  if(!resp.ok) return;
+  const s = await resp.json();
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${s.total}</div><div class="label">Meldungen (30 Tage)</div></div>
+    <div class="stat"><div class="num">${s.offen}</div><div class="label">Noch offen</div></div>
+    <div class="stat"><div class="num">${s.pro_kategorie.absage || 0}</div><div class="label">Absagen</div></div>
+    <div class="stat"><div class="num">${s.pro_kategorie.reklamation || 0}</div><div class="label">Reklamationen</div></div>
+    <div class="stat"><div class="num">${s.fehlgeschlagene_versuche}</div><div class="label">Fehlgeschlagene Versuche</div></div>
+  `;
+}
+
+async function loadCustomers(){
+  const resp = await fetch('/api/admin?action=customers');
+  if(!resp.ok) return;
+  const { kunden } = await resp.json();
+  kundenDaten = kunden;
+
+  document.getElementById('tbody').innerHTML = kunden.map((k, i) => `
+    <tr class="kunde-row" onclick="openDetail(${i})">
+      <td><span class="dot ${k.ampel}"></span></td>
+      <td>${k.name}${k.offen > 0 ? ` <span class="badge-offen">${k.offen} offen</span>` : ''}</td>
+      <td>${k.objekt_id}</td>
+      <td class="num-cell">${k.zaehler.verschiebung || 0}</td>
+      <td class="num-cell">${k.zaehler.absage || 0}</td>
+      <td class="num-cell">${k.zaehler.reklamation || 0}</td>
+      <td class="num-cell">${k.zaehler.schaden || 0}</td>
+      <td class="num-cell">${k.zaehler.zusatz || 0}</td>
+      <td>${new Date(k.letzte_meldung).toLocaleDateString('de-CH', {day:'2-digit', month:'2-digit', year:'2-digit'})}</td>
+      <td>→</td>
+    </tr>
+  `).join('');
+}
+
+function openDetail(i){
+  const k = kundenDaten[i];
+  document.getElementById('detail-name').textContent = k.name;
+  document.getElementById('detail-meta').innerHTML =
+    `Objekt-/Kundennummer ${k.objekt_id} · ${k.email || 'keine E-Mail'} · ${k.total} Meldungen insgesamt`;
+
+  document.getElementById('detail-history').innerHTML = k.meldungen.map(m => renderHistoryItem(m)).join('');
+  document.getElementById('detail-overlay').style.display = 'block';
+  document.getElementById('detail-panel').style.display = 'block';
+}
+function closeDetail(){
+  document.getElementById('detail-overlay').style.display = 'none';
+  document.getElementById('detail-panel').style.display = 'none';
+}
+
+function renderHistoryItem(m){
+  const datum = new Date(m.created_at).toLocaleString('de-CH', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'});
+  let actions = '';
+  if(m.kategorie === 'verschiebung' && (!m.status || m.status === 'neu')){
+    actions = `
+      <div class="actions" id="actions-${m.id}">
+        <button class="accept" onclick="reply(${m.id}, 'akzeptieren')">Akzeptieren</button>
+        <button class="reject" onclick="reply(${m.id}, 'ablehnen')">Ablehnen</button>
+      </div>`;
+  } else if(!m.status || m.status === 'neu'){
+    actions = `
+      <div class="actions" id="actions-${m.id}">
+        <textarea id="msg-${m.id}" placeholder="Kurze Rückmeldung an den Kunden …"></textarea>
+        <button onclick="reply(${m.id}, 'nachricht')">Antwort senden</button>
+        <button onclick="reply(${m.id}, 'erledigt')">Als erledigt markieren</button>
+      </div>`;
+  } else {
+    actions = `<div class="actions" id="actions-${m.id}"></div>`;
+  }
+
+  return `<div class="history-item">
+    <div class="top-row">
+      <span class="kat">${KAT_LABEL[m.kategorie] || m.kategorie}</span>
+      <span class="badge ${m.status || 'neu'}">${m.status || 'neu'}</span>
+    </div>
+    <div class="datum">${datum}</div>
+    <div class="details">${(m.details || '').slice(0, 300)}</div>
+    ${actions}
+  </div>`;
+}
+
+async function reply(id, action){
+  const msgField = document.getElementById(`msg-${id}`);
+  const nachricht = msgField ? msgField.value.trim() : '';
+  try{
+    const resp = await fetch('/api/admin?action=reply', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ id, action, nachricht })
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || 'Fehlgeschlagen');
+
+    const box = document.getElementById(`actions-${id}`);
+    const status = action === 'nachricht' ? (data.mail === 'sent' ? 'Nachricht gesendet' : 'Gespeichert, Mail fehlgeschlagen') : 'Erledigt';
+    box.innerHTML = `<div class="row-msg">✓ ${status}</div>`;
+    loadCustomers();
+    loadStats();
+  } catch(err){
+    alert('Fehler: ' + err.message);
+  }
+}
+</script>
+
+</body>
+</html>

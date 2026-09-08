@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Service Scaramuzzo AG — Kundenportal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Kundenlayout Clean Service — designsystem-kunde (Referenz: angebot-pfs.vercel.app) */
+    --teal:#2bb6b7;
+    --teal-2:#98c2d1;
+    --teal-3:#71b6c6;
+    --teal-4:#75c3c8;
+    --teal-5:#9cd3d3;
+    --teal-6:#60beb3;
+    --teal-pale:#bee2e9;
+
+    /* Abgedunkelt für Text/Links (barrierefreier Kontrast auf Weiss) */
+    --text-teal:#1c7878;      /* 5.2:1 auf Weiss */
+    --text-teal-dark:#125555;
+
+    /* Flächen */
+    --paper:#fcfdfd;
+    --panel:#ffffff;
+    --tint:#f2f8f8;
+    --tint-light:#eaf6f6;
+    --tint-light-2:#f2f9f9;
+
+    /* Rahmen */
+    --line:#e1eae9;
+    --line-2:#e8f0ef;
+
+    /* Text */
+    --ink:#0e1e1d;
+    --headline:#10403f;   /* Überschriften in der Markenfamilie statt Fast-Schwarz */
+    --body-text:#485655;
+    --grey:#7c8c8b;
+
+    /* Warmer Akzent (Hinweise/Vorteile) */
+    --warm-bg:#fef9ee;
+    --warm-bg-2:#fdf4e2;
+    --warm-border:#f0dfc0;
+    --warm-text:#8a5f16;
+
+    --font-head:'Poppins', -apple-system, sans-serif;
+    --font-body:'Mulish', -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.55;}
+
+  /* Skip-Link: nur bei Tastaturfokus sichtbar */
+  .skip-link{
+    position:absolute; left:-9999px; top:0; z-index:1000;
+    background:var(--text-teal-dark); color:#fff; padding:12px 18px;
+    border-radius:0 0 8px 0; font-family:var(--font-body); font-size:13px; text-decoration:none;
+  }
+  .skip-link:focus{left:0;}
+  a:focus-visible, button:focus-visible, .pick-row:focus-visible{
+    outline:3px solid var(--teal); outline-offset:2px;
+  }
+
+  /* ---- Kopfbereich ---- */
+  .hero{
+    position:relative;
+    background:linear-gradient(180deg, var(--tint-light-2) 0%, var(--tint) 100%);
+    border-bottom:1px solid var(--line);
+  }
+
+  /* Ein einziger, ruhiger Auftritt beim Laden - keine Effekte auf jedem Abschnitt */
+  @keyframes rise{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+  .hero-body h1{animation:rise .5s ease both;}
+  .hero-body .lead{animation:rise .5s ease .07s both;}
+  .hero-assurance{animation:rise .5s ease .14s both;}
+  @media (prefers-reduced-motion: reduce){
+    .hero-body h1, .hero-body .lead, .hero-assurance{animation:none;}
+  }
+  .hero-inner{
+    position:relative; z-index:1;
+    max-width:1000px; margin:0 auto;
+  }
+  .topbar{
+    position:relative; z-index:2;
+    margin:0 auto; padding:24px 28px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-logo{height:42px; width:auto; display:block;}
+
+  .nav{display:flex; align-items:center; gap:24px;}
+
+  .lang-switch{display:flex; align-items:center; gap:2px;}
+  .lang-switch button{
+    font-family:var(--font-body); font-size:12.5px; font-weight:600;
+    color:var(--grey); background:none; border:none; cursor:pointer;
+    padding:4px 7px; border-radius:6px;
+  }
+  .lang-switch button.active{color:var(--text-teal); background:var(--tint);}
+  .lang-switch button:hover{color:var(--text-teal);}
+
+  .text-link{font-size:12.5px; color:var(--grey); text-decoration:none; cursor:pointer;}
+  .text-link:hover{color:var(--text-teal);}
+
+  /* ---- Hero ---- */
+  .hero-body{position:relative; z-index:1; padding:46px 28px 30px; max-width:640px;}
+  h1{
+    font-family:var(--font-head); font-weight:600;
+    font-size:clamp(32px, 5vw, 46px); line-height:1.1; letter-spacing:-.5px;
+    margin:0 0 16px; color:var(--headline);
+  }
+  .lead{color:var(--body-text); font-size:16px; line-height:1.65; margin:0; max-width:52ch;}
+
+  /* Ruhige Vertrauens-Zeile, keine Kacheln */
+  .hero-assurance{
+    display:flex; gap:20px; flex-wrap:wrap; margin-top:26px;
+    font-size:12.5px; color:var(--grey);
+  }
+  .hero-assurance span{display:flex; align-items:center; gap:7px;}
+  .hero-assurance svg{color:var(--teal); flex-shrink:0;}
+
+  /* ---- Auswahl: die Hauptsache der Seite ---- */
+  .pick-heading{
+    font-family:var(--font-head); font-weight:600; font-size:19px;
+    color:var(--headline); margin:0 0 4px;
+  }
+  .pick-sub{font-size:13.5px; color:var(--grey); margin:0 0 22px;}
+
+  .pick-list{display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line);}
+  .pick-row{
+    display:flex; align-items:center; gap:20px; width:100%;
+    padding:22px 8px; background:none; border:none; border-bottom:1px solid var(--line);
+    text-align:left; cursor:pointer; font-family:var(--font-body);
+    transition:background .18s ease, padding-left .18s ease;
+  }
+  .pick-row:hover{background:var(--tint-light-2); padding-left:16px;}
+  .pick-row:hover .pick-go{opacity:1; transform:translateX(0);}
+  .pick-ico{
+    width:46px; height:46px; border-radius:12px; flex-shrink:0;
+    background:var(--tint); color:var(--text-teal);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pick-text{flex:1; min-width:0;}
+  .pick-label{display:block; font-family:var(--font-head); font-weight:600; font-size:15.5px; color:var(--headline); margin-bottom:3px;}
+  .pick-desc{display:block; font-size:13px; color:var(--grey); line-height:1.45;}
+  .pick-go{
+    color:var(--teal); flex-shrink:0; opacity:0; transform:translateX(-6px);
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  @media (max-width:600px){
+    .pick-row{gap:14px; padding:18px 4px;}
+    .pick-row:hover{padding-left:4px;}
+    .pick-go{display:none;}
+    .pick-ico{width:40px; height:40px;}
+  }
+
+  /* ---- Ruhige Zusicherung darunter, keine nummerierten Karten ---- */
+  .reassure{
+    margin-top:46px; padding:24px 26px;
+    background:var(--tint-light-2); border-radius:14px;
+    display:flex; gap:30px; flex-wrap:wrap;
+  }
+  .reassure div{flex:1; min-width:190px;}
+  .reassure h3{font-family:var(--font-head); font-size:14px; font-weight:600; margin:0 0 5px; color:var(--headline);}
+  .reassure p{font-size:12.5px; color:var(--body-text); margin:0; line-height:1.5;}
+
+
+
+  /* ---- Wellenform (Formwelt aus dem Corporate Design) ---- */
+  .wave-divider{display:block; width:100%; height:auto; margin-bottom:-1px;}
+
+  /* ---- Vertrauensband: seit 1984 ---- */
+  .heritage{
+    display:flex; align-items:baseline; gap:10px; margin-bottom:18px;
+    font-family:var(--font-head); font-size:12px; font-weight:600;
+    letter-spacing:.4px; color:var(--text-teal);
+  }
+  .heritage .since{
+    font-size:22px; font-weight:600; color:var(--teal); letter-spacing:-.5px;
+  }
+  .heritage .rule{flex:1; height:1px; background:var(--line); max-width:90px;}
+
+  /* ---- Ansprechpartner ---- */
+  .contacts{margin:56px 0 0; padding:30px 0 0; border-top:1px solid var(--line);}
+  .contacts-head{display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:20px;}
+  .contacts-head h2{margin:0;}
+  .contacts-head p{margin:0; font-size:13px; color:var(--grey);}
+  .contact-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .contact{
+    flex:1; min-width:190px; display:flex; align-items:center; gap:13px;
+    padding:15px 16px; background:var(--panel);
+    border:1px solid var(--line); border-radius:13px;
+  }
+  .contact .initials{
+    width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    background:var(--tint); color:var(--text-teal);
+    font-family:var(--font-head); font-weight:600; font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .contact .who{min-width:0;}
+  .contact .n{display:block; font-family:var(--font-head); font-weight:600; font-size:14px; color:var(--headline); line-height:1.3;}
+  .contact .r{display:block; font-size:12px; color:var(--grey); margin-top:2px; line-height:1.35;}
+
+  /* ---- Abschluss: Werte + Telefon ---- */
+  .closing{
+    margin-top:52px; padding:34px 32px; border-radius:18px;
+    background:var(--text-teal-dark); color:#fff;
+    display:flex; gap:34px; align-items:center; flex-wrap:wrap;
+  }
+  .closing-main{flex:1; min-width:260px;}
+  .closing h2{color:#fff; margin:0 0 8px; font-size:21px;}
+  .closing p{margin:0; font-size:14px; line-height:1.6; color:#cfe8e7; max-width:50ch;}
+  .closing-call{flex-shrink:0;}
+  .closing-call a{
+    display:inline-flex; align-items:center; gap:9px;
+    background:#fff; color:var(--text-teal-dark); text-decoration:none;
+    font-family:var(--font-head); font-weight:600; font-size:15px;
+    padding:14px 22px; border-radius:11px;
+  }
+  .closing-call span{display:block; font-size:11.5px; color:#a8cfce; margin-top:9px; text-align:center;}
+
+  /* ---- Inhaltsbereich ---- */
+  main{max-width:1000px; margin:0 auto; padding:44px 28px 90px;}
+  .narrow{max-width:620px; margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .eyebrow{font-family:var(--font-body); font-size:13px; color:var(--grey); margin-bottom:6px;}
+  h2{font-family:var(--font-head); font-weight:600; font-size:24px; margin:0 0 8px; color:var(--headline); letter-spacing:-.2px;}
+
+  /* ---- Karte / Formular ---- */
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:30px; box-shadow:0 1px 3px rgba(14,30,29,.04);
+  }
+  .form-title{font-family:var(--font-head); font-weight:600; font-size:17px; color:var(--headline); margin-bottom:20px;}
+
+  label{display:block; font-family:var(--font-body); font-size:13px; font-weight:600; margin-bottom:6px; margin-top:20px; color:var(--headline);}
+  label:first-of-type{margin-top:0;}
+  input, select, textarea{
+    width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:9px;
+    font-size:14.5px; font-family:var(--font-body); background:var(--paper); color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:none; border-color:var(--teal); background:#fff;
+    box-shadow:0 0 0 3px rgba(43,182,183,.14);
+  }
+  textarea{resize:vertical; min-height:92px;}
+  input[type="file"]{padding:10px 12px; background:var(--tint-light-2); font-size:13px;}
+  .row{display:flex; gap:14px;}
+  .row > div{flex:1;}
+  @media (max-width:520px){ .row{flex-direction:column; gap:0;} }
+
+  .opt{font-weight:400; color:var(--grey); font-size:12px;}
+  .req{font-weight:600; color:var(--warm-text); font-size:12px;}
+
+  /* Ja/Nein- und Auswahlfelder */
+  .cat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;}
+  .cat-grid label{
+    margin:0; display:flex; align-items:center; gap:9px; font-weight:500; font-size:13.5px;
+    border:1px solid var(--line); border-radius:9px; padding:12px 14px; cursor:pointer; color:var(--ink);
+  }
+  .cat-grid input{width:auto; accent-color:var(--teal);}
+  .cat-grid label:has(input:checked){border-color:var(--teal); background:var(--tint-light-2);}
+
+  .field-group{display:none;}
+  .field-group.active{display:block;}
+
+  button.primary{
+    margin-top:26px; width:100%; padding:14px; border:none; border-radius:10px;
+    background:var(--teal); color:#fff; font-size:15px; font-weight:600;
+    cursor:pointer; font-family:var(--font-head); letter-spacing:.2px;
+    transition:background .15s ease;
+  }
+  button.primary:hover{background:#22a2a3;}
+  button.primary:disabled{opacity:.6; cursor:default;}
+
+  .trust-line{display:flex; align-items:center; gap:8px; justify-content:center; font-size:12px; color:var(--grey); margin-top:16px;}
+  .trust-line .sep{color:var(--line);}
+
+  .back-link{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--grey); text-decoration:none; margin-bottom:18px;}
+  .back-link:hover{color:var(--text-teal);}
+
+  .notice{
+    display:flex; gap:10px; align-items:flex-start; padding:14px 16px; border-radius:10px;
+    background:var(--tint-light); border:1px solid var(--teal-5); font-size:12.5px;
+    color:var(--text-teal-dark); margin-top:20px;
+  }
+  .form-error{
+    display:flex; gap:10px; align-items:flex-start; padding:14px 16px; border-radius:10px;
+    background:var(--warm-bg-2); border:1px solid var(--warm-border); font-size:13px;
+    color:var(--warm-text); margin-top:18px;
+  }
+  .form-error .fe-icon{flex-shrink:0; font-size:15px;}
+  .form-error a{color:inherit; font-weight:600; text-decoration:underline;}
+
+  /* ---- Bestätigung ---- */
+  #confirm{display:none; text-align:center; padding-top:20px;}
+  .check-badge{
+    width:58px; height:58px; border-radius:50%; background:var(--teal); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:27px; margin:0 auto 22px;
+  }
+  #confirm h1{font-size:26px; margin-bottom:12px;}
+  #confirm .lead{max-width:44ch; margin-left:auto; margin-right:auto;}
+  #confirm .primary{max-width:280px; margin:26px auto 0;}
+
+  /* Organigramm */
+  .orgchart{display:flex; flex-direction:column; align-items:center;}
+  .org-tier{display:flex; gap:20px; justify-content:center; flex-wrap:wrap;}
+  .org-connector{width:2px; height:26px; background:var(--line);}
+  .org-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px; text-align:center; min-width:180px;
+    box-shadow:0 1px 3px rgba(14,30,29,.04);
+  }
+  .org-lead{border-color:var(--teal);}
+  .org-avatar{
+    width:52px; height:52px; border-radius:50%; margin:0 auto 10px;
+    background:var(--teal); color:#fff; font-family:var(--font-head); font-weight:700; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .org-avatar-navy{background:var(--text-teal-dark);}
+  .org-name{font-family:var(--font-head); font-weight:700; font-size:14px; color:var(--ink);}
+  .org-role{font-size:12px; color:var(--grey); margin-top:2px;}
+
+  footer{text-align:center; padding:26px 20px; font-size:11.5px; color:var(--grey);}
+
+  /* AGB — reine Leseansicht, keine Bearbeitungselemente */
+  .agb-box{
+    max-height:70vh; overflow-y:auto;
+    font-size:13.5px; color:var(--ink); line-height:1.65;
+    user-select:text;
+  }
+  .agb-box h3{font-family:var(--font-head); font-size:14.5px; color:var(--teal); margin:22px 0 8px;}
+  .agb-box h3:first-child{margin-top:0;}
+  .agb-box p{margin:6px 0;}
+  .agb-box ul, .agb-box ol{margin:6px 0; padding-left:22px;}
+  .agb-box blockquote{margin:6px 0 6px 14px; padding-left:12px; border-left:2px solid var(--line); color:var(--grey);}
+  footer .tag{font-family:var(--font-head); font-weight:600; letter-spacing:1px; color:var(--teal-3); font-size:11px; margin-bottom:4px;}
+
+  /* Admin (zweite Ansicht, minimalistisch angehängt) */
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px;}
+  .kpi{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px;}
+  .kpi .num{font-family:var(--font-head); font-size:22px; font-weight:700; color:var(--teal);}
+  .kpi .label{font-size:11px; color:var(--grey); margin-top:2px;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th, td{text-align:left; padding:10px 8px; border-bottom:1px solid var(--line);}
+  th{font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--grey); font-weight:600; font-family:var(--font-head);}
+  td.num-cell{text-align:center; font-variant-numeric:tabular-nums;}
+  tr:hover td{background:rgba(43,182,183,.05);}
+  .cust-name{font-weight:600;}
+  .cust-sub{font-size:11.5px; color:var(--grey);}
+</style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Zum Inhalt springen / Skip to content</a>
+
+<div class="hero">
+  <div class="hero-inner">
+
+  <div class="topbar">
+    <div class="brand">
+      <img src="logo.webp" alt="Clean Service by Scaramuzzo" class="brand-logo" width="150" height="47" loading="eager">
+    </div>
+    <nav class="nav">
+      <div class="lang-switch" role="group" aria-label="Sprache / Language">
+        <button data-lang="de" class="active" onclick="setLang('de')" aria-pressed="true" aria-label="Deutsch">DE</button>
+        <button data-lang="en" onclick="setLang('en')" aria-pressed="false" aria-label="English">EN</button>
+      </div>
+    </nav>
+  </div>
+
+  <div class="hero-body">
+    <div class="heritage">
+      <span class="since">1984</span>
+      <span class="rule"></span>
+      <span data-i18n="hero.heritage">Tradition die glänzt</span>
+    </div>
+    <h1 data-i18n="hero.h1">Ihr Anliegen, in zwei Minuten gemeldet.</h1>
+    <p class="lead" data-i18n="hero.lead">Termin verschieben, absagen oder etwas melden — Sie füllen ein kurzes Formular aus, den Rest übernehmen wir.</p>
+    <div class="hero-assurance">
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <span data-i18n="hero.b1">Ohne Anmeldung</span>
+      </span>
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span data-i18n="hero.b2">Antwort innert einem Arbeitstag</span>
+      </span>
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>
+        <span data-i18n="hero.b3">Direkt beim zuständigen Team</span>
+      </span>
+    </div>
+  </div>
+
+  </div>
+  <svg class="wave-divider" viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 34c150 26 305 34 470 22 165-12 300-38 470-38 170 0 330 26 500 34v18H0z" fill="var(--paper)" opacity=".55"/>
+    <path d="M0 46c170 20 320 24 480 12s300-32 470-30c170 2 330 24 490 30v12H0z" fill="var(--paper)"/>
+  </svg>
+</div>
+
+<main id="main-content">
+
+  <div class="view active" id="view-kunde">
+
+    <!-- Schritt 1: Kategorie wählen -->
+    <div id="step-category">
+      <h2 class="pick-heading" data-i18n="pick.title">Worum geht es?</h2>
+      <p class="pick-sub" data-i18n="pick.sub">Wählen Sie ein Anliegen — danach brauchen wir nur noch wenige Angaben.</p>
+
+      <div class="pick-list">
+        <button class="pick-row" onclick="chooseCategory('verschiebung')">
+          <span class="pick-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M10 16h5m0 0-2-2m2 2-2 2"/></svg>
+          </span>
+          <span class="pick-text">
+            <span class="pick-label" data-i18n="pick.versch">Termin verschieben</span>
+            <span class="pick-desc" data-i18n="pick.versch.desc">Bestehenden Termin auf ein neues Datum legen</span>
+          </span>
+          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
+        </button>
+
+        <button class="pick-row" onclick="chooseCategory('absage')">
+          <span class="pick-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m10 14 4 4m0-4-4 4"/></svg>
+          </span>
+          <span class="pick-text">
+            <span class="pick-label" data-i18n="pick.absage">Termin absagen</span>
+            <span class="pick-desc" data-i18n="pick.absage.desc">Einen oder mehrere Termine ersatzlos streichen</span>
+          </span>
+          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
+        </button>
+
+        <button class="pick-row" onclick="chooseCategory('reklamation')">
+          <span class="pick-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4m0 3h.01"/></svg>
+          </span>
+          <span class="pick-text">
+            <span class="pick-label" data-i18n="pick.reklamation">Reklamation</span>
+            <span class="pick-desc" data-i18n="pick.reklamation.desc">Etwas war nicht wie vereinbart — mit Foto</span>
+          </span>
+          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
+        </button>
+
+        <button class="pick-row" onclick="chooseCategory('schaden')">
+          <span class="pick-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0"/><path d="M12 9v4m0 3h.01"/></svg>
+          </span>
+          <span class="pick-text">
+            <span class="pick-label" data-i18n="pick.schaden">Schaden melden</span>
+            <span class="pick-desc" data-i18n="pick.schaden.desc">Ein Schaden ist entstanden — mit Foto</span>
+          </span>
+          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
+        </button>
+
+        <button class="pick-row" onclick="chooseCategory('zusatz')">
+          <span class="pick-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h5v4H9zM11.5 7v3"/><path d="M7 10h9a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2"/><path d="M11.5 14v3"/></svg>
+          </span>
+          <span class="pick-text">
+            <span class="pick-label" data-i18n="pick.zusatz">Zusatzreinigung anfragen</span>
+            <span class="pick-desc" data-i18n="pick.zusatz.desc">Fenster, Grundreinigung, Umzug und weitere Arbeiten</span>
+          </span>
+          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="reassure">
+        <div>
+          <h3 data-i18n="re.1.title">Kein Mailverkehr nötig</h3>
+          <p data-i18n="re.1.text">Ihre Meldung geht direkt an das zuständige Team, nicht in ein allgemeines Postfach.</p>
+        </div>
+        <div>
+          <h3 data-i18n="re.2.title">Sie bekommen eine Bestätigung</h3>
+          <p data-i18n="re.2.text">Per E-Mail, damit Sie wissen, dass Ihre Meldung angekommen ist.</p>
+        </div>
+        <div>
+          <h3 data-i18n="re.3.title">Alles an einem Ort</h3>
+          <p data-i18n="re.3.text">Termine, Reklamationen und Anfragen laufen über denselben Weg — nachvollziehbar für Sie und uns.</p>
+        </div>
+      </div>
+
+      <div class="contacts">
+        <div class="contacts-head">
+          <h2 data-i18n="contacts.title">Dahinter stehen echte Menschen</h2>
+          <p data-i18n="contacts.sub">Ihr Anliegen landet bei diesem Team.</p>
+        </div>
+        <div class="contact-row">
+          <div class="contact">
+            <span class="initials">FS</span>
+            <span class="who"><span class="n">Fiorella Scalone</span><span class="r" data-i18n="team.fiorella.role">Sachbearbeiterin</span></span>
+          </div>
+          <div class="contact">
+            <span class="initials">L</span>
+            <span class="who"><span class="n">Lina</span><span class="r" data-i18n="team.lina.role">Teamleiterin</span></span>
+          </div>
+          <div class="contact">
+            <span class="initials">CG</span>
+            <span class="who"><span class="n">Cristian Gambale</span><span class="r" data-i18n="team.cristian.role">Abteilungsleitung Putzfrauenservice</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="closing">
+        <div class="closing-main">
+          <h2 data-i18n="closing.title">Seit 1984 in Familienhand</h2>
+          <p data-i18n="closing.text">Wir reinigen Privathaushalte in der Region Zürich — mit festen Ansprechpartnern, klaren Abläufen und Mitarbeitenden, die Ihr Zuhause kennen.</p>
+        </div>
+        <div class="closing-call">
+          <a href="tel:0844355355">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+            0844 355 355
+          </a>
+          <span data-i18n="closing.hint">Mo–Fr, 08:00–17:00 Uhr</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schritt 2: passendes Formular -->
+    <div id="form-screen" class="narrow" style="display:none;">
+      <a href="#" class="back-link" onclick="backToCategory(); return false;" data-i18n="form.back">← Andere Kategorie wählen</a>
+
+      <div class="card">
+        <div id="form-title" class="form-title"></div>
+
+        <!-- Identifikation -->
+        <div class="row">
+          <div><label for="f-name" data-i18n="form.name">Name</label>
+          <input type="text" id="f-name" placeholder="Vor- und Nachname" data-i18n-ph="form.name.ph" autocomplete="name"></div>
+          <div><label for="f-objnr" data-i18n="form.objnr">Objekt-/Kundennummer</label>
+          <input type="text" id="f-objnr" placeholder="z.B. 109" data-i18n-ph="form.objnr.ph"></div>
+        </div>
+        <label for="f-email" data-i18n="form.email">E-Mail <span class="opt" data-i18n="form.email.hint">(für Ihre Bestätigung)</span></label>
+          <input type="email" id="f-email" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph" autocomplete="email">
+
+        <!-- Terminverschiebung -->
+        <div class="field-group" data-cat="verschiebung">
+          <label for="v-alt" data-i18n="v.alt">Betroffener Termin</label>
+          <input type="date" id="v-alt">
+          <div class="row">
+            <div><label for="v-neu" data-i18n="v.neu">Gewünschter neuer Termin</label>
+          <input type="date" id="v-neu"></div>
+            <div><label for="v-zeit" data-i18n="v.zeit">Uhrzeit</label>
+          <input type="time" id="v-zeit"></div>
+          </div>
+          <label for="v-kommentar" data-i18n="v.kommentar">Kommentar <span class="opt" data-i18n="opt">(optional)</span></label>
+          <textarea id="v-kommentar" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
+        </div>
+
+        <!-- Absage -->
+        <div class="field-group" data-cat="absage">
+          <label for="a-datum" data-i18n="v.alt">Betroffener Termin</label>
+          <input type="date" id="a-datum">
+          <label data-i18n="a.weitere">Sollen weitere Termine ebenfalls entfallen?</label>
+          <div class="cat-grid">
+            <label><input type="radio" name="a-weitere" onclick="toggleAbsageFolge(true)"> <span data-i18n="yes">Ja</span></label>
+            <label><input type="radio" name="a-weitere" checked onclick="toggleAbsageFolge(false)"> <span data-i18n="no">Nein</span></label>
+          </div>
+          <div id="a-bis-wrap">
+            <label data-i18n="a.weitereTermine">Welche weiteren Termine sollen entfallen? <span class="opt" data-i18n="a.upTo4">(bis zu 4)</span></label>
+            <div class="row"><div><input type="date" id="a-weiterer-1" placeholder="Termin 2"></div><div><input type="date" id="a-weiterer-2" placeholder="Termin 3"></div></div>
+            <div class="row" style="margin-top:10px;"><div><input type="date" id="a-weiterer-3" placeholder="Termin 4"></div><div><input type="date" id="a-weiterer-4" placeholder="Termin 5"></div></div>
+          </div>
+          <div id="a-bemerkung-wrap">
+            <label for="a-bemerkung" data-i18n="a.bemerkung">Bemerkung <span class="opt" data-i18n="opt">(optional)</span></label>
+            <textarea id="a-bemerkung" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
+          </div>
+        </div>
+
+        <!-- Reklamation -->
+        <div class="field-group" data-cat="reklamation">
+          <label for="r-text" data-i18n="rs.what">Was ist vorgefallen?</label>
+          <textarea id="r-text" placeholder="Kurz beschreiben, worum es geht …" data-i18n-ph="rs.what.ph"></textarea>
+          <label for="r-foto" data-i18n="rs.photo">Foto <span class="req" data-i18n="rs.required">(erforderlich)</span></label>
+          <input type="file" id="r-foto" accept="image/*" required>
+        </div>
+
+        <!-- Schadenmeldung -->
+        <div class="field-group" data-cat="schaden">
+          <label for="s-text" data-i18n="rs.what">Was ist vorgefallen?</label>
+          <textarea id="s-text" placeholder="Kurz beschreiben, worum es geht …" data-i18n-ph="rs.what.ph"></textarea>
+          <label for="s-foto" data-i18n="rs.photo">Foto <span class="req" data-i18n="rs.required">(erforderlich)</span></label>
+          <input type="file" id="s-foto" accept="image/*" required>
+        </div>
+
+        <!-- Zusatzauftrag -->
+        <div class="field-group" data-cat="zusatz">
+          <label for="z-art" data-i18n="z.art">Art der Zusatzreinigung</label>
+          <select id="z-art">
+            <option value="fenster" data-i18n="z.fenster">Fensterreinigung</option>
+            <option value="grund" data-i18n="z.grund">Grundreinigung</option>
+            <option value="umzug" data-i18n="z.umzug">Umzugsreinigung</option>
+            <option value="teppich" data-i18n="z.teppich">Teppich-/Polsterreinigung</option>
+            <option value="sonstiges" data-i18n="z.sonstiges">Sonstiges</option>
+          </select>
+          <label for="z-datum" data-i18n="z.wunschtermin">Wunschtermin</label>
+          <input type="date" id="z-datum">
+          <label for="z-details" data-i18n="z.details">Details <span class="opt" data-i18n="opt">(optional)</span></label>
+          <textarea id="z-details" placeholder="z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …" data-i18n-ph="z.details.ph"></textarea>
+        </div>
+
+        <div id="form-error" class="form-error" role="alert" aria-live="assertive" style="display:none;"></div>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAD8uKO86lXbHalU4" style="margin-top:20px;"></div>
+        <button class="primary" onclick="submitForm()" data-i18n="submit">Absenden</button>
+        <div class="trust-line"><span data-i18n="trust1">Antwort innert 1 Arbeitstag</span><span class="sep">·</span><span data-i18n="trust2">Keine Registrierung nötig</span></div>
+      </div>
+
+      <div class="notice" data-i18n="notice">Ihre Meldung geht direkt an unser Putzfrauenservice-Team — wir melden uns bei Bedarf per E-Mail bei Ihnen zurück.</div>
+    </div>
+
+    <div id="confirm" class="narrow">
+      <div class="check-badge">✓</div>
+      <h1 data-i18n="confirm.h1">Vielen Dank für Ihre Meldung</h1>
+      <p class="lead" data-i18n="confirm.lead">Ihr Anliegen wurde an unser Team übermittelt. Wir melden uns bei Rückfragen umgehend bei Ihnen.</p>
+      <p class="lead" id="confirm-next" style="margin-top:8px;"></p>
+      <button class="primary" style="background:transparent; color:var(--teal); border:1px solid var(--teal); max-width:280px; margin:24px auto 0;" onclick="resetForm()" data-i18n="confirm.btn">Weitere Meldung erfassen</button>
+    </div>
+  </div>
+
+  <div class="view narrow" id="view-team">
+    <a href="#" class="back-link" onclick="setView('kunde', this); return false;" data-i18n="back.simple">← Zurück</a>
+    <div class="eyebrow" data-i18n="team.eyebrow">Ihr Ansprechpartner</div>
+    <h1 data-i18n="team.h1">Das Team der Putzfrauenservice-Abteilung</h1>
+    <p class="lead" style="margin-bottom:32px;" data-i18n="team.lead">Damit Sie wissen, wer bei uns für Sie zuständig ist.</p>
+
+    <div class="orgchart">
+      <div class="org-tier org-tier-1">
+        <div class="org-card org-lead">
+          <div class="org-avatar org-avatar-navy">MS</div>
+          <div class="org-name">Mirco Scaramuzzo</div>
+          <div class="org-role" data-i18n="team.mirco.role">Inhaber &amp; Geschäftsführer</div>
+        </div>
+      </div>
+      <div class="org-connector"></div>
+      <div class="org-tier org-tier-2">
+        <div class="org-card">
+          <div class="org-avatar">CG</div>
+          <div class="org-name">Cristian Gambale</div>
+          <div class="org-role" data-i18n="team.cristian.role">Abteilungsleitung Putzfrauenservice</div>
+        </div>
+      </div>
+      <div class="org-connector"></div>
+      <div class="org-tier org-tier-3">
+        <div class="org-card">
+          <div class="org-avatar">L</div>
+          <div class="org-name">Lina</div>
+          <div class="org-role" data-i18n="team.lina.role">Teamleiterin</div>
+        </div>
+        <div class="org-card">
+          <div class="org-avatar">FS</div>
+          <div class="org-name">Fiorella Scalone</div>
+          <div class="org-role" data-i18n="team.fiorella.role">Sachbearbeiterin</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice" style="margin-top:28px;" data-i18n="team.photonote">Fotos folgen — wir binden hier gerne die echten Portraitbilder ein, sobald diese als Datei vorliegen.</div>
+  </div>
+
+  <div class="view narrow" id="view-datenschutz">
+    <a href="#" class="back-link" onclick="setView('kunde', this); return false;" data-i18n="back.simple">← Zurück</a>
+    <div class="eyebrow" data-i18n="dsg.eyebrow">Rechtliches</div>
+    <h1 data-i18n="dsg.h1">Datenschutzerklärung</h1>
+    <p class="lead" style="margin-bottom:24px;" data-i18n="dsg.lead">Kundenportal — Clean Service Scaramuzzo AG. Nur zur Ansicht.</p>
+    <div class="card agb-box">
+      <div id="dsg-de">
+<h3>1. Welche Daten wir erfassen</h3>
+<p>Wenn Sie über das Kundenportal eine Meldung absenden (Terminverschiebung, Absage, Reklamation oder Schadenmeldung), erfassen wir: Name, Objekt-/Kundennummer, die Angaben zu Ihrem Anliegen sowie — bei Reklamationen und Schadenmeldungen — ein von Ihnen hochgeladenes Foto.</p>
+<h3>2. Zweck der Datenbearbeitung</h3>
+<p>Diese Daten dienen ausschliesslich der Bearbeitung Ihres Anliegens durch unser Putzfrauenservice-Team, der internen Koordination mit dem zuständigen Reinigungspersonal sowie der Rückmeldung an Sie.</p>
+<h3>3. Speicherort und Aufbewahrung</h3>
+<p>Die Daten werden in einer Datenbank mit Serverstandort in der EU gespeichert und nur so lange aufbewahrt, wie dies für die Bearbeitung Ihres Anliegens und die gesetzlichen Aufbewahrungspflichten erforderlich ist.</p>
+<h3>4. Weitergabe an Dritte</h3>
+<p>Ihre Daten werden nicht an Dritte verkauft oder für Werbezwecke weitergegeben. Eine Weitergabe erfolgt nur an intern zuständige Mitarbeitende sowie an technische Dienstleister, die wir zur Bereitstellung des Portals einsetzen.</p>
+<h3>5. Ihre Rechte</h3>
+<p>Sie haben jederzeit das Recht auf Auskunft, Berichtigung oder Löschung Ihrer bei uns gespeicherten Daten. Wenden Sie sich dazu an putzfrauenservice@clean-service.ch.</p>
+<h3>6. Kontakt</h3>
+<p>Clean Service Scaramuzzo AG, Industriestrasse 5, 8307 Effretikon, 0844 355 355, putzfrauenservice@clean-service.ch.</p>
+      </div>
+      <div id="dsg-en" style="display:none;">
+<h3>1. What data we collect</h3>
+<p>When you submit a report via the customer portal (rescheduling, cancellation, complaint, or damage report), we collect: your name, property/customer number, the details of your request, and — for complaints and damage reports — a photo you upload.</p>
+<h3>2. Purpose of processing</h3>
+<p>This data is used exclusively to process your request through our Putzfrauenservice team, to coordinate internally with the responsible cleaning staff, and to respond to you.</p>
+<h3>3. Storage location and retention</h3>
+<p>Data is stored in a database hosted in the EU and is kept only for as long as necessary to process your request and to meet legal retention requirements.</p>
+<h3>4. Disclosure to third parties</h3>
+<p>Your data is not sold to third parties or used for advertising purposes. It is only shared with internally responsible staff and with technical service providers we use to operate the portal.</p>
+<h3>5. Your rights</h3>
+<p>You have the right at any time to request access to, correction of, or deletion of the data we hold about you. Please contact putzfrauenservice@clean-service.ch.</p>
+<h3>6. Contact</h3>
+<p>Clean Service Scaramuzzo AG, Industriestrasse 5, 8307 Effretikon, 0844 355 355, putzfrauenservice@clean-service.ch.</p>
+      </div>
+    </div>
+    <button class="text-link" style="display:inline-block; margin-top:16px; border:none; background:none; font-family:inherit;" onclick="setView('kunde', this)" data-i18n="back.toPortal">← Zurück zum Kundenportal</button>
+  </div>
+
+  <div class="view narrow" id="view-agb">
+    <a href="#" class="back-link" onclick="setView('kunde', this); return false;" data-i18n="back.simple">← Zurück</a>
+    <div class="eyebrow" data-i18n="agb.eyebrow">Rechtliches</div>
+    <h1 data-i18n="agb.h1">Allgemeine Geschäftsbedingungen</h1>
+    <p class="lead" style="margin-bottom:24px;" data-i18n="agb.lead">Privathaushaltreinigung (PFS) — Clean Service Scaramuzzo AG. Nur zur Ansicht.</p>
+    <div class="card agb-box">
+    <div id="agb-de">
+<h3>1. Vertragsabschluss und Verbindlichkeit</h3>
+<p>Eine unterschriebene oder elektronische Auftragserteilung gilt als
+verbindlich und stellt einen rechtsgültigen Vertrag zwischen dem Kunden
+und der Clean Service Scaramuzzo AG dar.</p>
+<p>Mit Auftragserteilung erklärt sich der Kunde mit diesen AGB
+einverstanden.</p>
+<p>Änderungen oder Ergänzungen bedürfen der Schriftform und der
+Zustimmung beider Parteien.</p>
+<h3>2. Leistungsumfang und Ausführung</h3>
+<p>Clean Service Scaramuzzo AG erbringt Reinigungsdienstleistungen im
+privaten Haushalt gemäss vereinbartem Leistungsumfang
+(Pflichtenheft).</p>
+<p>Ziel ist die Sicherstellung eines sauberen, gepflegten und angenehmen
+Wohnumfelds.</p>
+<p>Die Einsätze erfolgen an festgelegten Tagen und Zeitfenstern.</p>
+<p>Sonderwünsche sind nur Vertragsbestandteil, wenn diese schriftlich
+bestätigt wurden.</p>
+<h3>3. Organisation der Einsätze</h3>
+<p>3.1 Die Reinigung erfolgt grundsätzlich an festgelegten
+Einsatztagen.</p>
+<p>3.2 Änderungen sind frühzeitig mitzuteilen, mindestens <strong>14
+Tage im Voraus</strong>.</p>
+<p>3.3 An gesetzlichen Feiertagen entfallen die regulären
+Reinigungseinsätze.<br />
+Auf Wunsch kann ein alternativer Termin vereinbart werden, sofern dies
+mindestens <strong>14 Tage im Voraus</strong> abgestimmt wird.</p>
+<p>3.4 Ferienabsenzen des Kunden sind bis zu <strong>4 Wochen pro
+Jahr</strong> ohne Kosten möglich, sofern rechtzeitig gemeldet.</p>
+<p>3.5  Bei Ausfall des Personals wird nach Möglichkeit Ersatz gestellt.
+Ein Anspruch auf eine bestimmte Reinigungsperson besteht nicht.</p>
+<h3>4. Terminabsagen</h3>
+<ol type="1">
+<li><p>Absagen müssen mindestens <strong>24 Stunden im
+Voraus</strong> erfolgen.</p></li>
+<li><p>Kurzfristige Absagen:<strong><br />
+</strong></p></li>
+</ol>
+<blockquote>
+<p>&lt;24 Stunden: 50%</p>
+<p>&lt;4 Stunde oder keine Absage: 100%</p>
+</blockquote>
+<p>Kann der Einsatz aufgrund fehlenden Zugangs nicht durchgeführt
+werden, wird der Einsatz verrechnet.</p>
+<h3>5. Leistungsabgrenzung</h3>
+<p>5.1 Die Unterhaltsreinigung dient der laufenden
+Sauberkeitserhaltung.</p>
+<p>5.2 Grund- und Spezialreinigungen (z. B. Backofen, Fenster, Lamellen)
+sind nicht Bestandteil der regulären Leistungen.</p>
+<p>5.3 Diese werden durch die Spezialreinigungsabteilung separat
+angeboten.</p>
+<h3>6. Änderungen der Leistungen</h3>
+<p>6.1 Die vereinbarten Leistungen basieren auf dem definierten
+Arbeitsumfang.</p>
+<p>6.2 Mehr- oder Minderleistungen aufgrund von Änderungen der Nutzung,
+Flächen oder Anforderungen werden nach Aufwand oder gemäss vereinbarten
+Ansätzen verrechnet.</p>
+<p>6.3 Anpassungen, die eine Reduktion des Personaleinsatzes zur Folge
+haben, können erst nach Ablauf entsprechender Planungs- oder
+Kündigungsfristen berücksichtigt werden oder führen zu einer
+Tarifanpassung.</p>
+<h3>7. Leistungserfassung, Preise und
+Abrechnung</h3>
+<p>7.1 Die Leistungserfassung erfolgt digital und basiert auf der
+effektiv geleisteten Einsatzzeit.</p>
+<p>7.2 Die Arbeitszeit wird mittels Start-/Stopp-System erfasst und
+bildet die Grundlage für die Abrechnung.</p>
+<p>7.3 Abweichungen von bis zu <strong>15 Minuten</strong> gegenüber dem
+vereinbarten Leistungsumfang sind möglich und gelten als akzeptiert.</p>
+<ol start="4" type="1">
+<li>Rechnungen sind innert <strong>30 Tagen netto</strong> zahlbar.</li>
+</ol>
+<p>7.5 Der Kunde ist verpflichtet, allfällige Einwände gegen die
+Abrechnung innerhalb von <strong>5</strong>
+<strong>Arbeitstagen</strong> schriftlich mitzuteilen, andernfalls gilt
+diese als genehmigt.<strong> </strong></p>
+<h3>8. Infrastruktur, Material und Maschinen</h3>
+<p>8.1 Der Auftraggeber stellt Wasser, Strom sowie geeignete
+Räumlichkeiten unentgeltlich zur Verfügung.</p>
+<p>8.2 Verbrauchsmaterialien (z. B. WC-Papier, Seife, Abfallsäcke) sowie
+Haushaltsgeräte werden vom Auftraggeber bereitgestellt.</p>
+<p>8.3 Clean Service Scaramuzzo AG stellt Reinigungsmittel und
+-utensilien zur Verfügung. Für das Grund-Reinigungskit wird eine
+einmalige Pauschale von <strong>CHF 70.–</strong> verrechnet.</p>
+<p>8.4 Spezielle Pflegemittel für empfindliche Materialien werden vom
+Auftraggeber bereitgestellt oder können über den Auftragnehmer bezogen
+werden.</p>
+<h3>9. Zahlungsverzug und Leistungsunterbruch</h3>
+<p>9.1 Bei Überschreitung der Zahlungsfrist gerät der Kunde ohne weitere
+Mahnung in Verzug.</p>
+<p>9.2 Nach schriftlicher Mahnung und einer Nachfrist von <strong>5
+Arbeitstagen</strong> ist Clean Service Scaramuzzo AG berechtigt:</p>
+<blockquote>
+<p><strong>- </strong>die Dienstleistungen auszusetzen</p>
+<p><strong>- </strong>Leistungen nur gegen Vorauszahlung zu
+erbringen</p>
+</blockquote>
+<ol start="3" type="1">
+<li>Die Wiederaufnahme der Dienstleistungen erfolgt erst nach
+vollständigem Ausgleich aller offenen Forderungen.</li>
+</ol>
+<p>9.4 Wird die Zusammenarbeit aufgrund Zahlungsverzugs eingestellt, ist
+Clean Service Scaramuzzo AG berechtigt, eine pauschale Entschädigung zu
+verlangen.</p>
+<blockquote>
+<p>Diese beträgt bis zu 80% des durchschnittlichen monatlichen
+Auftragsvolumens der letzten 3 Monate, multipliziert mit der
+verbleibenden Vertragslaufzeit.</p>
+</blockquote>
+<p>9.5 Weitergehende Schadenersatzansprüche bleiben
+vorbehalten.<strong> </strong></p>
+<h3>10. Qualitätssicherung und Reklamationen</h3>
+<p>10.1 Beanstandungen sind spätestens am folgenden Arbeitstag zu
+melden.</p>
+<p>10.2 Bei berechtigten Mängeln erfolgt eine Nachbesserung.</p>
+<p>10.3 Mängel berechtigen nicht zur Kürzung oder Zurückbehaltung von
+Zahlungen.</p>
+<p>10.4 Die Vergütungspflicht bleibt bestehen.</p>
+<h3>11. Personal und Vertraulichkeit</h3>
+<p>11.1 Das eingesetzte Personal unterliegt der Sorgfalts-, Treue- und
+Schweigepflicht.</p>
+<p>11.2 Vertrauliche Informationen werden nicht an Dritte
+weitergegeben.</p>
+<p>11.3 Clean Service Scaramuzzo AG stellt sicher, dass das eingesetzte
+Personal entsprechend geschult und qualifiziert ist.</p>
+<h3>12. Abwerbeverbot</h3>
+<p>12.1 Der Kunde verpflichtet sich, während der Vertragsdauer sowie
+bis <strong>12 Monate nach Vertragsende</strong> keine Mitarbeitenden
+direkt oder indirekt anzustellen oder zu beauftragen.</p>
+<p>12.2 Dies gilt auch für Mitarbeitende, die in den letzten <strong>6
+Monaten</strong> beim Kunden im Einsatz waren.</p>
+<p>12.3 Bei Verstoss wird eine Konventionalstrafe <strong>von CHF 10’000
+pro Mitarbeitenden</strong> fällig.</p>
+<p>12.4 Weitergehende Schadenersatzansprüche bleiben vorbehalten.</p>
+<h3>13. Schlüssel und Zutritt</h3>
+<p>13.1 Der Auftraggeber stellt die notwendigen Schlüssel zur
+Verfügung.</p>
+<p>13.2 Schlüssel werden anonymisiert und vertraulich behandelt.</p>
+<p>13.3 Bei Verlust haftet der Auftragnehmer im Rahmen der Versicherung
+für den Zeitwert der Schliessanlage.</p>
+<p>13.4 Bei krankheitsbedingtem Einsatz einer Ersatzperson ist der
+Zugang durch den Auftraggeber sicherzustellen.</p>
+<p>13.5 Bei Ferienersatzreinigungen wird, sofern möglich, auf den
+hinterlegten Schlüssel zurückgegriffen.</p>
+<h3>14. Haftung und Versicherung</h3>
+<p>14.1 Clean Service Scaramuzzo AG haftet nur für nachweislich
+verursachte Schäden.</p>
+<p>14.2 Es besteht eine Haftpflichtversicherung mit einer Deckung von
+CHF 5 Mio.</p>
+<p>14.3 Für bestehende Schäden, normale Abnutzung oder empfindliche
+Materialien wird keine Haftung übernommen.</p>
+<p>14.4 Eine Haftung für indirekte Schäden oder Folgeschäden wird,
+soweit gesetzlich zulässig, ausgeschlossen.</p>
+<p>14.5 Die Entschädigung erfolgt im Rahmen der Versicherungsleistungen
+auf Basis des <strong>Zeitwertes</strong>. Der Schaden ist durch
+geeignete Belege (z. B. Kaufbeleg, Rechnung oder Kostenvoranschlag)
+nachzuweisen.</p>
+<p>14.6 Reparaturen oder Ersatzleistungen durch Dritte (z. B.
+Handwerker) bedürfen der vorgängigen Abstimmung und Freigabe durch die
+Clean Service Scaramuzzo AG.</p>
+<p>14.7 Clean Service Scaramuzzo AG behält sich das Recht vor, die
+Schadenbehebung durch eigene Partner oder beauftragte Fachbetriebe
+durchführen zu lassen.</p>
+<h3>15. Preisanpassungen </h3>
+<p>15.1 Preise können angepasst werden, sofern sich wesentliche
+Kostenfaktoren verändern.</p>
+<p>15.2 Dies betrifft insbesondere Löhne gemäss GAV, Sozialabgaben sowie
+Material- und Energiekosten.</p>
+<p>15.3  Preisanpassungen werden mindestens <strong>30 Tage im
+Voraus</strong> mitgeteilt.</p>
+<p>15.4 Ohne Widerspruch innerhalb von 10 Tagen gelten diese als
+akzeptiert.</p>
+<h3>16. Vertragsdauer und Kündigung </h3>
+<p>16.1 Der Vertrag wird auf unbestimmte Zeit abgeschlossen.</p>
+<p>16.2 Die Kündigung ist unter Einhaltung einer Frist von <strong>1
+Monat auf Monatsende</strong> schriftlich möglich.</p>
+<p>16.3 Das Recht zur fristlosen Kündigung aus wichtigem Grund bleibt
+vorbehalten.</p>
+<p>16.4 Ein wichtiger Grund liegt insbesondere vor bei:</p>
+<ul>
+<li><p>wiederholtem Zahlungsverzug</p></li>
+<li><p>schwerwiegenden Vertragsverletzungen</p></li>
+<li><p>fehlender Mitwirkung des Kunden (z. B. kein Zugang, wiederholte
+Behinderungen)</p></li>
+</ul>
+<blockquote>
+
+</blockquote>
+<h3>17. Vorzeitige Vertragsauflösung </h3>
+<p>17.1 Kündigt der Kunde den Vertrag ohne Einhaltung der
+Kündigungsfrist oder beendet die Zusammenarbeit vorzeitig, gilt dies als
+Vertragsverletzung.</p>
+<p>17.2 In diesem Fall ist Clean Service Scaramuzzo AG berechtigt, eine
+pauschale Entschädigung zu verlangen.</p>
+<p>17.3 Diese beträgt bis <strong>zu 80% des durchschnittlichen
+monatlichen Auftragsvolumens der letzten 3 Monate</strong>,
+multipliziert mit der verbleibenden Vertragslaufzeit.</p>
+<p>17.4 Bereits erbrachte Leistungen sind vollständig zu vergüten.</p>
+<p>17.5 Die Einhaltung der ordentlichen Kündigungsfrist kann alternativ
+verlangt werden.</p>
+<h3>18. Urheber- und Nutzungsrechte</h3>
+<p>18.1 Sämtliche von der Clean Service Scaramuzzo AG erstellten
+Unterlagen (insbesondere Offerten, Leistungsverzeichnisse, Konzepte und
+Arbeitspapiere) bleiben deren Eigentum.</p>
+<p>18.2 Diese dürfen ohne schriftliche Zustimmung weder vervielfältigt,
+weitergegeben noch Dritten zugänglich gemacht werden.</p>
+<p>18.3 Insbesondere ist die Weitergabe an Mitbewerber oder die
+Verwendung zur Einholung von Vergleichsofferten untersagt.</p>
+<p>18.4 Bei Zuwiderhandlung behält sich die Clean Service Scaramuzzo AG
+rechtliche Schritte vor.</p>
+<h3>19. Gerichtsstand und Recht</h3>
+<p>19.1 Es gilt ausschliesslich schweizerisches Recht.</p>
+<p>19.2 Gerichtsstand ist der Sitz der Clean Service Scaramuzzo AG.</p>
+    </div>
+    <div id="agb-en" style="display:none;">
+<h3>1. Contract Conclusion and Binding Effect</h3>
+<p>A signed or electronic order confirmation is binding and constitutes a legally valid contract between the customer and Clean Service Scaramuzzo AG.</p>
+<p>By placing an order, the customer agrees to these Terms and Conditions.</p>
+<p>Amendments or additions require written form and the consent of both parties.</p>
+<h3>2. Scope of Services and Performance</h3>
+<p>Clean Service Scaramuzzo AG provides cleaning services in private households according to the agreed scope of services (specification sheet).</p>
+<p>The aim is to ensure a clean, well-maintained, and pleasant living environment.</p>
+<p>Visits take place on fixed days and within fixed time windows.</p>
+<p>Special requests are only part of the contract if confirmed in writing.</p>
+<h3>3. Organization of Cleaning Visits</h3>
+<p>3.1 Cleaning generally takes place on fixed service days.</p>
+<p>3.2 Changes must be communicated in advance, at least 14 days ahead of time.</p>
+<p>3.3 Regular cleaning visits do not take place on public holidays. An alternative date can be arranged on request, provided this is agreed at least 14 days in advance.</p>
+<p>3.4 The customer's holiday absences are possible free of charge for up to 4 weeks per year, provided they are reported in good time.</p>
+<p>3.5 If staff are unavailable, a replacement will be provided where possible. There is no entitlement to a specific cleaning person.</p>
+<h3>4. Appointment Cancellations</h3>
+<p>1. Cancellations must be made at least 24 hours in advance.</p>
+<p>2. Short-notice cancellations:</p>
+<blockquote>Less than 24 hours: 50%<br>Less than 4 hours or no cancellation: 100%</blockquote>
+<p>If a visit cannot be carried out due to lack of access, it will be invoiced in full.</p>
+<h3>5. Scope Boundaries</h3>
+<p>5.1 Routine cleaning serves to maintain ongoing cleanliness.</p>
+<p>5.2 Basic and special cleaning (e.g. oven, windows, blinds) are not part of the regular services.</p>
+<p>5.3 These are offered separately by the Special Cleaning department.</p>
+<h3>6. Changes to Services</h3>
+<p>6.1 The agreed services are based on the defined scope of work.</p>
+<p>6.2 Additional or reduced services resulting from changes in use, floor area, or requirements will be invoiced based on time spent or according to agreed rates.</p>
+<p>6.3 Adjustments resulting in a reduction of staff deployment can only be taken into account after the expiry of the relevant planning or notice periods, or will result in a rate adjustment.</p>
+<h3>7. Recording of Services, Prices and Invoicing</h3>
+<p>7.1 Services are recorded digitally and are based on the actual time worked.</p>
+<p>7.2 Working time is recorded using a start/stop system and forms the basis for invoicing.</p>
+<p>7.3 Deviations of up to 15 minutes from the agreed scope of services are possible and are deemed accepted.</p>
+<p>4. Invoices are payable net within 30 days.</p>
+<p>7.5 The customer is obliged to notify any objections to an invoice in writing within 5 working days; otherwise the invoice is deemed approved.</p>
+<h3>8. Infrastructure, Materials and Equipment</h3>
+<p>8.1 The client provides water, electricity, and suitable premises free of charge.</p>
+<p>8.2 Consumables (e.g. toilet paper, soap, garbage bags) and household appliances are provided by the client.</p>
+<p>8.3 Clean Service Scaramuzzo AG provides cleaning agents and utensils. A one-time flat fee of CHF 70.00 is charged for the basic cleaning kit.</p>
+<p>8.4 Special care products for sensitive materials are provided by the client, or can be obtained through the contractor.</p>
+<h3>9. Late Payment and Service Suspension</h3>
+<p>9.1 If the payment deadline is exceeded, the customer is in default without any further reminder.</p>
+<p>9.2 After a written reminder and a grace period of 5 working days, Clean Service Scaramuzzo AG is entitled to:</p>
+<blockquote>- suspend services<br>- provide services only against advance payment</blockquote>
+<p>3. Services will only resume once all outstanding amounts have been settled in full.</p>
+<p>9.4 If the collaboration is terminated due to late payment, Clean Service Scaramuzzo AG is entitled to demand flat-rate compensation.</p>
+<blockquote>This amounts to up to 80% of the average monthly order volume of the last 3 months, multiplied by the remaining contract term.</blockquote>
+<p>9.5 Further claims for damages remain reserved.</p>
+<h3>10. Quality Assurance and Complaints</h3>
+<p>10.1 Complaints must be reported no later than the following working day.</p>
+<p>10.2 In the case of justified defects, the work will be rectified.</p>
+<p>10.3 Defects do not entitle the customer to reduce or withhold payments.</p>
+<p>10.4 The obligation to pay remains in place.</p>
+<h3>11. Staff and Confidentiality</h3>
+<p>11.1 Staff deployed are subject to a duty of care, loyalty, and confidentiality.</p>
+<p>11.2 Confidential information will not be disclosed to third parties.</p>
+<p>11.3 Clean Service Scaramuzzo AG ensures that deployed staff are appropriately trained and qualified.</p>
+<h3>12. Non-Solicitation of Staff</h3>
+<p>12.1 The customer undertakes not to directly or indirectly employ or engage any staff member during the term of the contract or for up to 12 months after its end.</p>
+<p>12.2 This also applies to staff who have been deployed at the customer's premises within the last 6 months.</p>
+<p>12.3 In the event of a breach, a contractual penalty of CHF 10,000 per employee becomes due.</p>
+<p>12.4 Further claims for damages remain reserved.</p>
+<h3>13. Keys and Access</h3>
+<p>13.1 The client provides the necessary keys.</p>
+<p>13.2 Keys are handled anonymously and confidentially.</p>
+<p>13.3 In the event of loss, the contractor is liable, within the scope of its insurance, for the current value of the locking system.</p>
+<p>13.4 If a replacement person is deployed due to illness, the client must ensure access is possible.</p>
+<p>13.5 For holiday replacement cleaning, the key on file will be used where possible.</p>
+<h3>14. Liability and Insurance</h3>
+<p>14.1 Clean Service Scaramuzzo AG is only liable for damage it has demonstrably caused.</p>
+<p>14.2 Liability insurance with coverage of CHF 5 million is in place.</p>
+<p>14.3 No liability is assumed for pre-existing damage, normal wear and tear, or sensitive materials.</p>
+<p>14.4 Liability for indirect or consequential damage is excluded to the extent permitted by law.</p>
+<p>14.5 Compensation is provided within the scope of the insurance benefits, on the basis of current value. The damage must be substantiated with suitable evidence (e.g. proof of purchase, invoice, or cost estimate).</p>
+<p>14.6 Repairs or replacements carried out by third parties (e.g. tradespeople) require prior coordination with, and approval from, Clean Service Scaramuzzo AG.</p>
+<p>14.7 Clean Service Scaramuzzo AG reserves the right to have damage remedied by its own partners or contracted specialist firms.</p>
+<h3>15. Price Adjustments</h3>
+<p>15.1 Prices may be adjusted if significant cost factors change.</p>
+<p>15.2 This applies in particular to wages under the collective labour agreement, social security contributions, and material and energy costs.</p>
+<p>15.3 Price adjustments will be communicated at least 30 days in advance.</p>
+<p>15.4 If no objection is raised within 10 days, the adjustment is deemed accepted.</p>
+<h3>16. Contract Term and Termination</h3>
+<p>16.1 The contract is concluded for an indefinite period.</p>
+<p>16.2 Termination is possible in writing, subject to one month's notice to the end of a calendar month.</p>
+<p>16.3 The right to terminate without notice for good cause remains reserved.</p>
+<p>16.4 Good cause exists in particular in the case of:</p>
+<ul><li>repeated late payment</li><li>serious breaches of contract</li><li>lack of cooperation by the customer (e.g. no access, repeated obstruction)</li></ul>
+<h3>17. Early Termination of Contract</h3>
+<p>17.1 If the customer terminates the contract without observing the notice period, or ends the collaboration prematurely, this is considered a breach of contract.</p>
+<p>17.2 In this case, Clean Service Scaramuzzo AG is entitled to demand flat-rate compensation.</p>
+<p>17.3 This amounts to up to 80% of the average monthly order volume of the last 3 months, multiplied by the remaining contract term.</p>
+<p>17.4 Services already rendered must be paid for in full.</p>
+<p>17.5 Compliance with the ordinary notice period may be requested as an alternative.</p>
+<h3>18. Copyright and Usage Rights</h3>
+<p>18.1 All documents prepared by Clean Service Scaramuzzo AG (in particular quotations, service specifications, concepts, and working papers) remain its property.</p>
+<p>18.2 These may not be copied, passed on, or made accessible to third parties without written consent.</p>
+<p>18.3 In particular, passing them on to competitors or using them to obtain comparative quotes is prohibited.</p>
+<p>18.4 In the event of a violation, Clean Service Scaramuzzo AG reserves the right to take legal action.</p>
+<h3>19. Governing Law and Jurisdiction</h3>
+<p>19.1 Swiss law applies exclusively.</p>
+<p>19.2 The place of jurisdiction is the registered office of Clean Service Scaramuzzo AG.</p>
+
+    </div>
+    </div>
+    <button class="text-link" style="display:inline-block; margin-top:16px; border:none; background:none; font-family:inherit;" onclick="setView('kunde', this)" data-i18n="back.toPortal">← Zurück zum Kundenportal</button>
+  </div>
+
+
+</main>
+
+<footer>
+  <div class="tag">TRADITION DIE GLÄNZT</div>
+  Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
+  <div style="margin-top:12px; display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+    <a href="#" onclick="setView('team', this); return false;" class="text-link" data-i18n="nav.team">Team</a>
+    <a href="#" onclick="setView('agb', this); return false;" class="text-link" data-i18n="nav.agb">AGB</a>
+    <a href="#" onclick="setView('datenschutz', this); return false;" class="text-link" data-i18n="nav.privacy">Datenschutz</a>
+  </div>
+  <div style="margin-top:10px;"><a href="/admin.html" style="color:var(--line); font-size:10px; text-decoration:none;">Admin-Zugang</a></div>
+</footer>
+
+<script>
+const translations = {
+  de: {
+    'nav.team': 'Team', 'nav.agb': 'AGB',
+    'hero.h1': 'Ihr Anliegen, in zwei Minuten gemeldet.',
+    'hero.lead': 'Termin verschieben, absagen oder etwas melden — Sie füllen ein kurzes Formular aus, den Rest übernehmen wir.',
+    'hero.b1': 'Ohne Anmeldung', 'hero.b2': 'Antwort innert einem Arbeitstag', 'hero.b3': 'Direkt beim zuständigen Team',
+    'hero.heritage': 'Tradition die glänzt',
+    'contacts.title': 'Dahinter stehen echte Menschen', 'contacts.sub': 'Ihr Anliegen landet bei diesem Team.',
+    'closing.title': 'Seit 1984 in Familienhand',
+    'closing.text': 'Wir reinigen Privathaushalte in der Region Zürich — mit festen Ansprechpartnern, klaren Abläufen und Mitarbeitenden, die Ihr Zuhause kennen.',
+    'closing.hint': 'Mo–Fr, 08:00–17:00 Uhr',
+    'pick.title': 'Worum geht es?',
+    'pick.sub': 'Wählen Sie ein Anliegen — danach brauchen wir nur noch wenige Angaben.',
+    're.1.title': 'Kein Mailverkehr nötig', 're.1.text': 'Ihre Meldung geht direkt an das zuständige Team, nicht in ein allgemeines Postfach.',
+    're.2.title': 'Sie bekommen eine Bestätigung', 're.2.text': 'Per E-Mail, damit Sie wissen, dass Ihre Meldung angekommen ist.',
+    're.3.title': 'Alles an einem Ort', 're.3.text': 'Termine, Reklamationen und Anfragen laufen über denselben Weg — nachvollziehbar für Sie und uns.',
+    'pick.versch.desc': 'Bestehenden Termin auf ein neues Datum legen',
+    'pick.absage.desc': 'Einen oder mehrere Termine ersatzlos streichen',
+    'pick.reklamation.desc': 'Etwas war nicht wie vereinbart — mit Foto',
+    'pick.schaden.desc': 'Ein Schaden ist entstanden — mit Foto',
+    'pick.zusatz.desc': 'Fenster, Grundreinigung, Umzug und weitere Arbeiten',
+    'pick.versch': 'Termin verschieben', 'pick.absage': 'Termin absagen', 'pick.reklamation': 'Reklamation', 'pick.schaden': 'Schaden melden',
+    'pick.zusatz': 'Zusatzreinigung anfragen',
+    'z.art': 'Art der Zusatzreinigung', 'z.fenster': 'Fensterreinigung', 'z.grund': 'Grundreinigung', 'z.umzug': 'Umzugsreinigung', 'z.teppich': 'Teppich-/Polsterreinigung', 'z.sonstiges': 'Sonstiges',
+    'z.wunschtermin': 'Wunschtermin', 'z.details': 'Details', 'z.details.ph': 'z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …',
+    'form.back': '← Andere Kategorie wählen',
+    'form.name': 'Name', 'form.name.ph': 'Vor- und Nachname',
+    'form.objnr': 'Objekt-/Kundennummer', 'form.objnr.ph': 'z.B. 109',
+    'form.email': 'E-Mail', 'form.email.hint': '(für Ihre Bestätigung)', 'form.email.ph': 'ihre@email.ch',
+    'v.alt': 'Betroffener Termin', 'v.neu': 'Gewünschter neuer Termin', 'v.zeit': 'Uhrzeit', 'v.kommentar': 'Kommentar',
+    'opt': '(optional)', 'misc.details.ph': 'Ergänzende Angaben …',
+    'a.weitere': 'Sollen weitere Termine ebenfalls entfallen?', 'yes': 'Ja', 'no': 'Nein',
+    'a.weitereTermine': 'Welche weiteren Termine sollen entfallen?', 'a.upTo4': '(bis zu 4)',
+    'a.bemerkung': 'Bemerkung',
+    'rs.what': 'Was ist vorgefallen?', 'rs.what.ph': 'Kurz beschreiben, worum es geht …',
+    'rs.photo': 'Foto', 'rs.required': '(erforderlich)',
+    'submit': 'Absenden', 'trust1': 'Antwort innert 1 Arbeitstag', 'trust2': 'Keine Registrierung nötig',
+    'notice': 'Ihre Meldung geht direkt an unser Putzfrauenservice-Team — wir melden uns bei Bedarf per E-Mail bei Ihnen zurück.',
+    'confirm.h1': 'Vielen Dank für Ihre Meldung',
+    'confirm.lead': 'Ihr Anliegen wurde an unser Team übermittelt. Wir melden uns bei Rückfragen umgehend bei Ihnen.',
+    'confirm.btn': 'Weitere Meldung erfassen',
+    'back.simple': '← Zurück', 'back.toPortal': '← Zurück zum Kundenportal',
+    'team.eyebrow': 'Ihr Ansprechpartner', 'team.h1': 'Das Team der Putzfrauenservice-Abteilung',
+    'team.lead': 'Damit Sie wissen, wer bei uns für Sie zuständig ist.',
+    'team.mirco.role': 'Inhaber & Geschäftsführer', 'team.cristian.role': 'Abteilungsleitung Putzfrauenservice',
+    'team.lina.role': 'Teamleiterin', 'team.fiorella.role': 'Sachbearbeiterin',
+    'team.photonote': 'Fotos folgen — wir binden hier gerne die echten Portraitbilder ein, sobald diese als Datei vorliegen.',
+    'agb.eyebrow': 'Rechtliches', 'agb.h1': 'Allgemeine Geschäftsbedingungen',
+    'nav.privacy': 'Datenschutz', 'dsg.eyebrow': 'Rechtliches', 'dsg.h1': 'Datenschutzerklärung', 'dsg.lead': 'Kundenportal — Clean Service Scaramuzzo AG. Nur zur Ansicht.',
+    'agb.lead': 'Privathaushaltreinigung (PFS) — Clean Service Scaramuzzo AG. Nur zur Ansicht.',
+    'photo.alert': 'Bitte fügen Sie ein Foto hinzu — dieses Feld ist für diese Meldungsart erforderlich.'
+  },
+  en: {
+    'nav.team': 'Team', 'nav.agb': 'Terms',
+    'hero.h1': 'Report your request in two minutes.',
+    'hero.lead': 'Reschedule, cancel or report something — you fill in a short form, we take care of the rest.',
+    'hero.b1': 'No account needed', 'hero.b2': 'Reply within one business day', 'hero.b3': 'Straight to the responsible team',
+    'hero.heritage': 'A tradition that shines',
+    'contacts.title': 'Real people behind it', 'contacts.sub': 'Your request reaches this team.',
+    'closing.title': 'Family-run since 1984',
+    'closing.text': 'We clean private households in the Zurich region — with dedicated contacts, clear processes and staff who know your home.',
+    'closing.hint': 'Mon–Fri, 08:00–17:00',
+    'pick.title': 'What can we do for you?',
+    'pick.sub': 'Choose a request — after that we only need a few details.',
+    're.1.title': 'No email back and forth', 're.1.text': 'Your report goes straight to the responsible team, not into a general inbox.',
+    're.2.title': 'You get a confirmation', 're.2.text': 'By email, so you know your report has arrived.',
+    're.3.title': 'Everything in one place', 're.3.text': 'Appointments, complaints and requests all follow the same path — traceable for you and for us.',
+    'pick.versch.desc': 'Move an existing appointment to a new date',
+    'pick.absage.desc': 'Cancel one or more appointments outright',
+    'pick.reklamation.desc': 'Something wasn\'t as agreed — with photo',
+    'pick.schaden.desc': 'Damage has occurred — with photo',
+    'pick.zusatz.desc': 'Windows, deep cleaning, move-out and more',
+    'pick.versch': 'Reschedule appointment', 'pick.absage': 'Cancel appointment', 'pick.reklamation': 'Complaint', 'pick.schaden': 'Report damage',
+    'pick.zusatz': 'Request extra cleaning',
+    'z.art': 'Type of additional cleaning', 'z.fenster': 'Window cleaning', 'z.grund': 'Deep cleaning', 'z.umzug': 'Move-out/move-in cleaning', 'z.teppich': 'Carpet/upholstery cleaning', 'z.sonstiges': 'Other',
+    'z.wunschtermin': 'Preferred date', 'z.details': 'Details', 'z.details.ph': 'e.g. number of rooms, approximate size, special requests …',
+    'form.back': '← Choose a different category',
+    'form.name': 'Name', 'form.name.ph': 'First and last name',
+    'form.objnr': 'Property / customer number', 'form.objnr.ph': 'e.g. 109',
+    'form.email': 'Email', 'form.email.hint': '(for your confirmation)', 'form.email.ph': 'your@email.com',
+    'v.alt': 'Affected appointment', 'v.neu': 'Preferred new date', 'v.zeit': 'Time', 'v.kommentar': 'Comment',
+    'opt': '(optional)', 'misc.details.ph': 'Any additional details …',
+    'a.weitere': 'Should further appointments be cancelled too?', 'yes': 'Yes', 'no': 'No',
+    'a.weitereTermine': 'Which further appointments should be cancelled?', 'a.upTo4': '(up to 4)',
+    'a.bemerkung': 'Note',
+    'rs.what': 'What happened?', 'rs.what.ph': 'Briefly describe what happened …',
+    'rs.photo': 'Photo', 'rs.required': '(required)',
+    'submit': 'Submit', 'trust1': 'Reply within 1 business day', 'trust2': 'No registration needed',
+    'notice': 'Your report goes directly to our Putzfrauenservice team — we will get back to you by email if needed.',
+    'confirm.h1': 'Thank you for your report',
+    'confirm.lead': 'Your request has been sent to our team. We will contact you promptly with any questions.',
+    'confirm.btn': 'Submit another report',
+    'back.simple': '← Back', 'back.toPortal': '← Back to portal',
+    'team.eyebrow': 'Your contact', 'team.h1': 'The Putzfrauenservice department team',
+    'team.lead': 'So you know exactly who is responsible for you.',
+    'team.mirco.role': 'Owner & Managing Director', 'team.cristian.role': 'Head of Department, Putzfrauenservice',
+    'team.lina.role': 'Team Leader', 'team.fiorella.role': 'Case Manager',
+    'team.photonote': 'Photos coming soon — happy to add the real portraits here once we have the files.',
+    'agb.eyebrow': 'Legal', 'agb.h1': 'Terms & Conditions',
+    'nav.privacy': 'Privacy', 'dsg.eyebrow': 'Legal', 'dsg.h1': 'Privacy Policy', 'dsg.lead': 'Customer Portal — Clean Service Scaramuzzo AG. View only.',
+    'agb.lead': 'Private household cleaning (PFS) — Clean Service Scaramuzzo AG. View only.',
+    'photo.alert': 'Please attach a photo — this field is required for this type of report.'
+  }
+};
+
+let currentLang = 'de';
+
+function setLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  const dict = translations[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if(dict[key] !== undefined) el.setAttribute('placeholder', dict[key]);
+  });
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    const isActive = b.dataset.lang === lang;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+  document.getElementById('agb-de').style.display = (lang === 'de') ? 'block' : 'none';
+  document.getElementById('agb-en').style.display = (lang === 'en') ? 'block' : 'none';
+  document.getElementById('dsg-de').style.display = (lang === 'de') ? 'block' : 'none';
+  document.getElementById('dsg-en').style.display = (lang === 'en') ? 'block' : 'none';
+  const activeCat = document.getElementById('form-screen').dataset.activeCat;
+  if(activeCat) document.getElementById('form-title').textContent = catTitles()[activeCat];
+}
+
+function catTitles(){
+  return {
+    verschiebung: translations[currentLang]['pick.versch'],
+    absage: translations[currentLang]['pick.absage'],
+    reklamation: translations[currentLang]['pick.reklamation'],
+    schaden: translations[currentLang]['pick.schaden'],
+    zusatz: translations[currentLang]['pick.zusatz']
+  };
+}
+
+function chooseCategory(cat){
+  clearFormError();
+  document.getElementById('step-category').style.display = 'none';
+  document.getElementById('form-screen').style.display = 'block';
+  document.getElementById('form-title').textContent = catTitles()[cat];
+  document.querySelectorAll('.field-group').forEach(g => g.classList.toggle('active', g.dataset.cat === cat));
+  document.getElementById('form-screen').dataset.activeCat = cat;
+}
+function backToCategory(){
+  clearFormError();
+  document.getElementById('form-screen').style.display = 'none';
+  document.getElementById('step-category').style.display = 'block';
+}
+function toggleAbsageFolge(weitereJa){
+  document.getElementById('a-bis-wrap').style.display = weitereJa ? 'block' : 'none';
+  document.getElementById('a-bemerkung-wrap').style.display = weitereJa ? 'none' : 'block';
+}
+// Startzustand: "Nein" ist vorausgewählt -> Bemerkung zeigen, Bis-Feld verstecken
+toggleAbsageFolge(false);
+
+function gatherDetails(cat){
+  if(cat === 'verschiebung'){
+    return `Betroffener Termin: ${document.getElementById('v-alt').value || '-'}\n` +
+           `Neuer Termin: ${document.getElementById('v-neu').value || '-'} ${document.getElementById('v-zeit').value || ''}\n` +
+           `Kommentar: ${document.getElementById('v-kommentar').value || '-'}`;
+  }
+  if(cat === 'absage'){
+    const weitereJa = document.getElementById('a-bis-wrap').style.display === 'block';
+    let text = `Betroffener Termin: ${document.getElementById('a-datum').value || '-'}\n`;
+    if(weitereJa){
+      const weitere = ['a-weiterer-1','a-weiterer-2','a-weiterer-3','a-weiterer-4']
+        .map(id => document.getElementById(id).value).filter(Boolean);
+      text += `Weitere Termine: ${weitere.length ? weitere.join(', ') : '-'}`;
+    } else {
+      text += `Bemerkung: ${document.getElementById('a-bemerkung').value || '-'}`;
+    }
+    return text;
+  }
+  if(cat === 'reklamation') return `Beschreibung: ${document.getElementById('r-text').value || '-'}\n(Foto beigefügt, wird separat verarbeitet)`;
+  if(cat === 'schaden') return `Beschreibung: ${document.getElementById('s-text').value || '-'}\n(Foto beigefügt, wird separat verarbeitet)`;
+  if(cat === 'zusatz'){
+    return `Art: ${document.getElementById('z-art').value}\n` +
+           `Wunschtermin: ${document.getElementById('z-datum').value || '-'}\n` +
+           `Details: ${document.getElementById('z-details').value || '-'}`;
+  }
+  return '';
+}
+
+function showFormError(message){
+  const box = document.getElementById('form-error');
+  box.innerHTML = `<span class="fe-icon">⚠</span><span>${message}</span>`;
+  box.style.display = 'flex';
+  box.scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+function clearFormError(){
+  const box = document.getElementById('form-error');
+  box.style.display = 'none';
+  box.innerHTML = '';
+}
+
+const PHONE_HINT_DE = 'Falls es weiterhin nicht klappt, rufen Sie uns direkt an: <a href="tel:0844355355">0844 355 355</a>.';
+const PHONE_HINT_EN = 'If this keeps happening, please call us directly: <a href="tel:0844355355">0844 355 355</a>.';
+
+const NEXT_STEPS = {
+  de: {
+    verschiebung: 'Wir prüfen Ihren Wunschtermin und melden uns per E-Mail, sobald er bestätigt ist.',
+    absage: 'Sie erhalten in Kürze eine Bestätigung der Absage per E-Mail.',
+    reklamation: 'Wir melden uns innert 2 Arbeitstagen mit einer Rückmeldung zu Ihrer Reklamation.',
+    schaden: 'Wir melden uns innert 2 Arbeitstagen mit einer ersten Einschätzung zur Schadenmeldung.',
+    zusatz: 'Wir melden uns mit einer Offerte bzw. einem Terminvorschlag bei Ihnen.'
+  },
+  en: {
+    verschiebung: 'We will check your preferred date and confirm it by email shortly.',
+    absage: 'You will receive a confirmation of the cancellation by email shortly.',
+    reklamation: 'We will get back to you regarding your complaint within 2 business days.',
+    schaden: 'We will get back to you with an initial assessment within 2 business days.',
+    zusatz: 'We will get back to you with a quote or a suggested date.'
+  }
+};
+
+async function submitForm(){
+  clearFormError();
+  const cat = document.getElementById('form-screen').dataset.activeCat;
+
+  if((cat === 'reklamation' && !document.getElementById('r-foto').value) ||
+     (cat === 'schaden' && !document.getElementById('s-foto').value)){
+    showFormError(translations[currentLang]['photo.alert']);
+    return;
+  }
+
+  const name = document.getElementById('f-name').value.trim();
+  const objektId = document.getElementById('f-objnr').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  if(!name || !objektId || !email){
+    showFormError(currentLang === 'de'
+      ? 'Bitte Name, Objekt-/Kundennummer und E-Mail-Adresse angeben.'
+      : 'Please provide your name, property/customer number, and email address.');
+    return;
+  }
+
+  const captchaToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse() : '';
+  if(!captchaToken){
+    showFormError(currentLang === 'de' ? 'Bitte das Sicherheits-Häkchen bestätigen.' : 'Please complete the security check.');
+    return;
+  }
+
+  const btn = document.querySelector('#form-screen button.primary');
+  const originalLabel = btn.textContent;
+  btn.textContent = currentLang === 'de' ? 'Wird gesendet …' : 'Sending …';
+  btn.disabled = true;
+
+  try{
+    const resp = await fetch('/api/melde', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        kategorie: cat,
+        name: name,
+        objekt_id: objektId,
+        email: email,
+        details: gatherDetails(cat),
+        captcha_token: captchaToken
+      })
+    });
+
+    let result;
+    try{ result = await resp.json(); } catch{ result = {}; }
+
+    if(!resp.ok){
+      // Serverseitige Fehlermeldungen (z.B. unbekannte Objektnummer, Rate-Limit) sind bereits
+      // kundenfreundlich formuliert - die zeigen wir direkt an.
+      showFormError((result.error || (currentLang === 'de' ? 'Da ist etwas schiefgelaufen.' : 'Something went wrong.')) +
+        ' ' + (currentLang === 'de' ? PHONE_HINT_DE : PHONE_HINT_EN));
+      return;
+    }
+
+    console.log('Meldung gesendet:', result); // email/beekeeper Status zu Testzwecken
+    document.getElementById('confirm-next').textContent = NEXT_STEPS[currentLang][cat] || '';
+    document.getElementById('form-screen').style.display = 'none';
+    document.getElementById('confirm').style.display = 'block';
+  } catch(err){
+    // Das ist der Fall "kein Internet / Server nicht erreichbar" (fetch selbst wirft einen Fehler)
+    showFormError((currentLang === 'de'
+      ? 'Ihre Meldung konnte nicht gesendet werden — vermutlich ist die Internetverbindung unterbrochen. Ihre Eingaben sind nicht verloren, bitte versuchen Sie es gleich nochmal.'
+      : 'Your report could not be sent — your internet connection may be interrupted. Your input is not lost, please try again in a moment.') +
+      ' ' + (currentLang === 'de' ? PHONE_HINT_DE : PHONE_HINT_EN));
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+    if(typeof turnstile !== 'undefined') turnstile.reset();
+  }
+}
+function resetForm(){
+  document.getElementById('confirm').style.display = 'none';
+  document.getElementById('step-category').style.display = 'block';
+  document.getElementById('form-screen').style.display = 'none';
+}
+function setView(name, el){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+}
+
+
+</script>
+
+</body>
+</html>

@@ -81,6 +81,52 @@ async function sendeAdminAntwort({ email, name, betreff, nachricht }) {
   });
 }
 
+
+/* ------------------------------------------------------- Kundenzugaenge */
+// Gut lesbares Format, ohne leicht verwechselbare Zeichen (kein O/0, I/1)
+const TOKEN_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function makeToken() {
+  const pick = n => Array.from({ length: n }, () =>
+    TOKEN_ALPHABET[crypto.randomInt(TOKEN_ALPHABET.length)]).join("");
+  return `${pick(4)}-${pick(4)}`;
+}
+
+const PORTAL_URL = (process.env.PORTAL_URL || "https://kundenportal-two.vercel.app").replace(/\/$/, "");
+
+async function sendeZugangsMail(email, name, token) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
+  const link = `${PORTAL_URL}/k/${token}`;
+  const html = `
+    <p>Guten Tag ${name || ""}</p>
+    <p>Herzlich willkommen bei Clean Service Scaramuzzo AG. Hier ist Ihr persönlicher
+       Zugang zum Kundenportal — damit melden Sie Termine, Absagen oder Anliegen
+       direkt bei uns, ohne E-Mail schreiben zu müssen.</p>
+    <p style="margin:22px 0;">
+      <a href="${link}" style="background:#2bb6b7; color:#ffffff; text-decoration:none;
+         padding:14px 24px; border-radius:9px; font-weight:600; display:inline-block;">
+        Kundenportal öffnen
+      </a>
+    </p>
+    <p style="font-size:13px; color:#5b6b76;">
+      Oder diesen Link im Browser öffnen:<br><a href="${link}">${link}</a>
+    </p>
+    <p style="font-size:13px; color:#5b6b76;">
+      Sie brauchen kein Passwort. Speichern Sie den Link als Lesezeichen, dann sind
+      Ihre Angaben beim nächsten Mal bereits ausgefüllt.
+    </p>
+    <p style="color:#7c8c8b; font-size:12.5px; margin-top:26px;">
+      Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
+    </p>
+  `;
+  return new Resend(apiKey).emails.send({
+    from: "Clean Service Scaramuzzo AG <kundenportal@clean-service.ch>",
+    to: email,
+    subject: "Ihr Zugang zum Kundenportal",
+    html,
+  });
+}
+
 /* ------------------------------------------------------------------- Ampel */
 /**
  * ROT   - mind. 3 Reklamationen/Schäden in 90 Tagen ODER eine Absage in 30 Tagen
@@ -248,6 +294,60 @@ module.exports = async function handler(req, res) {
     if (updateError) { res.status(500).json({ error: updateError.message }); return; }
 
     res.status(200).json({ ok: true, mail: mailStatus, mail_error: mailError });
+    return;
+  }
+
+  /* --- Kundenzugang anlegen und Link verschicken --- */
+  if (action === "zugang-anlegen") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const { objekt_id, name, email, adresse, senden } = req.body || {};
+    if (!objekt_id || !name || !email) {
+      res.status(400).json({ error: "objekt_id, name und email sind erforderlich." });
+      return;
+    }
+
+    // Bestehenden aktiven Zugang wiederverwenden statt doppelt anlegen
+    const { data: vorhanden } = await supabase
+      .from("kundenzugaenge").select("token").eq("objekt_id", objekt_id).eq("aktiv", true).maybeSingle();
+
+    let token = vorhanden?.token;
+    if (!token) {
+      token = makeToken();
+      const { error } = await supabase.from("kundenzugaenge")
+        .insert({ token, objekt_id, name, email, adresse: adresse || null });
+      if (error) { res.status(500).json({ error: error.message }); return; }
+    }
+
+    let mail = "skipped", mailError = null;
+    if (senden !== false) {
+      try { await sendeZugangsMail(email, name, token); mail = "sent"; }
+      catch (err) { mail = "error"; mailError = err.message; }
+    }
+
+    res.status(200).json({ ok: true, token, link: `${PORTAL_URL}/k/${token}`, mail, mail_error: mailError });
+    return;
+  }
+
+  /* --- Alle Kundenzugaenge auflisten --- */
+  if (action === "zugaenge") {
+    const { data, error } = await supabase
+      .from("kundenzugaenge")
+      .select("token, objekt_id, name, email, aktiv, letzte_nutzung, erstellt_am")
+      .order("erstellt_am", { ascending: false })
+      .limit(600);
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    res.status(200).json({ zugaenge: data, portal_url: PORTAL_URL });
+    return;
+  }
+
+  /* --- Zugang deaktivieren (z.B. bei Kündigung) --- */
+  if (action === "zugang-deaktivieren") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const { token } = req.body || {};
+    if (!token) { res.status(400).json({ error: "token ist erforderlich." }); return; }
+    const { error } = await supabase.from("kundenzugaenge").update({ aktiv: false }).eq("token", token);
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    res.status(200).json({ ok: true });
     return;
   }
 

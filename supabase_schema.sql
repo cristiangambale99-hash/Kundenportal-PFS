@@ -3,12 +3,14 @@ create table if not exists meldungen (
     id bigint generated always as identity primary key,
     kategorie text not null check (kategorie in ('verschiebung', 'absage', 'reklamation', 'schaden', 'zusatz')),
     name text not null,
-    objekt_id text not null,
+    objekt_id text,
+    adresse text,
     email text,
     details text,
     ip text,
     status text not null default 'neu' check (status in ('neu', 'akzeptieren', 'ablehnen', 'erledigt')),
     admin_note text,
+    zuordnung_offen boolean not null default false,
     created_at timestamptz not null default now()
 );
 
@@ -39,3 +41,10 @@ create index if not exists idx_meldungen_created_at on meldungen (created_at des
 create index if not exists idx_meldungen_ip_created on meldungen (ip, created_at desc);
 create index if not exists idx_meldungen_status on meldungen (status);
 create index if not exists idx_fehlversuche_created on fehlversuche (created_at desc);
+
+-- Nachträglich für bestehende Installationen (einmalig ausführen, Fehler bei
+-- bereits vorhandenen Spalten sind unkritisch):
+alter table meldungen alter column objekt_id drop not null;
+alter table meldungen add column if not exists adresse text;
+alter table meldungen add column if not exists zuordnung_offen boolean not null default false;
+create index if not exists idx_meldungen_zuordnung on meldungen (zuordnung_offen) where zuordnung_offen;

@@ -219,6 +219,40 @@
   }
   .closing-call span{display:block; font-size:11.5px; color:#a8cfce; margin-top:9px; text-align:center;}
 
+
+  /* ---- Grössere, ruhigere Bedienelemente (Zielgruppe: Privathaushalte, oft am Handy) ---- */
+  label{font-size:14.5px; margin-top:22px;}
+  input, select, textarea{padding:14px 15px; font-size:16px; border-radius:10px;}
+  textarea{min-height:110px;}
+  .field-hint{font-size:12.5px; color:var(--grey); margin:6px 0 0; line-height:1.45;}
+  .cat-grid label{padding:15px 16px; font-size:15px;}
+  button.primary{padding:17px; font-size:16.5px;}
+  .pick-row{padding:24px 8px;}
+  .pick-label{font-size:16.5px;}
+  .pick-desc{font-size:13.5px;}
+
+  /* ---- Wiedererkennung von Stammkunden ---- */
+  .known{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    padding:15px 17px; border-radius:12px; margin-bottom:6px;
+    background:var(--tint-light-2); border:1px solid var(--teal-5);
+  }
+  .known-text strong{display:block; font-family:var(--font-head); font-size:15px; color:var(--headline);}
+  .known-text span{display:block; font-size:13px; color:var(--grey); margin-top:2px;}
+  .known-change{
+    background:none; border:none; cursor:pointer; padding:0;
+    font-family:var(--font-body); font-size:13px; color:var(--text-teal);
+    text-decoration:underline;
+  }
+
+  /* ---- Schrittanzeige ---- */
+  .steps{display:flex; align-items:center; gap:10px; margin-bottom:16px; font-size:13px; color:var(--grey);}
+  .steps b{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:24px; height:24px; border-radius:50%; background:var(--teal); color:#fff;
+    font-family:var(--font-head); font-size:12.5px; font-weight:600;
+  }
+
   /* ---- Inhaltsbereich ---- */
   main{max-width:1000px; margin:0 auto; padding:44px 28px 90px;}
   .narrow{max-width:620px; margin:0 auto;}
@@ -523,18 +557,38 @@
     <div id="form-screen" class="narrow" style="display:none;">
       <a href="#" class="back-link" onclick="backToCategory(); return false;" data-i18n="form.back">← Andere Kategorie wählen</a>
 
+      <div class="steps">
+        <b>2</b><span data-i18n="form.step">Schritt 2 von 2 — Ihre Angaben</span>
+      </div>
+
       <div class="card">
         <div id="form-title" class="form-title"></div>
 
-        <!-- Identifikation -->
-        <div class="row">
-          <div><label for="f-name" data-i18n="form.name">Name</label>
-          <input type="text" id="f-name" placeholder="Vor- und Nachname" data-i18n-ph="form.name.ph" autocomplete="name"></div>
-          <div><label for="f-objnr" data-i18n="form.objnr">Objekt-/Kundennummer</label>
-          <input type="text" id="f-objnr" placeholder="z.B. 109" data-i18n-ph="form.objnr.ph"></div>
+        <!-- Wiedererkennung: bei Stammkunden sind die Angaben schon da -->
+        <div id="known-customer" class="known" style="display:none;">
+          <div class="known-text">
+            <strong id="known-name"></strong>
+            <span id="known-detail"></span>
+          </div>
+          <button type="button" class="known-change" onclick="forgetCustomer()" data-i18n="form.notyou">Nicht Sie? Angaben ändern</button>
         </div>
-        <label for="f-email" data-i18n="form.email">E-Mail <span class="opt" data-i18n="form.email.hint">(für Ihre Bestätigung)</span></label>
+
+        <!-- Identifikation -->
+        <div id="ident-fields">
+          <label for="f-name" data-i18n="form.name">Ihr Name</label>
+          <input type="text" id="f-name" placeholder="Vor- und Nachname" data-i18n-ph="form.name.ph" autocomplete="name">
+
+          <label for="f-email" data-i18n="form.email">E-Mail-Adresse</label>
           <input type="email" id="f-email" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph" autocomplete="email">
+          <p class="field-hint" data-i18n="form.email.hint">Hierhin schicken wir Ihre Bestätigung.</p>
+
+          <label for="f-objnr" data-i18n="form.objnr">Kundennummer <span class="opt" data-i18n="opt">(optional)</span></label>
+          <input type="text" id="f-objnr" placeholder="z.B. 109" data-i18n-ph="form.objnr.ph" inputmode="numeric">
+          <p class="field-hint" data-i18n="form.objnr.hint">Steht auf Ihrer Rechnung. Kein Problem, wenn Sie sie nicht zur Hand haben — geben Sie stattdessen einfach Ihre Adresse an.</p>
+
+          <label for="f-adresse" data-i18n="form.adresse">Adresse des Objekts</label>
+          <input type="text" id="f-adresse" placeholder="Strasse, Nr., PLZ Ort" data-i18n-ph="form.adresse.ph" autocomplete="street-address">
+        </div>
 
         <!-- Terminverschiebung -->
         <div class="field-group" data-cat="verschiebung">
@@ -1051,6 +1105,13 @@ const translations = {
     'closing.title': 'Seit 1984 in Familienhand',
     'closing.text': 'Wir reinigen Privathaushalte in der Region Zürich — mit festen Ansprechpartnern, klaren Abläufen und Mitarbeitenden, die Ihr Zuhause kennen.',
     'closing.hint': 'Mo–Fr, 08:00–17:00 Uhr',
+    'form.name': 'Ihr Name', 'form.name.ph': 'Vor- und Nachname',
+    'form.email': 'E-Mail-Adresse', 'form.email.hint': 'Hierhin schicken wir Ihre Bestätigung.', 'form.email.ph': 'ihre@email.ch',
+    'form.objnr': 'Kundennummer', 'form.objnr.ph': 'z.B. 109',
+    'form.objnr.hint': 'Steht auf Ihrer Rechnung. Kein Problem, wenn Sie sie nicht zur Hand haben — geben Sie stattdessen einfach Ihre Adresse an.',
+    'form.adresse': 'Adresse des Objekts', 'form.adresse.ph': 'Strasse, Nr., PLZ Ort',
+    'form.notyou': 'Nicht Sie? Angaben ändern',
+    'form.step': 'Schritt 2 von 2 — Ihre Angaben',
     'pick.title': 'Worum geht es?',
     'pick.sub': 'Wählen Sie ein Anliegen — danach brauchen wir nur noch wenige Angaben.',
     're.1.title': 'Kein Mailverkehr nötig', 're.1.text': 'Ihre Meldung geht direkt an das zuständige Team, nicht in ein allgemeines Postfach.',
@@ -1066,9 +1127,6 @@ const translations = {
     'z.art': 'Art der Zusatzreinigung', 'z.fenster': 'Fensterreinigung', 'z.grund': 'Grundreinigung', 'z.umzug': 'Umzugsreinigung', 'z.teppich': 'Teppich-/Polsterreinigung', 'z.sonstiges': 'Sonstiges',
     'z.wunschtermin': 'Wunschtermin', 'z.details': 'Details', 'z.details.ph': 'z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …',
     'form.back': '← Andere Kategorie wählen',
-    'form.name': 'Name', 'form.name.ph': 'Vor- und Nachname',
-    'form.objnr': 'Objekt-/Kundennummer', 'form.objnr.ph': 'z.B. 109',
-    'form.email': 'E-Mail', 'form.email.hint': '(für Ihre Bestätigung)', 'form.email.ph': 'ihre@email.ch',
     'v.alt': 'Betroffener Termin', 'v.neu': 'Gewünschter neuer Termin', 'v.zeit': 'Uhrzeit', 'v.kommentar': 'Kommentar',
     'opt': '(optional)', 'misc.details.ph': 'Ergänzende Angaben …',
     'a.weitere': 'Sollen weitere Termine ebenfalls entfallen?', 'yes': 'Ja', 'no': 'Nein',
@@ -1102,6 +1160,13 @@ const translations = {
     'closing.title': 'Family-run since 1984',
     'closing.text': 'We clean private households in the Zurich region — with dedicated contacts, clear processes and staff who know your home.',
     'closing.hint': 'Mon–Fri, 08:00–17:00',
+    'form.name': 'Your name', 'form.name.ph': 'First and last name',
+    'form.email': 'Email address', 'form.email.hint': 'This is where we send your confirmation.', 'form.email.ph': 'your@email.com',
+    'form.objnr': 'Customer number', 'form.objnr.ph': 'e.g. 109',
+    'form.objnr.hint': 'You will find it on your invoice. No problem if you do not have it at hand — just give us your address instead.',
+    'form.adresse': 'Property address', 'form.adresse.ph': 'Street, no., postcode, town',
+    'form.notyou': 'Not you? Change details',
+    'form.step': 'Step 2 of 2 — your details',
     'pick.title': 'What can we do for you?',
     'pick.sub': 'Choose a request — after that we only need a few details.',
     're.1.title': 'No email back and forth', 're.1.text': 'Your report goes straight to the responsible team, not into a general inbox.',
@@ -1117,9 +1182,6 @@ const translations = {
     'z.art': 'Type of additional cleaning', 'z.fenster': 'Window cleaning', 'z.grund': 'Deep cleaning', 'z.umzug': 'Move-out/move-in cleaning', 'z.teppich': 'Carpet/upholstery cleaning', 'z.sonstiges': 'Other',
     'z.wunschtermin': 'Preferred date', 'z.details': 'Details', 'z.details.ph': 'e.g. number of rooms, approximate size, special requests …',
     'form.back': '← Choose a different category',
-    'form.name': 'Name', 'form.name.ph': 'First and last name',
-    'form.objnr': 'Property / customer number', 'form.objnr.ph': 'e.g. 109',
-    'form.email': 'Email', 'form.email.hint': '(for your confirmation)', 'form.email.ph': 'your@email.com',
     'v.alt': 'Affected appointment', 'v.neu': 'Preferred new date', 'v.zeit': 'Time', 'v.kommentar': 'Comment',
     'opt': '(optional)', 'misc.details.ph': 'Any additional details …',
     'a.weitere': 'Should further appointments be cancelled too?', 'yes': 'Yes', 'no': 'No',
@@ -1189,6 +1251,7 @@ function chooseCategory(cat){
   document.getElementById('form-title').textContent = catTitles()[cat];
   document.querySelectorAll('.field-group').forEach(g => g.classList.toggle('active', g.dataset.cat === cat));
   document.getElementById('form-screen').dataset.activeCat = cat;
+  applyKnownCustomer();
 }
 function backToCategory(){
   clearFormError();
@@ -1201,6 +1264,46 @@ function toggleAbsageFolge(weitereJa){
 }
 // Startzustand: "Nein" ist vorausgewählt -> Bemerkung zeigen, Bis-Feld verstecken
 toggleAbsageFolge(false);
+
+
+/* --- Wiedererkennung: Stammkunden sollen ihre Angaben nur einmal eintippen --- */
+const CUST_KEY = 'cs_kunde';
+
+function saveCustomer(c){
+  try{ localStorage.setItem(CUST_KEY, JSON.stringify(c)); }catch(e){}
+}
+function loadCustomer(){
+  try{ return JSON.parse(localStorage.getItem(CUST_KEY) || 'null'); }catch(e){ return null; }
+}
+function forgetCustomer(){
+  try{ localStorage.removeItem(CUST_KEY); }catch(e){}
+  ['f-name','f-email','f-objnr','f-adresse'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('known-customer').style.display = 'none';
+  document.getElementById('ident-fields').style.display = 'block';
+  document.getElementById('f-name').focus();
+}
+function applyKnownCustomer(){
+  const c = loadCustomer();
+  const box = document.getElementById('known-customer');
+  const fields = document.getElementById('ident-fields');
+  if(!c || !c.name){
+    box.style.display = 'none';
+    fields.style.display = 'block';
+    return;
+  }
+  document.getElementById('f-name').value = c.name || '';
+  document.getElementById('f-email').value = c.email || '';
+  document.getElementById('f-objnr').value = c.objektId || '';
+  document.getElementById('f-adresse').value = c.adresse || '';
+
+  document.getElementById('known-name').textContent = c.name;
+  const detail = [c.objektId ? (currentLang === 'de' ? 'Kundennummer ' : 'Customer no. ') + c.objektId : '', c.adresse, c.email]
+    .filter(Boolean).join(' · ');
+  document.getElementById('known-detail').textContent = detail;
+
+  box.style.display = 'flex';
+  fields.style.display = 'none';
+}
 
 function gatherDetails(cat){
   if(cat === 'verschiebung'){
@@ -1274,11 +1377,20 @@ async function submitForm(){
 
   const name = document.getElementById('f-name').value.trim();
   const objektId = document.getElementById('f-objnr').value.trim();
+  const adresse = document.getElementById('f-adresse').value.trim();
   const email = document.getElementById('f-email').value.trim();
-  if(!name || !objektId || !email){
+
+  if(!name || !email){
     showFormError(currentLang === 'de'
-      ? 'Bitte Name, Objekt-/Kundennummer und E-Mail-Adresse angeben.'
-      : 'Please provide your name, property/customer number, and email address.');
+      ? 'Bitte geben Sie Ihren Namen und Ihre E-Mail-Adresse an.'
+      : 'Please provide your name and email address.');
+    return;
+  }
+  // Kundennummer ODER Adresse genügt - niemand wird wegen einer fehlenden Nummer abgewiesen
+  if(!objektId && !adresse){
+    showFormError(currentLang === 'de'
+      ? 'Bitte geben Sie Ihre Kundennummer oder die Adresse des Objekts an.'
+      : 'Please provide either your customer number or the property address.');
     return;
   }
 
@@ -1318,6 +1430,7 @@ async function submitForm(){
       return;
     }
 
+    saveCustomer({name: name, email: email, objektId: objektId, adresse: adresse});
     console.log('Meldung gesendet:', result); // email/beekeeper Status zu Testzwecken
     document.getElementById('confirm-next').textContent = NEXT_STEPS[currentLang][cat] || '';
     document.getElementById('form-screen').style.display = 'none';

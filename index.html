@@ -593,7 +593,6 @@
   .cust-name{font-weight:600;}
   .cust-sub{font-size:11.5px; color:var(--grey);}
 </style>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Zum Inhalt springen / Skip to content</a>
@@ -1054,7 +1053,6 @@
         </div>
 
         <div id="form-error" class="form-error" role="alert" aria-live="assertive" style="display:none;"></div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAD8uKO86lXbHalU4" style="margin-top:20px;"></div>
         <button class="primary" onclick="submitForm()" data-i18n="submit">Absenden</button>
         <div class="trust-line"><span data-i18n="trust1">Antwort innert 1 Arbeitstag</span><span class="sep">·</span><span data-i18n="trust2">Direkt beim Putzfrauenservice</span></div>
       </div>
@@ -1986,7 +1984,7 @@ function zeigePortal(bereich){
 
   if(bereich === 'melden'){
     document.getElementById('view-kunde').classList.add('active');
-    resetToCategory();
+    backToCategory();
   } else if(bereich === 'kontakt'){
     document.getElementById('view-team').classList.add('active');
   } else {
@@ -2250,12 +2248,6 @@ async function submitForm(){
     return;
   }
 
-  const captchaToken = (typeof turnstile !== 'undefined') ? turnstile.getResponse() : '';
-  if(!captchaToken){
-    showFormError(currentLang === 'de' ? 'Bitte das Sicherheits-Häkchen bestätigen.' : 'Please complete the security check.');
-    return;
-  }
-
   const btn = document.querySelector('#form-screen button.primary');
   const originalLabel = btn.textContent;
   btn.textContent = currentLang === 'de' ? 'Wird gesendet …' : 'Sending …';
@@ -2267,11 +2259,7 @@ async function submitForm(){
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         kategorie: cat,
-        name: name,
-        objekt_id: objektId,
-        email: email,
-        details: gatherDetails(cat),
-        captcha_token: captchaToken
+        details: gatherDetails(cat)
       })
     });
 
@@ -2298,7 +2286,6 @@ async function submitForm(){
   } finally {
     btn.textContent = originalLabel;
     btn.disabled = false;
-    if(typeof turnstile !== 'undefined') turnstile.reset();
   }
 }
 function resetForm(){

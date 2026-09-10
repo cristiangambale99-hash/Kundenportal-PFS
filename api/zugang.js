@@ -43,8 +43,16 @@ function hashen(passwort, salt) {
 }
 
 module.exports = async function handler(req, res) {
-  const supabase = getSupabase();
   const action = (req.query && req.query.action) || "";
+
+  let supabase;
+  try {
+    supabase = getSupabase();
+  } catch (err) {
+    console.error("zugang.js: Supabase nicht erreichbar -", err.message);
+    res.status(500).json({ ok: false, error: "Portal nicht erreichbar.", detail: err.message });
+    return;
+  }
 
   if (req.method !== "POST" || action !== "aus-angebot") {
     res.status(400).json({ ok: false, error: "Unbekannter Aufruf." });

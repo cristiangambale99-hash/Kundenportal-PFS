@@ -127,9 +127,22 @@ const SPERRE_MINUTEN = 15;
 
 /* ----------------------------------------------------------------- Handler */
 module.exports = async function handler(req, res) {
-  const supabase = getSupabase();
   const action = (req.query && req.query.action) || "";
   const body = req.body || {};
+
+  // Alles im try: fehlt eine Umgebungsvariable, soll die Kundschaft eine
+  // lesbare Meldung sehen statt einer Absturzseite von Vercel.
+  let supabase;
+  try {
+    supabase = getSupabase();
+  } catch (err) {
+    console.error("konto.js: Supabase nicht erreichbar -", err.message);
+    res.status(500).json({
+      error: "Das Portal ist gerade nicht erreichbar. Bitte später erneut versuchen oder anrufen: 0844 355 355.",
+      detail: err.message,
+    });
+    return;
+  }
 
   try {
     /* ---------------------------------------------------------- Anmelden --- */
@@ -361,7 +374,3 @@ module.exports = async function handler(req, res) {
     res.status(500).json({ error: "Es ist ein Fehler aufgetreten. Bitte später erneut versuchen." });
   }
 };
-
-/* Für andere Module (zugang.js erzeugt das Erstpasswort) */
-module.exports.erstpasswortErzeugen = erstpasswortErzeugen;
-module.exports.hashen = hashen;

@@ -360,6 +360,33 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    /* --------------------------------------------- Eigene Meldungen --- */
+    if (action === "meldungen") {
+      const kontoId = sessionLesen(req);
+      if (!kontoId) { res.status(401).json({ error: "Nicht angemeldet." }); return; }
+
+      const { data: konto } = await supabase
+        .from("kundenzugaenge")
+        .select("email, objekt_id, aktiv")
+        .eq("id", kontoId)
+        .maybeSingle();
+
+      if (!konto || !konto.aktiv) { res.status(401).json({ error: "Nicht angemeldet." }); return; }
+
+      // Streng auf die eigene E-Mail eingegrenzt. Nicht ueber die Objektnummer:
+      // die ist erratbar, die Sitzung dagegen nicht.
+      const { data, error } = await supabase
+        .from("meldungen")
+        .select("id, kategorie, details, status, admin_note, created_at")
+        .ilike("email", konto.email)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error) { res.status(500).json({ error: error.message }); return; }
+      res.status(200).json({ ok: true, meldungen: data || [] });
+      return;
+    }
+
     /* ---------------------------------------------------------- Abmelden --- */
     if (action === "logout") {
       cookieLoeschen(res);

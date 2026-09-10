@@ -109,7 +109,9 @@ async function sendeTeamMail(meldung) {
   const html = `
     <h2>${label} über das Kundenportal</h2>
     <p><strong>Name:</strong> ${meldung.name || "-"}</p>
-    <p><strong>Objekt-/Kundennummer:</strong> ${meldung.objekt_id || "-"}</p>
+    <p><strong>Objekt-/Kundennummer:</strong> ${meldung.objekt_id || "— nicht angegeben"}</p>
+    <p><strong>Adresse:</strong> ${meldung.adresse || "-"}</p>
+    ${meldung.zuordnung_offen ? '<p style="color:#b3541e;"><strong>Zuordnung offen — bitte Kunde manuell zuordnen.</strong></p>' : ""}
     <p><strong>E-Mail:</strong> ${meldung.email || "-"}</p>
     <p><strong>Kategorie:</strong> ${label}</p>
     <pre style="white-space:pre-wrap; font-family:inherit;">${meldung.details || ""}</pre>
@@ -172,7 +174,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const { kategorie, name, objekt_id, email, details, captcha_token } = req.body || {};
+  const { kategorie, name, objekt_id, adresse, email, details, captcha_token } = req.body || {};
   const ip = getClientIp(req);
   const supabase = getSupabase();
 
@@ -181,9 +183,12 @@ module.exports = async function handler(req, res) {
     res.status(400).json({ error: `Ungültige oder fehlende Kategorie. Erlaubt: ${ERLAUBTE_KATEGORIEN.join(", ")}` });
     return;
   }
-  if (!name || !objekt_id || !email) {
+  // Objektnummer ist bewusst NICHT Pflicht: die wenigsten Privatkunden kennen sie
+  // auswendig. Wer sie nicht hat, gibt stattdessen die Adresse an - die Meldung
+  // wird trotzdem angenommen und im Admin-Bereich zur Zuordnung markiert.
+  if (!name || !email || (!objekt_id && !adresse)) {
     await logFehlversuch(supabase, { kategorie, grund: "pflichtfeld_fehlt", ip });
-    res.status(400).json({ error: "Name, Objekt-/Kundennummer und E-Mail-Adresse sind erforderlich." });
+    res.status(400).json({ error: "Bitte geben Sie Ihren Namen, Ihre E-Mail-Adresse und entweder die Kundennummer oder Ihre Adresse an." });
     return;
   }
 
@@ -201,23 +206,30 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const { data: objekt, error: objektError } = await supabase
-    .from("objekt_beekeeper_mapping")
-    .select("objekt_id")
-    .eq("objekt_id", objekt_id)
-    .maybeSingle();
-
-  if (objektError) {
-    console.error("Objektnummer-Prüfung fehlgeschlagen:", objektError.message);
-  } else if (!objekt) {
-    await logFehlversuch(supabase, { kategorie, grund: "unbekannte_objektnummer", ip });
-    res.status(400).json({
-      error: "Diese Objekt-/Kundennummer ist uns nicht bekannt. Bitte prüfen Sie die Angabe oder kontaktieren Sie uns direkt: 0844 355 355.",
-    });
-    return;
+  // Zuordnung pruefen - aber niemals eine echte Kundenmeldung abweisen.
+  // Unbekannt/leer => Meldung wird angenommen und im Admin-Bereich markiert.
+  let zuordnung = null;
+  if (objekt_id) {
+    const { data, error: objektError } = await supabase
+      .from("objekt_beekeeper_mapping")
+      .select("objekt_id")
+      .eq("objekt_id", objekt_id)
+      .maybeSingle();
+    if (objektError) console.error("Objektnummer-Pruefung fehlgeschlagen:", objektError.message);
+    else zuordnung = data;
   }
+  const zuordnungOffen = !zuordnung;
 
-  const meldung = { kategorie, name, objekt_id, email, details: details || "", ip, status: "neu" };
+  const meldung = {
+    kategorie, name,
+    objekt_id: objekt_id || null,
+    adresse: adresse || null,
+    email,
+    details: details || "",
+    ip,
+    status: "neu",
+    zuordnung_offen: zuordnungOffen,
+  };
 
   const { data: inserted, error: dbError } = await supabase
     .from("meldungen")
@@ -254,6 +266,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (!objekt_id) throw new Error("keine Objektnummer angegeben");
     const { data: mapping } = await supabase
       .from("objekt_beekeeper_mapping")
       .select("beekeeper_chat_id, status")

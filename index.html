@@ -326,6 +326,141 @@
   .konto-logout:hover{border-color:var(--teal); color:var(--text-teal);}
   @media (max-width:600px){ .konto-name{display:none;} }
 
+
+  /* ---- Portalmenü ---- */
+  .portal-nav{
+    background:var(--panel); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:40;
+  }
+  .portal-nav-inner{
+    max-width:1080px; margin:0 auto; padding:0 24px;
+    display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
+  }
+  .portal-nav-inner::-webkit-scrollbar{display:none;}
+  .pnav{
+    background:none; border:none; cursor:pointer; white-space:nowrap;
+    font-family:var(--font-body); font-size:14px; color:var(--grey);
+    padding:16px 14px; border-bottom:2px solid transparent; margin-bottom:-1px;
+  }
+  .pnav:hover{color:var(--text-teal);}
+  .pnav.active{color:var(--text-teal-dark); border-bottom-color:var(--teal); font-weight:600;}
+  .pnav .zahl{
+    display:inline-block; margin-left:6px; min-width:19px; padding:1px 5px;
+    background:var(--tint-light); color:var(--text-teal-dark);
+    border-radius:9px; font-size:11.5px; font-weight:600; text-align:center;
+  }
+
+  /* ---- Übersicht ---- */
+  .ueb-wrap{max-width:1080px; margin:0 auto; padding:34px 24px 70px;}
+  .ueb-gruss{margin:0 0 4px; font-family:var(--font-head); font-size:26px; color:var(--headline);}
+  .ueb-sub{margin:0 0 28px; font-size:14.5px; color:var(--grey);}
+
+  .ueb-karten{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin-bottom:34px;}
+  .ueb-karte{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px;
+  }
+  .ueb-karte .k-zahl{
+    font-family:var(--font-head); font-size:30px; line-height:1.1;
+    color:var(--text-teal-dark); margin-bottom:2px;
+  }
+  .ueb-karte .k-lbl{font-size:13px; color:var(--grey);}
+  .ueb-karte.hell{background:var(--tint-light); border-color:var(--teal-5);}
+
+  .ueb-titel{
+    font-family:var(--font-head); font-size:18px; color:var(--headline);
+    margin:0 0 4px;
+  }
+  .ueb-titel-sub{font-size:13.5px; color:var(--grey); margin:0 0 16px;}
+
+  .ueb-schnell{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; margin-bottom:38px;}
+  .schnell{
+    display:flex; align-items:center; gap:13px; text-align:left;
+    background:var(--panel); border:1px solid var(--line); border-radius:13px;
+    padding:16px 18px; cursor:pointer; font-family:var(--font-body);
+    transition:border-color .15s, transform .15s;
+  }
+  .schnell:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .schnell .s-ico{
+    flex:0 0 40px; height:40px; border-radius:11px; background:var(--tint-light);
+    display:flex; align-items:center; justify-content:center; color:var(--text-teal);
+  }
+  .schnell .s-lbl{font-size:14.5px; font-weight:600; color:var(--headline); display:block;}
+  .schnell .s-sub{font-size:12.5px; color:var(--grey);}
+
+  /* ---- Meldungsliste ---- */
+  .mld-filter{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;}
+  .mfilt{
+    background:var(--panel); border:1px solid var(--line); border-radius:20px;
+    padding:8px 15px; cursor:pointer; font-family:var(--font-body);
+    font-size:13px; color:var(--grey);
+  }
+  .mfilt:hover{border-color:var(--teal);}
+  .mfilt.active{background:var(--text-teal-dark); border-color:var(--text-teal-dark); color:#fff;}
+
+  .mld-karte{
+    background:var(--panel); border:1px solid var(--line); border-radius:13px;
+    padding:18px 20px; margin-bottom:12px;
+  }
+  .mld-kopf{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:8px;}
+  .mld-kat{font-family:var(--font-head); font-size:15.5px; color:var(--headline);}
+  .mld-datum{font-size:12.5px; color:var(--grey); white-space:nowrap;}
+  .mld-text{font-size:13.5px; color:var(--text); line-height:1.65; white-space:pre-wrap;}
+  .mld-antwort{
+    margin-top:13px; padding:12px 14px; background:var(--tint-light);
+    border-left:3px solid var(--teal); border-radius:0 8px 8px 0;
+    font-size:13px; line-height:1.6; color:var(--text-teal-dark);
+  }
+  .mld-antwort strong{display:block; font-size:11.5px; letter-spacing:.4px;
+    text-transform:uppercase; margin-bottom:4px; opacity:.75;}
+
+  .stat{
+    display:inline-block; padding:3px 10px; border-radius:20px;
+    font-size:11.5px; font-weight:600; white-space:nowrap;
+  }
+  .stat.neu{background:#FFF4E0; color:#8a5a12;}
+  .stat.akzeptieren{background:#E4F5EC; color:#1c7a5a;}
+  .stat.ablehnen{background:var(--warm-bg-2); color:var(--warm-text);}
+  .stat.erledigt{background:var(--tint-light); color:var(--text-teal-dark);}
+
+  .leer{
+    text-align:center; padding:56px 24px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  }
+  .leer .l-ico{color:var(--teal-5); margin-bottom:14px;}
+  .leer h3{font-family:var(--font-head); font-size:17px; color:var(--headline); margin:0 0 6px;}
+  .leer p{font-size:13.5px; color:var(--grey); margin:0 0 20px; line-height:1.6;}
+
+  /* ---- Konto ---- */
+  .konto-block{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:24px 26px; margin-bottom:16px;
+  }
+  .konto-block h3{font-family:var(--font-head); font-size:16px; color:var(--headline); margin:0 0 16px;}
+  .kz{display:flex; justify-content:space-between; gap:16px; padding:11px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .kz:last-child{border-bottom:none;}
+  .kz .kz-l{color:var(--grey);}
+  .kz .kz-w{color:var(--text); text-align:right;}
+
+  @media (max-width:600px){
+    .ueb-wrap{padding:24px 18px 60px;}
+    .ueb-gruss{font-size:22px;}
+    .portal-nav-inner{padding:0 16px;}
+    .pnav{font-size:13.5px; padding:14px 11px;}
+  }
+
+
+  /* Kopfzeile im angemeldeten Portal: schmal, ohne Farbverlauf */
+  .hero.kompakt{background:var(--panel); border-bottom:1px solid var(--line); padding-bottom:0;}
+  .hero.kompakt .hero-inner{padding-top:0; padding-bottom:0;}
+  .hero.kompakt .topbar{padding:14px 0;}
+
+  /* Schnellwahl: gleich hohe Kacheln, kein ungünstiger Umbruch */
+  .ueb-schnell{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));}
+  .schnell{align-items:flex-start;}
+  .schnell .s-lbl{margin-bottom:2px; line-height:1.3;}
+  .schnell .s-sub{line-height:1.45; display:block;}
+
   /* ---- Inhaltsbereich ---- */
   main{max-width:1000px; margin:0 auto; padding:44px 28px 90px;}
   .narrow{max-width:620px; margin:0 auto;}
@@ -513,6 +648,19 @@
   </svg>
 </div>
 
+<!-- ============ Portalmenü (nur angemeldet) ============ -->
+<div class="portal-nav" id="portal-nav" style="display:none;">
+  <div class="portal-nav-inner">
+    <button class="pnav active" data-ziel="uebersicht" onclick="zeigePortal('uebersicht')" data-i18n="nav.ueb">Übersicht</button>
+    <button class="pnav" data-ziel="melden" onclick="zeigePortal('melden')" data-i18n="nav.melden">Anliegen melden</button>
+    <button class="pnav" data-ziel="meldungen" onclick="zeigePortal('meldungen')">
+      <span data-i18n="nav.meine">Meine Meldungen</span><span class="zahl" id="nav-zahl" style="display:none;">0</span>
+    </button>
+    <button class="pnav" data-ziel="konto" onclick="zeigePortal('konto')" data-i18n="nav.konto">Mein Konto</button>
+    <button class="pnav" data-ziel="kontakt" onclick="zeigePortal('kontakt')" data-i18n="nav.kontakt">Kontakt</button>
+  </div>
+</div>
+
 <main id="main-content">
 
   <!-- ============ Anmeldung ============ -->
@@ -598,6 +746,105 @@
 
         <button class="primary" onclick="resetSpeichern()" data-i18n="auth.reset.btn">Passwort speichern</button>
         <div id="r-msg" class="auth-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Übersicht ============ -->
+  <div class="view" id="view-uebersicht">
+    <div class="ueb-wrap">
+      <h2 class="ueb-gruss" id="ueb-gruss">Guten Tag</h2>
+      <p class="ueb-sub" id="ueb-sub"></p>
+
+      <div class="ueb-karten">
+        <div class="ueb-karte hell">
+          <div class="k-zahl" id="k-offen">–</div>
+          <div class="k-lbl" data-i18n="ueb.offen">In Bearbeitung</div>
+        </div>
+        <div class="ueb-karte">
+          <div class="k-zahl" id="k-gesamt">–</div>
+          <div class="k-lbl" data-i18n="ueb.gesamt">Meldungen insgesamt</div>
+        </div>
+        <div class="ueb-karte">
+          <div class="k-zahl" id="k-objekt">–</div>
+          <div class="k-lbl" data-i18n="ueb.objekt">Ihre Kundennummer</div>
+        </div>
+      </div>
+
+      <h3 class="ueb-titel" data-i18n="ueb.schnell">Was möchten Sie melden?</h3>
+      <p class="ueb-titel-sub" data-i18n="ueb.schnell.sub">Ein Klick genügt — Ihre Angaben sind bereits hinterlegt.</p>
+
+      <div class="ueb-schnell">
+        <button class="schnell" onclick="schnellMelden('verschiebung')">
+          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M10 16h5m0 0-2-2m2 2-2 2"/></svg></span>
+          <span><span class="s-lbl" data-i18n="pick.versch">Termin verschieben</span><span class="s-sub" data-i18n="ueb.s1">Auf ein neues Datum legen</span></span>
+        </button>
+        <button class="schnell" onclick="schnellMelden('absage')">
+          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m10 15 4 4m0-4-4 4"/></svg></span>
+          <span><span class="s-lbl" data-i18n="pick.absage">Termin absagen</span><span class="s-sub" data-i18n="ueb.s2">Ersatzlos streichen</span></span>
+        </button>
+        <button class="schnell" onclick="schnellMelden('reklamation')">
+          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span><span class="s-lbl" data-i18n="pick.rekl">Reklamation</span><span class="s-sub" data-i18n="ueb.s3">Etwas war nicht wie vereinbart</span></span>
+        </button>
+        <button class="schnell" onclick="schnellMelden('schaden')">
+          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
+          <span><span class="s-lbl" data-i18n="pick.schaden">Schaden melden</span><span class="s-sub" data-i18n="ueb.s4">Ein Schaden ist entstanden</span></span>
+        </button>
+        <button class="schnell" onclick="schnellMelden('zusatz')">
+          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span><span class="s-lbl" data-i18n="pick.zusatz">Zusatzreinigung</span><span class="s-sub" data-i18n="ueb.s5">Fenster, Grundreinigung, Umzug</span></span>
+        </button>
+      </div>
+
+      <h3 class="ueb-titel" data-i18n="ueb.letzte">Ihre letzten Meldungen</h3>
+      <p class="ueb-titel-sub" data-i18n="ueb.letzte.sub">Den vollständigen Verlauf finden Sie unter „Meine Meldungen“.</p>
+      <div id="ueb-letzte"></div>
+    </div>
+  </div>
+
+  <!-- ============ Meine Meldungen ============ -->
+  <div class="view" id="view-meldungen">
+    <div class="ueb-wrap">
+      <h2 class="ueb-gruss" data-i18n="nav.meine">Meine Meldungen</h2>
+      <p class="ueb-sub" data-i18n="mld.sub">Alles, was Sie uns gemeldet haben — mit dem aktuellen Stand.</p>
+
+      <div class="mld-filter" id="mld-filter">
+        <button class="mfilt active" onclick="filterMeldungen('alle')" data-i18n="mld.alle">Alle</button>
+        <button class="mfilt" onclick="filterMeldungen('verschiebung')" data-i18n="pick.versch">Verschiebungen</button>
+        <button class="mfilt" onclick="filterMeldungen('absage')" data-i18n="pick.absage">Absagen</button>
+        <button class="mfilt" onclick="filterMeldungen('reklamation')" data-i18n="pick.rekl">Reklamationen</button>
+        <button class="mfilt" onclick="filterMeldungen('schaden')" data-i18n="pick.schaden">Schäden</button>
+        <button class="mfilt" onclick="filterMeldungen('zusatz')" data-i18n="pick.zusatz">Zusatzarbeiten</button>
+      </div>
+
+      <div id="mld-liste"></div>
+    </div>
+  </div>
+
+  <!-- ============ Mein Konto ============ -->
+  <div class="view" id="view-konto">
+    <div class="ueb-wrap" style="max-width:640px;">
+      <h2 class="ueb-gruss" data-i18n="nav.konto">Mein Konto</h2>
+      <p class="ueb-sub" data-i18n="konto.sub">Ihre hinterlegten Angaben. Änderungen nehmen wir gerne telefonisch entgegen.</p>
+
+      <div class="konto-block">
+        <h3 data-i18n="konto.daten">Ihre Angaben</h3>
+        <div class="kz"><span class="kz-l" data-i18n="form.name">Name</span><span class="kz-w" id="ko-name"></span></div>
+        <div class="kz"><span class="kz-l" data-i18n="auth.email">E-Mail-Adresse</span><span class="kz-w" id="ko-mail"></span></div>
+        <div class="kz"><span class="kz-l" data-i18n="ueb.objekt">Kundennummer</span><span class="kz-w" id="ko-objekt"></span></div>
+        <div class="kz"><span class="kz-l" data-i18n="form.adresse">Adresse</span><span class="kz-w" id="ko-adresse"></span></div>
+      </div>
+
+      <div class="konto-block">
+        <h3 data-i18n="konto.pw">Passwort ändern</h3>
+        <label for="k-pw" data-i18n="auth.pw.new">Neues Passwort</label>
+        <input type="password" id="k-pw" autocomplete="new-password">
+        <p class="field-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
+        <label for="k-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
+        <input type="password" id="k-pw2" autocomplete="new-password">
+        <button class="primary" onclick="kontoPasswortAendern()" data-i18n="auth.set.btn">Passwort speichern</button>
+        <div id="k-msg" class="auth-msg"></div>
       </div>
     </div>
   </div>
@@ -1246,6 +1493,20 @@ rechtliche Schritte vor.</p>
 <script>
 const translations = {
   de: {
+    'nav.ueb': 'Übersicht', 'nav.melden': 'Anliegen melden', 'nav.meine': 'Meine Meldungen',
+    'nav.konto': 'Mein Konto', 'nav.kontakt': 'Kontakt',
+    'ueb.offen': 'In Bearbeitung', 'ueb.gesamt': 'Meldungen insgesamt', 'ueb.objekt': 'Ihre Kundennummer',
+    'ueb.schnell': 'Was möchten Sie melden?',
+    'ueb.schnell.sub': 'Ein Klick genügt — Ihre Angaben sind bereits hinterlegt.',
+    'ueb.s1': 'Auf ein neues Datum legen', 'ueb.s2': 'Ersatzlos streichen',
+    'ueb.s3': 'Etwas war nicht wie vereinbart', 'ueb.s4': 'Ein Schaden ist entstanden',
+    'ueb.s5': 'Fenster, Grundreinigung, Umzug',
+    'ueb.letzte': 'Ihre letzten Meldungen',
+    'ueb.letzte.sub': 'Den vollständigen Verlauf finden Sie unter „Meine Meldungen“.',
+    'mld.sub': 'Alles, was Sie uns gemeldet haben — mit dem aktuellen Stand.',
+    'mld.alle': 'Alle',
+    'konto.sub': 'Ihre hinterlegten Angaben. Änderungen nehmen wir gerne telefonisch entgegen.',
+    'konto.daten': 'Ihre Angaben', 'konto.pw': 'Passwort ändern',
     'auth.login.h': 'Anmelden',
     'auth.login.sub': 'Ihre Anmelde-ID ist Ihre E-Mail-Adresse. Das Erstpasswort finden Sie auf Ihrem Reinigungsvertrag.',
     'auth.login.btn': 'Anmelden',
@@ -1322,6 +1583,20 @@ const translations = {
     'photo.alert': 'Bitte fügen Sie ein Foto hinzu — dieses Feld ist für diese Meldungsart erforderlich.'
   },
   en: {
+    'nav.ueb': 'Overview', 'nav.melden': 'Send a request', 'nav.meine': 'My requests',
+    'nav.konto': 'My account', 'nav.kontakt': 'Contact',
+    'ueb.offen': 'In progress', 'ueb.gesamt': 'Requests in total', 'ueb.objekt': 'Your customer number',
+    'ueb.schnell': 'What would you like to tell us?',
+    'ueb.schnell.sub': 'One click is enough — your details are already stored.',
+    'ueb.s1': 'Move to a new date', 'ueb.s2': 'Cancel without replacement',
+    'ueb.s3': 'Something was not as agreed', 'ueb.s4': 'Damage has occurred',
+    'ueb.s5': 'Windows, deep clean, moving out',
+    'ueb.letzte': 'Your latest requests',
+    'ueb.letzte.sub': 'You will find the full history under “My requests”.',
+    'mld.sub': 'Everything you have sent us — with its current status.',
+    'mld.alle': 'All',
+    'konto.sub': 'Your stored details. We are happy to make changes over the phone.',
+    'konto.daten': 'Your details', 'konto.pw': 'Change password',
     'auth.login.h': 'Sign in',
     'auth.login.sub': 'Your login ID is your email address. You will find your initial password on your cleaning contract.',
     'auth.login.btn': 'Sign in',
@@ -1489,12 +1764,32 @@ function applyKnownCustomer(){
 let KUNDE = null;   // { name, email, objekt_id, adresse } wenn angemeldet
 
 function zeigeAuth(welche){
-  ['view-login','view-pw-setzen','view-vergessen','view-reset','view-kunde']
+  ['view-login','view-pw-setzen','view-vergessen','view-reset','view-kunde',
+   'view-uebersicht','view-meldungen','view-konto','view-team','view-datenschutz','view-agb']
     .forEach(id => {
       const el = document.getElementById(id);
       if(el) el.classList.remove('active');
     });
-  const ziel = document.getElementById(welche === 'kunde' ? 'view-kunde' : 'view-' + welche);
+
+  // Angemeldet: Menü zeigen, Hero weg. Der Hero ist Werbefläche für Gäste,
+  // im Portal nimmt er nur Platz von den eigentlichen Inhalten weg.
+  const drin = (welche === 'kunde');
+  const nav = document.getElementById('portal-nav');
+  // Nur den Werbeteil ausblenden - die Kopfzeile mit Logo und "Abmelden"
+  // steckt im selben Element und muss sichtbar bleiben.
+  const heroBody = document.querySelector('.hero-body');
+  const hero = document.querySelector('.hero');
+  if(nav)      nav.style.display      = drin ? 'block' : 'none';
+  if(heroBody) heroBody.style.display = drin ? 'none'  : '';
+  const welle = document.querySelector('.wave-divider');
+  if(welle) welle.style.display = drin ? 'none' : '';
+  if(hero)     hero.classList.toggle('kompakt', drin);
+
+  if(drin){
+    zeigePortal('uebersicht');
+    return;
+  }
+  const ziel = document.getElementById('view-' + welche);
   if(ziel) ziel.classList.add('active');
   window.scrollTo(0, 0);
 }
@@ -1662,6 +1957,209 @@ async function kontoLaden(){
 }
 
 document.addEventListener('DOMContentLoaded', kontoLaden);
+
+
+/* ==========================================================================
+   Portalbereiche: Übersicht, Meldungen, Konto
+   ========================================================================== */
+
+let MELDUNGEN = [];
+let MFILTER = 'alle';
+
+const KAT_LABEL = {
+  de: { verschiebung:'Terminverschiebung', absage:'Terminabsage', reklamation:'Reklamation',
+        schaden:'Schadenmeldung', zusatz:'Zusatzreinigung' },
+  en: { verschiebung:'Appointment change', absage:'Cancellation', reklamation:'Complaint',
+        schaden:'Damage report', zusatz:'Additional cleaning' }
+};
+const STAT_LABEL = {
+  de: { neu:'In Bearbeitung', akzeptieren:'Angenommen', ablehnen:'Abgelehnt', erledigt:'Erledigt' },
+  en: { neu:'In progress', akzeptieren:'Accepted', ablehnen:'Declined', erledigt:'Done' }
+};
+
+function zeigePortal(bereich){
+  ['view-uebersicht','view-meldungen','view-konto','view-kunde','view-team','view-datenschutz','view-agb']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('active'); });
+
+  document.querySelectorAll('.pnav').forEach(b =>
+    b.classList.toggle('active', b.dataset.ziel === bereich));
+
+  if(bereich === 'melden'){
+    document.getElementById('view-kunde').classList.add('active');
+    resetToCategory();
+  } else if(bereich === 'kontakt'){
+    document.getElementById('view-team').classList.add('active');
+  } else {
+    const el = document.getElementById('view-' + bereich);
+    if(el) el.classList.add('active');
+  }
+
+  if(bereich === 'uebersicht') uebersichtFuellen();
+  if(bereich === 'meldungen')  meldungenZeichnen();
+  if(bereich === 'konto')      kontoFuellen();
+
+  window.scrollTo(0, 0);
+}
+
+/* --- Meldungen laden --- */
+async function meldungenLaden(){
+  try{
+    const r = await fetch('/api/konto?action=meldungen');
+    if(!r.ok) throw new Error('nicht verfügbar');
+    const d = await r.json();
+    MELDUNGEN = d.meldungen || [];
+  }catch(e){
+    MELDUNGEN = [];
+  }
+  const offen = MELDUNGEN.filter(m => m.status === 'neu').length;
+  const zahl = document.getElementById('nav-zahl');
+  if(zahl){
+    zahl.textContent = MELDUNGEN.length;
+    zahl.style.display = MELDUNGEN.length ? 'inline-block' : 'none';
+  }
+  return { offen, gesamt: MELDUNGEN.length };
+}
+
+function datumKurz(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString(currentLang === 'de' ? 'de-CH' : 'en-GB',
+    { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function meldungKarte(m){
+  const L = currentLang;
+  const kat = (KAT_LABEL[L] || KAT_LABEL.de)[m.kategorie] || m.kategorie;
+  const st  = (STAT_LABEL[L] || STAT_LABEL.de)[m.status] || m.status;
+  const antwortTitel = L === 'de' ? 'Antwort vom Putzfrauenservice' : 'Reply from the cleaning team';
+  return `
+    <div class="mld-karte">
+      <div class="mld-kopf">
+        <div>
+          <div class="mld-kat">${kat}</div>
+          <div class="mld-datum">${datumKurz(m.created_at)}</div>
+        </div>
+        <span class="stat ${m.status}">${st}</span>
+      </div>
+      ${m.details ? `<div class="mld-text">${escapeHtml(m.details)}</div>` : ''}
+      ${m.admin_note ? `<div class="mld-antwort"><strong>${antwortTitel}</strong>${escapeHtml(m.admin_note)}</div>` : ''}
+    </div>`;
+}
+
+function escapeHtml(s){
+  return String(s || '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function leerBlock(titel, text, knopf){
+  return `
+    <div class="leer">
+      <div class="l-ico">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+        </svg>
+      </div>
+      <h3>${titel}</h3>
+      <p>${text}</p>
+      ${knopf ? `<button class="primary" style="max-width:260px;margin:0 auto;" onclick="zeigePortal('melden')">${knopf}</button>` : ''}
+    </div>`;
+}
+
+/* --- Übersicht --- */
+async function uebersichtFuellen(){
+  const L = currentLang;
+  if(KUNDE){
+    document.getElementById('ueb-gruss').textContent =
+      (L === 'de' ? 'Guten Tag, ' : 'Hello, ') + (KUNDE.name || '');
+    document.getElementById('ueb-sub').textContent =
+      [KUNDE.adresse, KUNDE.objekt_id ? (L === 'de' ? 'Kundennummer ' : 'Customer no. ') + KUNDE.objekt_id : '']
+        .filter(Boolean).join(' · ');
+    document.getElementById('k-objekt').textContent = KUNDE.objekt_id || '–';
+  }
+
+  const { offen, gesamt } = await meldungenLaden();
+  document.getElementById('k-offen').textContent = offen;
+  document.getElementById('k-gesamt').textContent = gesamt;
+
+  const box = document.getElementById('ueb-letzte');
+  if(!MELDUNGEN.length){
+    box.innerHTML = leerBlock(
+      L === 'de' ? 'Noch keine Meldungen' : 'No submissions yet',
+      L === 'de' ? 'Sobald Sie uns etwas melden, sehen Sie hier den Verlauf und unseren Bearbeitungsstand.'
+                 : 'As soon as you send us something, you will see the history and its status here.',
+      L === 'de' ? 'Erste Meldung erfassen' : 'Send your first request');
+  } else {
+    box.innerHTML = MELDUNGEN.slice(0, 3).map(meldungKarte).join('');
+  }
+}
+
+/* --- Meine Meldungen --- */
+function filterMeldungen(kat){
+  MFILTER = kat;
+  document.querySelectorAll('.mfilt').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${kat}'`)));
+  meldungenZeichnen(true);
+}
+
+async function meldungenZeichnen(nurZeichnen){
+  const L = currentLang;
+  if(!nurZeichnen) await meldungenLaden();
+
+  const liste = MFILTER === 'alle' ? MELDUNGEN : MELDUNGEN.filter(m => m.kategorie === MFILTER);
+  const box = document.getElementById('mld-liste');
+
+  if(!liste.length){
+    box.innerHTML = MELDUNGEN.length
+      ? leerBlock(L === 'de' ? 'Nichts in dieser Kategorie' : 'Nothing in this category',
+                  L === 'de' ? 'Wählen Sie oben eine andere Kategorie oder „Alle“.'
+                             : 'Choose another category above, or “All”.', '')
+      : leerBlock(L === 'de' ? 'Noch keine Meldungen' : 'No submissions yet',
+                  L === 'de' ? 'Sobald Sie uns etwas melden, sehen Sie hier den Verlauf und unseren Bearbeitungsstand.'
+                             : 'As soon as you send us something, you will see the history and its status here.',
+                  L === 'de' ? 'Erste Meldung erfassen' : 'Send your first request');
+    return;
+  }
+  box.innerHTML = liste.map(meldungKarte).join('');
+}
+
+/* --- Konto --- */
+function kontoFuellen(){
+  if(!KUNDE) return;
+  document.getElementById('ko-name').textContent = KUNDE.name || '–';
+  document.getElementById('ko-mail').textContent = KUNDE.email || '–';
+  document.getElementById('ko-objekt').textContent = KUNDE.objekt_id || '–';
+  document.getElementById('ko-adresse').textContent = KUNDE.adresse || '–';
+}
+
+async function kontoPasswortAendern(){
+  const pw = document.getElementById('k-pw').value;
+  const pw2 = document.getElementById('k-pw2').value;
+  if(pw !== pw2){
+    meldung('k-msg', currentLang === 'de'
+      ? 'Die beiden Passwörter stimmen nicht überein.'
+      : 'The two passwords do not match.');
+    return;
+  }
+  meldung('k-msg', currentLang === 'de' ? 'Wird gespeichert …' : 'Saving …', 'ok');
+  try{
+    const r = await fetch('/api/konto?action=passwort-setzen', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ passwort: pw })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Speichern fehlgeschlagen');
+    document.getElementById('k-pw').value = '';
+    document.getElementById('k-pw2').value = '';
+    meldung('k-msg', currentLang === 'de' ? 'Passwort geändert.' : 'Password changed.', 'ok');
+  }catch(err){
+    meldung('k-msg', err.message);
+  }
+}
+
+/* --- Direkt aus der Übersicht ins Formular --- */
+function schnellMelden(kat){
+  zeigePortal('melden');
+  chooseCategory(kat);
+}
 
 function gatherDetails(cat){
   if(cat === 'verschiebung'){

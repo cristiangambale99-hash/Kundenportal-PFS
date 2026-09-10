@@ -2,7 +2,7 @@
  * POST /api/melde — nimmt eine Meldung aus dem Kundenportal entgegen.
  *
  * Ablauf:
- *   0. Captcha, Rate-Limit und Objekt-/Kundennummer prüfen
+ *   0. Anmeldung prüfen (die Sitzung ersetzt das frühere Captcha)
  *   1. In Supabase speichern (Tabelle "meldungen", Status "neu")
  *   2. Interne E-Mail an putzfrauenservice@clean-service.ch
  *   3. Bei Absagen sofort eine Bestätigung an den Kunden
@@ -12,6 +12,7 @@
  * Projekt ohne verschachtelte Ordner auskommt und sich leicht hochladen lässt.
  */
 
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
 
@@ -27,27 +28,6 @@ function getSupabase() {
   return _client;
 }
 
-/* ----------------------------------------------------------------- Captcha */
-async function verifyTurnstile(token, ip) {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
-  if (!secret) {
-    console.warn("TURNSTILE_SECRET_KEY fehlt - Captcha-Prüfung wird übersprungen.");
-    return { success: true, skipped: true };
-  }
-  if (!token) return { success: false, error: "Kein Captcha-Token übermittelt." };
-
-  const params = new URLSearchParams();
-  params.append("secret", secret);
-  params.append("response", token);
-  if (ip) params.append("remoteip", ip);
-
-  const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    body: params,
-  });
-  const data = await resp.json();
-  return { success: !!data.success, raw: data };
-}
 
 /* -------------------------------------------------------------- Rate-Limit */
 const RATE_LIMIT = 5;          // max. Meldungen ...
@@ -168,13 +148,34 @@ async function sendGroupMessage(chatId, body) {
 const ERLAUBTE_KATEGORIEN = ["verschiebung", "absage", "reklamation", "schaden", "zusatz"];
 const SOFORT_BESTAETIGEN = ["absage"];
 
+/* ---------------------------------------------------------------- Sitzung */
+// Muss zu konto.js passen - sonst wird niemand erkannt.
+const COOKIE = "kunde_session";
+
+function sessionGeheim() {
+  return process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_KEY || "cs-portal";
+}
+
+function sessionLesen(req) {
+  const kopf = req.headers.cookie || "";
+  const treffer = kopf.split(";").map(c => c.trim()).find(c => c.startsWith(COOKIE + "="));
+  if (!treffer) return null;
+  const [kontoId, ablauf, sig] = treffer.slice(COOKIE.length + 1).split(".");
+  if (!kontoId || !ablauf || !sig) return null;
+  const soll = crypto.createHmac("sha256", sessionGeheim())
+                     .update(`${kontoId}.${ablauf}`).digest("hex").slice(0, 32);
+  if (sig !== soll) return null;
+  if (Date.now() > Number(ablauf)) return null;
+  return kontoId;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
 
-  const { kategorie, name, objekt_id, adresse, email, details, captcha_token } = req.body || {};
+  const { kategorie, details } = req.body || {};
   const ip = getClientIp(req);
   const supabase = getSupabase();
 
@@ -183,21 +184,33 @@ module.exports = async function handler(req, res) {
     res.status(400).json({ error: `Ungültige oder fehlende Kategorie. Erlaubt: ${ERLAUBTE_KATEGORIEN.join(", ")}` });
     return;
   }
-  // Objektnummer ist bewusst NICHT Pflicht: die wenigsten Privatkunden kennen sie
-  // auswendig. Wer sie nicht hat, gibt stattdessen die Adresse an - die Meldung
-  // wird trotzdem angenommen und im Admin-Bereich zur Zuordnung markiert.
-  if (!name || !email || (!objekt_id && !adresse)) {
-    await logFehlversuch(supabase, { kategorie, grund: "pflichtfeld_fehlt", ip });
-    res.status(400).json({ error: "Bitte geben Sie Ihren Namen, Ihre E-Mail-Adresse und entweder die Kundennummer oder Ihre Adresse an." });
+
+  /* Identitaet kommt aus der Sitzung, nicht aus dem Formular.
+     Wuerden wir Name und Objektnummer aus dem Body uebernehmen, koennte eine
+     angemeldete Person die Felder manipulieren und in fremdem Namen melden.
+     Die Anmeldung ersetzt zugleich das Captcha: Wer ein Passwort hat, ist kein Bot. */
+  const kontoId = sessionLesen(req);
+  if (!kontoId) {
+    await logFehlversuch(supabase, { kategorie, grund: "nicht_angemeldet", ip });
+    res.status(401).json({ error: "Bitte melden Sie sich an, um eine Meldung zu senden." });
     return;
   }
 
-  const captcha = await verifyTurnstile(captcha_token, ip);
-  if (!captcha.success) {
-    await logFehlversuch(supabase, { kategorie, grund: "captcha_fehlgeschlagen", ip });
-    res.status(400).json({ error: "Captcha-Prüfung fehlgeschlagen. Bitte Seite neu laden und erneut versuchen." });
+  const { data: konto } = await supabase
+    .from("kundenzugaenge")
+    .select("name, email, objekt_id, adresse, aktiv")
+    .eq("id", kontoId)
+    .maybeSingle();
+
+  if (!konto || !konto.aktiv) {
+    res.status(401).json({ error: "Bitte melden Sie sich an, um eine Meldung zu senden." });
     return;
   }
+
+  const name = konto.name;
+  const email = konto.email;
+  const objekt_id = konto.objekt_id;
+  const adresse = konto.adresse;
 
   const rate = await checkRateLimit(supabase, ip);
   if (!rate.allowed) {

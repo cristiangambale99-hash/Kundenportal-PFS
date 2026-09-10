@@ -1,17 +1,19 @@
 /**
- * /api/zugang — persönlicher Kundenzugang ohne Passwort.
+ * /api/zugang — Kundenkonto bei Vertragsabschluss anlegen.
  *
- *   GET  /api/zugang?token=7FQ2-XR91    Kundendaten zum Zugangslink holen
- *   POST /api/zugang?action=anfordern   { email }  Link erneut zusenden
+ *   POST /api/zugang?action=aus-angebot   (Header X-Api-Key)
+ *     { objekt_id, name, email, adresse }
+ *   -> { ok, anmeldeId, erstpasswort }
  *
- * Warum kein Passwort: Bei rund 550 Privathaushalten - viele davon ältere
- * Kundinnen und Kunden - erzeugen vergessene Passwörter mehr Aufwand fürs
- * Team, als das Portal an Mailverkehr einspart. Der Zugangslink kommt mit der
- * Auftragserteilung (als Link und QR-Code) und funktioniert dauerhaft.
+ * Das Erstpasswort wird auf den Vertrag gedruckt. Beim ersten Anmelden muss die
+ * Kundschaft ein eigenes Passwort setzen (siehe konto.js).
+ *
+ * Aufgerufen von der Angebots-Webapp, abgesichert ueber einen gemeinsamen
+ * Schluessel im Header X-Api-Key.
  */
 
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
-const { Resend } = require("resend");
 
 let _client = null;
 function getSupabase() {
@@ -24,133 +26,92 @@ function getSupabase() {
   return _client;
 }
 
-function getClientIp(req) {
-  const fwd = req.headers["x-forwarded-for"];
-  if (fwd) return fwd.split(",")[0].trim();
-  return req.socket?.remoteAddress || null;
+/* Erstpasswort: gut lesbar, ohne verwechselbare Zeichen (kein O/0, kein I/1),
+   damit es sich vom Vertrag abtippen laesst. */
+const PW_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function erstpasswortErzeugen() {
+  const teil = n => Array.from({ length: n }, () =>
+    PW_ALPHABET[crypto.randomInt(PW_ALPHABET.length)]).join("");
+  return `${teil(4)}-${teil(4)}`;
 }
 
-const PORTAL_URL = (process.env.PORTAL_URL || "https://kundenportal-two.vercel.app").replace(/\/$/, "");
-
-/** Max. 3 Link-Anforderungen pro E-Mail und Stunde. */
-async function zuVieleAnfragen(supabase, email) {
-  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count } = await supabase
-    .from("zugang_versand")
-    .select("id", { count: "exact", head: true })
-    .ilike("email", email)
-    .gte("created_at", since);
-  return (count || 0) >= 3;
-}
-
-async function sendeZugangsMail(email, name, token) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
-  const link = `${PORTAL_URL}/k/${token}`;
-
-  const html = `
-    <p>Guten Tag ${name || ""}</p>
-    <p>Hier ist Ihr persönlicher Zugang zum Kundenportal:</p>
-    <p style="margin:22px 0;">
-      <a href="${link}" style="background:#2bb6b7; color:#ffffff; text-decoration:none;
-         padding:14px 24px; border-radius:9px; font-weight:600; display:inline-block;">
-        Kundenportal öffnen
-      </a>
-    </p>
-    <p style="font-size:13px; color:#5b6b76;">
-      Oder diesen Link im Browser öffnen:<br>
-      <a href="${link}">${link}</a>
-    </p>
-    <p style="font-size:13px; color:#5b6b76;">
-      Sie brauchen kein Passwort. Speichern Sie den Link als Lesezeichen, dann sind
-      Ihre Angaben beim nächsten Mal bereits ausgefüllt.
-    </p>
-    <p style="color:#7c8c8b; font-size:12.5px; margin-top:26px;">
-      Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
-    </p>
-  `;
-
-  return new Resend(apiKey).emails.send({
-    from: "Clean Service Scaramuzzo AG <kundenportal@clean-service.ch>",
-    to: email,
-    subject: "Ihr Zugang zum Kundenportal",
-    html,
-  });
+const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
+function hashen(passwort, salt) {
+  return crypto.scryptSync(String(passwort), salt, SCRYPT.keylen, {
+    N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p,
+  }).toString("hex");
 }
 
 module.exports = async function handler(req, res) {
   const supabase = getSupabase();
   const action = (req.query && req.query.action) || "";
 
-  /* --- Zugangsdaten zu einem Token holen --- */
-  if (req.method === "GET") {
-    const token = (req.query.token || "").trim().toUpperCase();
-    if (!token) { res.status(400).json({ error: "Kein Token angegeben." }); return; }
-
-    const { data, error } = await supabase
-      .from("kundenzugaenge")
-      .select("token, objekt_id, name, email, adresse, aktiv")
-      .eq("token", token)
-      .maybeSingle();
-
-    if (error) { res.status(500).json({ error: error.message }); return; }
-    if (!data || !data.aktiv) {
-      res.status(404).json({ error: "Dieser Zugangslink ist nicht (mehr) gültig." });
-      return;
-    }
-
-    // Nutzung protokollieren (nice-to-have, darf nie blockieren)
-    supabase.from("kundenzugaenge")
-      .update({ letzte_nutzung: new Date().toISOString() })
-      .eq("token", token)
-      .then(() => {}, () => {});
-
-    res.status(200).json({
-      objekt_id: data.objekt_id,
-      name: data.name,
-      email: data.email,
-      adresse: data.adresse,
-    });
+  if (req.method !== "POST" || action !== "aus-angebot") {
+    res.status(400).json({ ok: false, error: "Unbekannter Aufruf." });
     return;
   }
 
-  /* --- Zugangslink erneut zusenden --- */
-  if (req.method === "POST" && action === "anfordern") {
-    const email = ((req.body || {}).email || "").trim();
-    if (!email || !email.includes("@")) {
-      res.status(400).json({ error: "Bitte geben Sie eine gültige E-Mail-Adresse an." });
-      return;
-    }
+  const erwartet = (process.env.ANGEBOT_API_KEY || "").trim();
+  const gesendet = (req.headers["x-api-key"] || "").trim();
+  if (!erwartet) { res.status(500).json({ ok: false, error: "ANGEBOT_API_KEY ist serverseitig nicht gesetzt." }); return; }
+  if (gesendet !== erwartet) { res.status(401).json({ ok: false, error: "Nicht berechtigt." }); return; }
 
-    if (await zuVieleAnfragen(supabase, email)) {
-      res.status(429).json({
-        error: "Es wurden bereits mehrere Links an diese Adresse geschickt. Bitte prüfen Sie Ihren Posteingang oder rufen Sie uns an: 0844 355 355.",
-      });
-      return;
-    }
-
-    await supabase.from("zugang_versand").insert({ email, ip: getClientIp(req) });
-
-    const { data } = await supabase
-      .from("kundenzugaenge")
-      .select("token, name, email, aktiv")
-      .ilike("email", email)
-      .eq("aktiv", true)
-      .maybeSingle();
-
-    if (data) {
-      try { await sendeZugangsMail(data.email, data.name, data.token); }
-      catch (err) { console.error("Zugangsmail fehlgeschlagen:", err.message); }
-    }
-
-    // Bewusst immer dieselbe Antwort: sonst liesse sich herausfinden,
-    // welche Adressen bei uns Kunde sind.
-    res.status(200).json({
-      ok: true,
-      hinweis: "Falls diese Adresse bei uns hinterlegt ist, haben wir Ihnen soeben Ihren Zugangslink geschickt.",
-    });
+  const { objekt_id, name, email, adresse } = req.body || {};
+  if (!objekt_id || !name || !email) {
+    res.status(400).json({ ok: false, error: "objekt_id, name und email sind erforderlich." });
     return;
   }
 
-  res.status(400).json({ error: "Unbekannter Aufruf." });
+  const mail = String(email).trim().toLowerCase();
+
+  try {
+    // Konto zu dieser E-Mail schon vorhanden? Dann nicht ueberschreiben -
+    // sonst wuerde ein neuer Vertrag das selbstgewaehlte Passwort loeschen.
+    const { data: vorhanden } = await supabase
+      .from("kundenzugaenge")
+      .select("id, passwort_gesetzt")
+      .ilike("email", mail)
+      .maybeSingle();
+
+    if (vorhanden) {
+      if (vorhanden.passwort_gesetzt) {
+        // Kundschaft hat bereits ein eigenes Passwort - unangetastet lassen.
+        res.status(200).json({
+          ok: true, anmeldeId: mail, erstpasswort: null, bestehend: true,
+        });
+        return;
+      }
+      // Konto existiert, aber Erstpasswort noch nicht eingeloest: neu erzeugen.
+      const pw = erstpasswortErzeugen();
+      const salt = crypto.randomBytes(16).toString("hex");
+      await supabase.from("kundenzugaenge").update({
+        objekt_id: String(objekt_id), name, adresse: adresse || null,
+        passwort_salt: salt, passwort_hash: hashen(pw, salt),
+        passwort_gesetzt: false, aktiv: true,
+      }).eq("id", vorhanden.id);
+
+      res.status(200).json({ ok: true, anmeldeId: mail, erstpasswort: pw });
+      return;
+    }
+
+    const pw = erstpasswortErzeugen();
+    const salt = crypto.randomBytes(16).toString("hex");
+    const { error } = await supabase.from("kundenzugaenge").insert({
+      objekt_id: String(objekt_id),
+      name,
+      email: mail,
+      adresse: adresse || null,
+      passwort_salt: salt,
+      passwort_hash: hashen(pw, salt),
+      passwort_gesetzt: false,
+      aktiv: true,
+    });
+
+    if (error) { res.status(500).json({ ok: false, error: error.message }); return; }
+    res.status(200).json({ ok: true, anmeldeId: mail, erstpasswort: pw });
+
+  } catch (err) {
+    console.error("zugang.js:", err);
+    res.status(500).json({ ok: false, error: "Konto konnte nicht angelegt werden." });
+  }
 };

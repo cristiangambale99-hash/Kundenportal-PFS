@@ -82,49 +82,24 @@ async function sendeAdminAntwort({ email, name, betreff, nachricht }) {
 }
 
 
-/* ------------------------------------------------------- Kundenzugaenge */
-// Gut lesbares Format, ohne leicht verwechselbare Zeichen (kein O/0, I/1)
-const TOKEN_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-function makeToken() {
-  const pick = n => Array.from({ length: n }, () =>
-    TOKEN_ALPHABET[crypto.randomInt(TOKEN_ALPHABET.length)]).join("");
-  return `${pick(4)}-${pick(4)}`;
+/* ------------------------------------------------------- Kundenkonten */
+// Erstpasswort fuer Bestandskunden ohne neuen Vertrag. Gut lesbar, ohne
+// verwechselbare Zeichen (kein O/0, kein I/1) - es wird am Telefon durchgegeben
+// oder abgetippt.
+const PW_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function erstpasswortErzeugen() {
+  const teil = n => Array.from({ length: n }, () =>
+    PW_ALPHABET[crypto.randomInt(PW_ALPHABET.length)]).join("");
+  return `${teil(4)}-${teil(4)}`;
 }
 
-const PORTAL_URL = (process.env.PORTAL_URL || "https://kundenportal-two.vercel.app").replace(/\/$/, "");
-
-async function sendeZugangsMail(email, name, token) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
-  const link = `${PORTAL_URL}/k/${token}`;
-  const html = `
-    <p>Guten Tag ${name || ""}</p>
-    <p>Herzlich willkommen bei Clean Service Scaramuzzo AG. Hier ist Ihr persönlicher
-       Zugang zum Kundenportal — damit melden Sie Termine, Absagen oder Anliegen
-       direkt bei uns, ohne E-Mail schreiben zu müssen.</p>
-    <p style="margin:22px 0;">
-      <a href="${link}" style="background:#2bb6b7; color:#ffffff; text-decoration:none;
-         padding:14px 24px; border-radius:9px; font-weight:600; display:inline-block;">
-        Kundenportal öffnen
-      </a>
-    </p>
-    <p style="font-size:13px; color:#5b6b76;">
-      Oder diesen Link im Browser öffnen:<br><a href="${link}">${link}</a>
-    </p>
-    <p style="font-size:13px; color:#5b6b76;">
-      Sie brauchen kein Passwort. Speichern Sie den Link als Lesezeichen, dann sind
-      Ihre Angaben beim nächsten Mal bereits ausgefüllt.
-    </p>
-    <p style="color:#7c8c8b; font-size:12.5px; margin-top:26px;">
-      Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
-    </p>
-  `;
-  return new Resend(apiKey).emails.send({
-    from: "Clean Service Scaramuzzo AG <kundenportal@clean-service.ch>",
-    to: email,
-    subject: "Ihr Zugang zum Kundenportal",
-    html,
-  });
+// Muss zu konto.js passen - sonst laesst sich das Passwort nicht pruefen.
+const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
+function hashen(passwort, salt) {
+  return crypto.scryptSync(String(passwort), salt, SCRYPT.keylen, {
+    N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p,
+  }).toString("hex");
 }
 
 /* ------------------------------------------------------------------- Ampel */
@@ -297,55 +272,85 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  /* --- Kundenzugang anlegen und Link verschicken --- */
-  if (action === "zugang-anlegen") {
+  /* --- Kundenkonto anlegen (Bestandskunden ohne neuen Vertrag) --- */
+  if (action === "konto-anlegen") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-    const { objekt_id, name, email, adresse, senden } = req.body || {};
+    const { objekt_id, name, email, adresse } = req.body || {};
     if (!objekt_id || !name || !email) {
-      res.status(400).json({ error: "objekt_id, name und email sind erforderlich." });
+      res.status(400).json({ error: "Objektnummer, Name und E-Mail sind erforderlich." });
       return;
     }
+    const mail = String(email).trim().toLowerCase();
 
-    // Bestehenden aktiven Zugang wiederverwenden statt doppelt anlegen
     const { data: vorhanden } = await supabase
-      .from("kundenzugaenge").select("token").eq("objekt_id", objekt_id).eq("aktiv", true).maybeSingle();
+      .from("kundenzugaenge").select("id, passwort_gesetzt").ilike("email", mail).maybeSingle();
 
-    let token = vorhanden?.token;
-    if (!token) {
-      token = makeToken();
-      const { error } = await supabase.from("kundenzugaenge")
-        .insert({ token, objekt_id, name, email, adresse: adresse || null });
+    const pw = erstpasswortErzeugen();
+    const salt = crypto.randomBytes(16).toString("hex");
+    const felder = {
+      objekt_id: String(objekt_id), name, adresse: adresse || null,
+      passwort_salt: salt, passwort_hash: hashen(pw, salt),
+      passwort_gesetzt: false, aktiv: true,
+      fehlversuche: 0, gesperrt_bis: null,
+    };
+
+    if (vorhanden) {
+      if (vorhanden.passwort_gesetzt) {
+        res.status(400).json({
+          error: "Zu dieser E-Mail besteht bereits ein Konto mit eigenem Passwort. Bitte stattdessen das Passwort zurücksetzen.",
+        });
+        return;
+      }
+      const { error } = await supabase.from("kundenzugaenge").update(felder).eq("id", vorhanden.id);
+      if (error) { res.status(500).json({ error: error.message }); return; }
+    } else {
+      const { error } = await supabase.from("kundenzugaenge").insert({ ...felder, email: mail });
       if (error) { res.status(500).json({ error: error.message }); return; }
     }
 
-    let mail = "skipped", mailError = null;
-    if (senden !== false) {
-      try { await sendeZugangsMail(email, name, token); mail = "sent"; }
-      catch (err) { mail = "error"; mailError = err.message; }
-    }
-
-    res.status(200).json({ ok: true, token, link: `${PORTAL_URL}/k/${token}`, mail, mail_error: mailError });
+    res.status(200).json({ ok: true, anmeldeId: mail, erstpasswort: pw });
     return;
   }
 
-  /* --- Alle Kundenzugaenge auflisten --- */
+  /* --- Alle Kundenkonten auflisten --- */
   if (action === "zugaenge") {
     const { data, error } = await supabase
       .from("kundenzugaenge")
-      .select("token, objekt_id, name, email, aktiv, letzte_nutzung, erstellt_am")
+      .select("id, objekt_id, name, email, aktiv, passwort_gesetzt, letzter_login, erstellt_am")
       .order("erstellt_am", { ascending: false })
       .limit(600);
     if (error) { res.status(500).json({ error: error.message }); return; }
-    res.status(200).json({ zugaenge: data, portal_url: PORTAL_URL });
+    res.status(200).json({ zugaenge: data });
     return;
   }
 
-  /* --- Zugang deaktivieren (z.B. bei Kündigung) --- */
-  if (action === "zugang-deaktivieren") {
+  /* --- Passwort zuruecksetzen (fuer Anrufe) ---
+     Erzeugt ein neues Erstpasswort, das am Telefon durchgegeben wird. Beim
+     naechsten Anmelden muss die Kundschaft wieder ein eigenes Passwort setzen. */
+  if (action === "passwort-zuruecksetzen") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-    const { token } = req.body || {};
-    if (!token) { res.status(400).json({ error: "token ist erforderlich." }); return; }
-    const { error } = await supabase.from("kundenzugaenge").update({ aktiv: false }).eq("token", token);
+    const { id } = req.body || {};
+    if (!id) { res.status(400).json({ error: "id ist erforderlich." }); return; }
+
+    const pw = erstpasswortErzeugen();
+    const salt = crypto.randomBytes(16).toString("hex");
+    const { error } = await supabase.from("kundenzugaenge").update({
+      passwort_salt: salt, passwort_hash: hashen(pw, salt),
+      passwort_gesetzt: false, reset_hash: null, reset_ablauf: null,
+      fehlversuche: 0, gesperrt_bis: null,
+    }).eq("id", id);
+
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    res.status(200).json({ ok: true, erstpasswort: pw });
+    return;
+  }
+
+  /* --- Konto deaktivieren (z.B. bei Kuendigung) --- */
+  if (action === "konto-deaktivieren") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const { id } = req.body || {};
+    if (!id) { res.status(400).json({ error: "id ist erforderlich." }); return; }
+    const { error } = await supabase.from("kundenzugaenge").update({ aktiv: false }).eq("id", id);
     if (error) { res.status(500).json({ error: error.message }); return; }
     res.status(200).json({ ok: true });
     return;

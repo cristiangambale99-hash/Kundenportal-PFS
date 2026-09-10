@@ -253,6 +253,37 @@
     font-family:var(--font-head); font-size:12.5px; font-weight:600;
   }
 
+
+  /* ---- Begrüssung nach Öffnen des Zugangslinks ---- */
+  .welcome{
+    display:flex; align-items:center; gap:10px;
+    padding:14px 17px; border-radius:12px; margin-bottom:24px;
+    background:var(--tint-light); border:1px solid var(--teal-5);
+    font-size:14px; color:var(--text-teal-dark);
+  }
+  .welcome svg{color:var(--teal); flex-shrink:0;}
+  .welcome.wb-error{background:var(--warm-bg-2); border-color:var(--warm-border); color:var(--warm-text);}
+  .welcome.wb-error svg{display:none;}
+
+  /* ---- Zugangslink erneut anfordern ---- */
+  .recover{margin-top:34px;}
+  .recover summary{
+    cursor:pointer; font-size:13.5px; color:var(--grey);
+    padding:6px 0; list-style:none;
+  }
+  .recover summary::-webkit-details-marker{display:none;}
+  .recover summary::before{content:"+ "; color:var(--teal); font-weight:600;}
+  .recover details[open] summary::before{content:"– ";}
+  .recover summary:hover{color:var(--text-teal);}
+  .recover-row{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;}
+  .recover-row input{flex:1; min-width:200px;}
+  .recover-row button{
+    padding:14px 20px; border-radius:10px; border:1px solid var(--teal);
+    background:#fff; color:var(--text-teal); font-family:var(--font-head);
+    font-weight:600; font-size:14.5px; cursor:pointer; white-space:nowrap;
+  }
+  .recover-row button:hover{background:var(--tint-light-2);}
+
   /* ---- Inhaltsbereich ---- */
   main{max-width:1000px; margin:0 auto; padding:44px 28px 90px;}
   .narrow{max-width:620px; margin:0 auto;}
@@ -440,6 +471,11 @@
 
   <div class="view active" id="view-kunde">
 
+      <div id="welcome-banner" class="welcome" style="display:none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <span class="wb-text"></span>
+      </div>
+
     <!-- Schritt 1: Kategorie wählen -->
     <div id="step-category">
       <h2 class="pick-heading" data-i18n="pick.title">Worum geht es?</h2>
@@ -536,6 +572,19 @@
             <span class="who"><span class="n">Cristian Gambale</span><span class="r" data-i18n="team.cristian.role">Abteilungsleitung Putzfrauenservice</span></span>
           </div>
         </div>
+      </div>
+
+
+      <div class="recover">
+        <details>
+          <summary data-i18n="recover.summary">Sie haben Ihren Zugangslink nicht mehr?</summary>
+          <p class="field-hint" data-i18n="recover.text">Geben Sie Ihre E-Mail-Adresse an — wir schicken Ihnen den Link erneut zu.</p>
+          <div class="recover-row">
+            <input type="email" id="recover-email" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph" autocomplete="email">
+            <button type="button" onclick="linkAnfordern()" data-i18n="recover.btn">Link zusenden</button>
+          </div>
+          <p id="recover-result" class="field-hint" style="display:none;"></p>
+        </details>
       </div>
 
       <div class="closing">
@@ -1112,6 +1161,9 @@ const translations = {
     'form.adresse': 'Adresse des Objekts', 'form.adresse.ph': 'Strasse, Nr., PLZ Ort',
     'form.notyou': 'Nicht Sie? Angaben ändern',
     'form.step': 'Schritt 2 von 2 — Ihre Angaben',
+    'recover.summary': 'Sie haben Ihren Zugangslink nicht mehr?',
+    'recover.text': 'Geben Sie Ihre E-Mail-Adresse an — wir schicken Ihnen den Link erneut zu.',
+    'recover.btn': 'Link zusenden',
     'pick.title': 'Worum geht es?',
     'pick.sub': 'Wählen Sie ein Anliegen — danach brauchen wir nur noch wenige Angaben.',
     're.1.title': 'Kein Mailverkehr nötig', 're.1.text': 'Ihre Meldung geht direkt an das zuständige Team, nicht in ein allgemeines Postfach.',
@@ -1167,6 +1219,9 @@ const translations = {
     'form.adresse': 'Property address', 'form.adresse.ph': 'Street, no., postcode, town',
     'form.notyou': 'Not you? Change details',
     'form.step': 'Step 2 of 2 — your details',
+    'recover.summary': 'Lost your access link?',
+    'recover.text': 'Enter your email address — we will send you the link again.',
+    'recover.btn': 'Send link',
     'pick.title': 'What can we do for you?',
     'pick.sub': 'Choose a request — after that we only need a few details.',
     're.1.title': 'No email back and forth', 're.1.text': 'Your report goes straight to the responsible team, not into a general inbox.',
@@ -1268,6 +1323,69 @@ toggleAbsageFolge(false);
 
 /* --- Wiedererkennung: Stammkunden sollen ihre Angaben nur einmal eintippen --- */
 const CUST_KEY = 'cs_kunde';
+
+/* Persönlicher Zugangslink: /k/ABCD-1234 löst die Kundendaten ein.
+   Danach merkt sich das Gerät den Kunden dauerhaft — kein Passwort nötig. */
+async function zugangEinloesen(){
+  const m = window.location.pathname.match(/^\/k\/([A-Za-z0-9-]+)/);
+  if(!m) return;
+  const token = m[1].toUpperCase();
+  try{
+    const resp = await fetch('/api/zugang?token=' + encodeURIComponent(token));
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || 'Zugang ungültig');
+    saveCustomer({
+      name: data.name, email: data.email,
+      objektId: data.objekt_id, adresse: data.adresse || '', token: token
+    });
+    // Token aus der Adresszeile nehmen, damit er nicht in Verläufen landet
+    window.history.replaceState({}, '', '/');
+    zeigeBegruessung(data.name);
+  }catch(err){
+    zeigeZugangsFehler(err.message);
+  }
+}
+
+function zeigeBegruessung(name){
+  const el = document.getElementById('welcome-banner');
+  if(!el) return;
+  el.querySelector('.wb-text').textContent = (currentLang === 'de'
+    ? 'Willkommen, ' + name + ' — Ihre Angaben sind hinterlegt.'
+    : 'Welcome, ' + name + ' — your details are saved.');
+  el.style.display = 'flex';
+}
+function zeigeZugangsFehler(msg){
+  const el = document.getElementById('welcome-banner');
+  if(!el) return;
+  el.classList.add('wb-error');
+  el.querySelector('.wb-text').textContent = msg;
+  el.style.display = 'flex';
+}
+
+/* Zugangslink erneut anfordern */
+async function linkAnfordern(){
+  const email = document.getElementById('recover-email').value.trim();
+  const out = document.getElementById('recover-result');
+  if(!email || !email.includes('@')){
+    out.textContent = currentLang === 'de' ? 'Bitte gültige E-Mail-Adresse angeben.' : 'Please enter a valid email address.';
+    out.style.display = 'block';
+    return;
+  }
+  out.textContent = currentLang === 'de' ? 'Wird gesendet …' : 'Sending …';
+  out.style.display = 'block';
+  try{
+    const resp = await fetch('/api/zugang?action=anfordern', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email })
+    });
+    const data = await resp.json();
+    out.textContent = data.hinweis || data.error || '';
+  }catch(err){
+    out.textContent = currentLang === 'de'
+      ? 'Senden fehlgeschlagen. Bitte rufen Sie uns an: 0844 355 355.'
+      : 'Sending failed. Please call us: 0844 355 355.';
+  }
+}
 
 function saveCustomer(c){
   try{ localStorage.setItem(CUST_KEY, JSON.stringify(c)); }catch(e){}
@@ -1458,6 +1576,8 @@ function setView(name, el){
 }
 
 
+
+document.addEventListener('DOMContentLoaded', zugangEinloesen);
 </script>
 
 </body>

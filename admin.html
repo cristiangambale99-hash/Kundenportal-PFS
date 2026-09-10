@@ -53,6 +53,7 @@
   /* Kunden-Detail Panel (Slide-over) */
   #detail-overlay{display:none; position:fixed; inset:0; background:rgba(11,39,64,.35); z-index:50;}
   #detail-panel{
+    display:none;
     position:fixed; top:0; right:0; height:100%; width:560px; max-width:92vw;
     background:var(--panel); z-index:51; overflow-y:auto; padding:28px;
     box-shadow:-8px 0 30px rgba(0,0,0,.15);
@@ -76,6 +77,16 @@
   .actions button.reject{border-color:var(--rot); color:var(--rot);}
   .actions textarea{width:100%; font-size:12px; padding:6px; border:1px solid var(--line); border-radius:6px; min-height:44px; margin-top:6px;}
   .row-msg{font-size:11px; color:var(--grey); margin-top:4px;}
+  .tab{border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:12.5px;}
+  .tab.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .zugang-neu{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px;}
+  .zn-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .zn-row input{flex:1; min-width:150px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:13px;}
+  .zn-row button{padding:10px 18px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
+  .zn-result{margin-top:14px; padding:13px 15px; border-radius:9px; background:var(--ok-soft); border:1px solid #b6ded1; font-size:13px;}
+  .zn-result code{background:#fff; padding:3px 7px; border-radius:5px; font-size:12.5px; user-select:all;}
+  .zn-result.err{background:#fbeaea; border-color:#e6bcbc; color:#a33;}
+  .link-cell code{font-size:11.5px; background:#f5f7f8; padding:3px 7px; border-radius:5px; user-select:all;}
 </style>
 </head>
 <body>
@@ -90,8 +101,12 @@
 
 <div id="dashboard">
   <header>
-    <h1>Kunden-Dashboard</h1>
-    <button onclick="loadAll()">↻ Aktualisieren</button>
+    <h1 id="page-title">Kunden-Dashboard</h1>
+    <div style="display:flex; gap:8px;">
+      <button id="tab-meldungen" class="tab active" onclick="showTab('meldungen')">Meldungen</button>
+      <button id="tab-zugaenge" class="tab" onclick="showTab('zugaenge')">Kundenzugänge</button>
+      <button onclick="loadAll()">↻ Aktualisieren</button>
+    </div>
   </header>
 
   <div class="stats" id="stats"></div>
@@ -107,6 +122,29 @@
       <tr><th></th><th>Kunde</th><th>Objekt</th><th class="num-cell">Verschieb.</th><th class="num-cell">Absagen</th><th class="num-cell">Reklam.</th><th class="num-cell">Schäden</th><th class="num-cell">Zusatz</th><th>Letzte Meldung</th><th></th></tr>
     </thead>
     <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div id="view-zugaenge" style="display:none; max-width:1200px; margin:0 auto; padding:0 24px 80px;">
+  <div class="zugang-neu">
+    <h2 style="font-size:16px; margin:0 0 4px; color:var(--navy);">Neuen Kundenzugang anlegen</h2>
+    <p style="font-size:12.5px; color:var(--grey); margin:0 0 14px;">
+      Erzeugt einen persönlichen Zugangslink und schickt ihn per E-Mail an den Kunden.
+      Den Link zusätzlich auf die Auftragserteilung drucken (als Text oder QR-Code).
+    </p>
+    <div class="zn-row">
+      <input type="text" id="zn-objnr" placeholder="Objekt-/Kundennummer">
+      <input type="text" id="zn-name" placeholder="Name des Kunden">
+      <input type="email" id="zn-email" placeholder="E-Mail">
+      <input type="text" id="zn-adresse" placeholder="Adresse (optional)">
+      <button onclick="zugangAnlegen()">Anlegen &amp; senden</button>
+    </div>
+    <div id="zn-result" class="zn-result" style="display:none;"></div>
+  </div>
+
+  <table style="margin-top:22px;">
+    <thead><tr><th>Kunde</th><th>Objekt</th><th>Zugangslink</th><th>Zuletzt genutzt</th><th></th></tr></thead>
+    <tbody id="zugang-tbody"></tbody>
   </table>
 </div>
 
@@ -137,6 +175,78 @@ async function login(){
     errBox.textContent = err.message;
     errBox.style.display = 'block';
   }
+}
+
+let portalUrl = '';
+
+function showTab(tab){
+  const meld = tab === 'meldungen';
+  const setShow = (sel, disp) => {
+    const el = document.querySelector(sel);
+    if(el) el.style.display = meld ? disp : 'none';
+  };
+  setShow('.stats', 'grid');
+  setShow('.ampel-legende', 'flex');
+  setShow('.filters', 'flex');
+  // erste Tabelle = Meldungen (die zweite gehört zu den Zugängen)
+  const meldTable = document.querySelector('#dashboard > table');
+  if(meldTable) meldTable.style.display = meld ? 'table' : 'none';
+
+  document.getElementById('view-zugaenge').style.display = meld ? 'none' : 'block';
+  document.getElementById('page-title').textContent = meld ? 'Kunden-Dashboard' : 'Kundenzugänge';
+  document.getElementById('tab-meldungen').classList.toggle('active', meld);
+  document.getElementById('tab-zugaenge').classList.toggle('active', !meld);
+  if(!meld) loadZugaenge();
+}
+
+async function zugangAnlegen(){
+  const body = {
+    objekt_id: document.getElementById('zn-objnr').value.trim(),
+    name: document.getElementById('zn-name').value.trim(),
+    email: document.getElementById('zn-email').value.trim(),
+    adresse: document.getElementById('zn-adresse').value.trim()
+  };
+  const out = document.getElementById('zn-result');
+  out.className = 'zn-result';
+  out.style.display = 'block';
+  out.textContent = 'Wird angelegt …';
+  try{
+    const resp = await fetch('/api/admin?action=zugang-anlegen', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || 'Fehlgeschlagen');
+    out.innerHTML = `Zugang angelegt. Link: <code>${data.link}</code>` +
+      (data.mail === 'sent' ? ' — E-Mail wurde an den Kunden geschickt.' : ' — <strong>E-Mail konnte nicht gesendet werden.</strong>');
+    ['zn-objnr','zn-name','zn-email','zn-adresse'].forEach(id => document.getElementById(id).value = '');
+    loadZugaenge();
+  }catch(err){
+    out.className = 'zn-result err';
+    out.textContent = 'Fehler: ' + err.message;
+  }
+}
+
+async function loadZugaenge(){
+  const resp = await fetch('/api/admin?action=zugaenge');
+  if(!resp.ok) return;
+  const { zugaenge, portal_url } = await resp.json();
+  portalUrl = portal_url || '';
+  document.getElementById('zugang-tbody').innerHTML = zugaenge.map(z => `
+    <tr style="${z.aktiv ? '' : 'opacity:.45;'}">
+      <td>${z.name}<br><span style="color:var(--grey); font-size:11.5px;">${z.email}</span></td>
+      <td>${z.objekt_id}</td>
+      <td class="link-cell"><code>${portalUrl}/k/${z.token}</code></td>
+      <td>${z.letzte_nutzung ? new Date(z.letzte_nutzung).toLocaleDateString('de-CH') : '<span style="color:var(--grey);">noch nie</span>'}</td>
+      <td>${z.aktiv ? `<button class="tab" onclick="zugangDeaktivieren('${z.token}')">Deaktivieren</button>` : 'inaktiv'}</td>
+    </tr>`).join('');
+}
+
+async function zugangDeaktivieren(token){
+  if(!confirm('Diesen Zugang wirklich deaktivieren? Der Link funktioniert danach nicht mehr.')) return;
+  await fetch('/api/admin?action=zugang-deaktivieren', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token })
+  });
+  loadZugaenge();
 }
 
 async function loadAll(){

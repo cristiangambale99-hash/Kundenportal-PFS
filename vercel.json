@@ -1,10 +1,8 @@
 {
   "functions": {
-    "api/melde.js": { "memory": 256, "maxDuration": 15 },
-    "api/admin.js": { "memory": 256, "maxDuration": 15 },
-    "api/zugang.js": { "memory": 256, "maxDuration": 15 }
-  },
-  "rewrites": [
-    { "source": "/k/:token", "destination": "/index.html" }
-  ]
+    "api/melde.js":  { "memory": 256, "maxDuration": 15 },
+    "api/admin.js":  { "memory": 256, "maxDuration": 15 },
+    "api/zugang.js": { "memory": 256, "maxDuration": 15 },
+    "api/konto.js":  { "memory": 512, "maxDuration": 15 }
+  }
 }

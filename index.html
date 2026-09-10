@@ -284,6 +284,48 @@
   }
   .recover-row button:hover{background:var(--tint-light-2);}
 
+
+  /* ---- Anmeldung / Kontoansichten ---- */
+  .auth-wrap{max-width:420px; margin:0 auto; padding:8px 0 40px;}
+  .auth-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:30px 28px; box-shadow:0 1px 3px rgba(14,30,29,.04);
+  }
+  .auth-card h2{margin:0 0 6px; font-size:21px;}
+  .auth-sub{font-size:13.5px; color:var(--grey); margin:0 0 22px; line-height:1.5;}
+  .auth-card label{margin-top:18px;}
+  .auth-card label:first-of-type{margin-top:0;}
+  .auth-alt{
+    text-align:center; margin-top:18px; font-size:13.5px;
+  }
+  .auth-alt button{
+    background:none; border:none; padding:0; cursor:pointer;
+    font-family:var(--font-body); font-size:13.5px; color:var(--text-teal);
+    text-decoration:underline;
+  }
+  .auth-hilfe{
+    margin-top:26px; padding-top:20px; border-top:1px solid var(--line);
+    font-size:12.5px; color:var(--grey); text-align:center; line-height:1.6;
+  }
+  .auth-msg{
+    display:none; margin-top:16px; padding:13px 15px; border-radius:10px;
+    font-size:13px; line-height:1.5;
+  }
+  .auth-msg.err{background:var(--warm-bg-2); border:1px solid var(--warm-border); color:var(--warm-text);}
+  .auth-msg.ok{background:var(--tint-light); border:1px solid var(--teal-5); color:var(--text-teal-dark);}
+
+  /* ---- Kopfzeile im angemeldeten Zustand ---- */
+  .konto{display:flex; align-items:center; gap:14px;}
+  .konto-name{font-size:13px; color:var(--grey); text-align:right; line-height:1.3;}
+  .konto-name strong{display:block; font-family:var(--font-head); font-size:14px; color:var(--headline);}
+  .konto-logout{
+    background:none; border:1px solid var(--line); border-radius:8px;
+    padding:7px 13px; cursor:pointer; font-family:var(--font-body);
+    font-size:12.5px; color:var(--grey);
+  }
+  .konto-logout:hover{border-color:var(--teal); color:var(--text-teal);}
+  @media (max-width:600px){ .konto-name{display:none;} }
+
   /* ---- Inhaltsbereich ---- */
   main{max-width:1000px; margin:0 auto; padding:44px 28px 90px;}
   .narrow{max-width:620px; margin:0 auto;}
@@ -429,6 +471,10 @@
       <img src="logo.webp" alt="Clean Service by Scaramuzzo" class="brand-logo" width="150" height="47" loading="eager">
     </div>
     <nav class="nav">
+      <div id="konto-leiste" class="konto" style="display:none;">
+        <span class="konto-name"><strong id="konto-name"></strong><span id="konto-objekt"></span></span>
+        <button class="konto-logout" onclick="abmelden()" data-i18n="auth.logout">Abmelden</button>
+      </div>
       <div class="lang-switch" role="group" aria-label="Sprache / Language">
         <button data-lang="de" class="active" onclick="setLang('de')" aria-pressed="true" aria-label="Deutsch">DE</button>
         <button data-lang="en" onclick="setLang('en')" aria-pressed="false" aria-label="English">EN</button>
@@ -442,12 +488,12 @@
       <span class="rule"></span>
       <span data-i18n="hero.heritage">Tradition die glänzt</span>
     </div>
-    <h1 data-i18n="hero.h1">Ihr Anliegen, in zwei Minuten gemeldet.</h1>
-    <p class="lead" data-i18n="hero.lead">Termin verschieben, absagen oder etwas melden — Sie füllen ein kurzes Formular aus, den Rest übernehmen wir.</p>
+    <h1 data-i18n="hero.h1">Ihr Kundenportal.</h1>
+    <p class="lead" data-i18n="hero.lead">Termine verschieben, absagen, Reklamationen und Anfragen — alles an einem Ort, jederzeit erreichbar.</p>
     <div class="hero-assurance">
       <span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-        <span data-i18n="hero.b1">Ohne Anmeldung</span>
+        <span data-i18n="hero.b1">Ihre Angaben hinterlegt</span>
       </span>
       <span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -469,13 +515,94 @@
 
 <main id="main-content">
 
-  <div class="view active" id="view-kunde">
+  <!-- ============ Anmeldung ============ -->
+  <div class="view" id="view-login">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h2 data-i18n="auth.login.h">Anmelden</h2>
+        <p class="auth-sub" data-i18n="auth.login.sub">Ihre Anmelde-ID ist Ihre E-Mail-Adresse. Das Erstpasswort finden Sie auf Ihrem Reinigungsvertrag.</p>
 
-      <div id="welcome-banner" class="welcome" style="display:none;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-        <span class="wb-text"></span>
+        <label for="l-email" data-i18n="auth.email">E-Mail-Adresse</label>
+        <input type="email" id="l-email" autocomplete="username" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph">
+
+        <label for="l-pw" data-i18n="auth.pw">Passwort</label>
+        <input type="password" id="l-pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')anmelden()">
+
+        <button class="primary" onclick="anmelden()" data-i18n="auth.login.btn">Anmelden</button>
+        <div id="l-msg" class="auth-msg"></div>
+
+        <div class="auth-alt">
+          <button onclick="zeigeAuth('vergessen')" data-i18n="auth.forgot.link">Passwort vergessen?</button>
+        </div>
+
+        <div class="auth-hilfe" data-i18n="auth.help">
+          Noch keine Zugangsdaten? Sie erhalten diese mit Ihrem Reinigungsvertrag. Bei Fragen erreichen Sie uns unter 0844 355 355.
+        </div>
       </div>
+    </div>
+  </div>
 
+  <!-- ============ Erstpasswort ersetzen ============ -->
+  <div class="view" id="view-pw-setzen">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h2 data-i18n="auth.set.h">Passwort festlegen</h2>
+        <p class="auth-sub" data-i18n="auth.set.sub">Sie haben sich mit dem Erstpasswort vom Vertrag angemeldet. Legen Sie jetzt Ihr eigenes Passwort fest — danach gilt nur noch dieses.</p>
+
+        <label for="s-pw" data-i18n="auth.pw.new">Neues Passwort</label>
+        <input type="password" id="s-pw" autocomplete="new-password">
+        <p class="field-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
+
+        <label for="s-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
+        <input type="password" id="s-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')passwortSetzen()">
+
+        <button class="primary" onclick="passwortSetzen()" data-i18n="auth.set.btn">Passwort speichern</button>
+        <div id="s-msg" class="auth-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Passwort vergessen ============ -->
+  <div class="view" id="view-vergessen">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h2 data-i18n="auth.forgot.h">Passwort vergessen</h2>
+        <p class="auth-sub" data-i18n="auth.forgot.sub">Geben Sie Ihre E-Mail-Adresse an. Wir schicken Ihnen einen Link, mit dem Sie ein neues Passwort festlegen können.</p>
+
+        <label for="v-email" data-i18n="auth.email">E-Mail-Adresse</label>
+        <input type="email" id="v-email" autocomplete="username" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph" onkeydown="if(event.key==='Enter')vergessenSenden()">
+
+        <button class="primary" onclick="vergessenSenden()" data-i18n="auth.forgot.btn">Link zusenden</button>
+        <div id="v-msg" class="auth-msg"></div>
+
+        <div class="auth-alt">
+          <button onclick="zeigeAuth('login')" data-i18n="auth.back">Zurück zur Anmeldung</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Neues Passwort nach Reset-Link ============ -->
+  <div class="view" id="view-reset">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h2 data-i18n="auth.reset.h">Neues Passwort festlegen</h2>
+        <p class="auth-sub" data-i18n="auth.reset.sub">Wählen Sie ein neues Passwort für Ihr Kundenkonto.</p>
+
+        <label for="r-pw" data-i18n="auth.pw.new">Neues Passwort</label>
+        <input type="password" id="r-pw" autocomplete="new-password">
+        <p class="field-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
+
+        <label for="r-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
+        <input type="password" id="r-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')resetSpeichern()">
+
+        <button class="primary" onclick="resetSpeichern()" data-i18n="auth.reset.btn">Passwort speichern</button>
+        <div id="r-msg" class="auth-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-kunde">
     <!-- Schritt 1: Kategorie wählen -->
     <div id="step-category">
       <h2 class="pick-heading" data-i18n="pick.title">Worum geht es?</h2>
@@ -575,31 +702,6 @@
       </div>
 
 
-      <div class="recover">
-        <details>
-          <summary data-i18n="recover.summary">Sie haben Ihren Zugangslink nicht mehr?</summary>
-          <p class="field-hint" data-i18n="recover.text">Geben Sie Ihre E-Mail-Adresse an — wir schicken Ihnen den Link erneut zu.</p>
-          <div class="recover-row">
-            <input type="email" id="recover-email" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph" autocomplete="email">
-            <button type="button" onclick="linkAnfordern()" data-i18n="recover.btn">Link zusenden</button>
-          </div>
-          <p id="recover-result" class="field-hint" style="display:none;"></p>
-        </details>
-      </div>
-
-      <div class="closing">
-        <div class="closing-main">
-          <h2 data-i18n="closing.title">Seit 1984 in Familienhand</h2>
-          <p data-i18n="closing.text">Wir reinigen Privathaushalte in der Region Zürich — mit festen Ansprechpartnern, klaren Abläufen und Mitarbeitenden, die Ihr Zuhause kennen.</p>
-        </div>
-        <div class="closing-call">
-          <a href="tel:0844355355">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
-            0844 355 355
-          </a>
-          <span data-i18n="closing.hint">Mo–Fr, 08:00–17:00 Uhr</span>
-        </div>
-      </div>
     </div>
 
     <!-- Schritt 2: passendes Formular -->
@@ -619,7 +721,6 @@
             <strong id="known-name"></strong>
             <span id="known-detail"></span>
           </div>
-          <button type="button" class="known-change" onclick="forgetCustomer()" data-i18n="form.notyou">Nicht Sie? Angaben ändern</button>
         </div>
 
         <!-- Identifikation -->
@@ -708,7 +809,7 @@
         <div id="form-error" class="form-error" role="alert" aria-live="assertive" style="display:none;"></div>
         <div class="cf-turnstile" data-sitekey="0x4AAAAAAD8uKO86lXbHalU4" style="margin-top:20px;"></div>
         <button class="primary" onclick="submitForm()" data-i18n="submit">Absenden</button>
-        <div class="trust-line"><span data-i18n="trust1">Antwort innert 1 Arbeitstag</span><span class="sep">·</span><span data-i18n="trust2">Keine Registrierung nötig</span></div>
+        <div class="trust-line"><span data-i18n="trust1">Antwort innert 1 Arbeitstag</span><span class="sep">·</span><span data-i18n="trust2">Direkt beim Putzfrauenservice</span></div>
       </div>
 
       <div class="notice" data-i18n="notice">Ihre Meldung geht direkt an unser Putzfrauenservice-Team — wir melden uns bei Bedarf per E-Mail bei Ihnen zurück.</div>
@@ -1145,10 +1246,31 @@ rechtliche Schritte vor.</p>
 <script>
 const translations = {
   de: {
+    'auth.login.h': 'Anmelden',
+    'auth.login.sub': 'Ihre Anmelde-ID ist Ihre E-Mail-Adresse. Das Erstpasswort finden Sie auf Ihrem Reinigungsvertrag.',
+    'auth.login.btn': 'Anmelden',
+    'auth.email': 'E-Mail-Adresse',
+    'auth.pw': 'Passwort',
+    'auth.pw.new': 'Neues Passwort',
+    'auth.pw.repeat': 'Passwort wiederholen',
+    'auth.pw.rule': 'Mindestens 8 Zeichen.',
+    'auth.forgot.link': 'Passwort vergessen?',
+    'auth.forgot.h': 'Passwort vergessen',
+    'auth.forgot.sub': 'Geben Sie Ihre E-Mail-Adresse an. Wir schicken Ihnen einen Link, mit dem Sie ein neues Passwort festlegen können.',
+    'auth.forgot.btn': 'Link zusenden',
+    'auth.set.h': 'Passwort festlegen',
+    'auth.set.sub': 'Sie haben sich mit dem Erstpasswort vom Vertrag angemeldet. Legen Sie jetzt Ihr eigenes Passwort fest — danach gilt nur noch dieses.',
+    'auth.set.btn': 'Passwort speichern',
+    'auth.reset.h': 'Neues Passwort festlegen',
+    'auth.reset.sub': 'Wählen Sie ein neues Passwort für Ihr Kundenkonto.',
+    'auth.reset.btn': 'Passwort speichern',
+    'auth.back': 'Zurück zur Anmeldung',
+    'auth.logout': 'Abmelden',
+    'auth.help': 'Noch keine Zugangsdaten? Sie erhalten diese mit Ihrem Reinigungsvertrag. Bei Fragen erreichen Sie uns unter 0844 355 355.',
     'nav.team': 'Team', 'nav.agb': 'AGB',
-    'hero.h1': 'Ihr Anliegen, in zwei Minuten gemeldet.',
-    'hero.lead': 'Termin verschieben, absagen oder etwas melden — Sie füllen ein kurzes Formular aus, den Rest übernehmen wir.',
-    'hero.b1': 'Ohne Anmeldung', 'hero.b2': 'Antwort innert einem Arbeitstag', 'hero.b3': 'Direkt beim zuständigen Team',
+    'hero.h1': 'Ihr Kundenportal.',
+    'hero.lead': 'Termine verschieben, absagen, Reklamationen und Anfragen — alles an einem Ort, jederzeit erreichbar.',
+    'hero.b1': 'Ihre Angaben hinterlegt', 'hero.b2': 'Antwort innert einem Arbeitstag', 'hero.b3': 'Direkt beim zuständigen Team',
     'hero.heritage': 'Tradition die glänzt',
     'contacts.title': 'Dahinter stehen echte Menschen', 'contacts.sub': 'Ihr Anliegen landet bei diesem Team.',
     'closing.title': 'Seit 1984 in Familienhand',
@@ -1161,9 +1283,6 @@ const translations = {
     'form.adresse': 'Adresse des Objekts', 'form.adresse.ph': 'Strasse, Nr., PLZ Ort',
     'form.notyou': 'Nicht Sie? Angaben ändern',
     'form.step': 'Schritt 2 von 2 — Ihre Angaben',
-    'recover.summary': 'Sie haben Ihren Zugangslink nicht mehr?',
-    'recover.text': 'Geben Sie Ihre E-Mail-Adresse an — wir schicken Ihnen den Link erneut zu.',
-    'recover.btn': 'Link zusenden',
     'pick.title': 'Worum geht es?',
     'pick.sub': 'Wählen Sie ein Anliegen — danach brauchen wir nur noch wenige Angaben.',
     're.1.title': 'Kein Mailverkehr nötig', 're.1.text': 'Ihre Meldung geht direkt an das zuständige Team, nicht in ein allgemeines Postfach.',
@@ -1186,7 +1305,7 @@ const translations = {
     'a.bemerkung': 'Bemerkung',
     'rs.what': 'Was ist vorgefallen?', 'rs.what.ph': 'Kurz beschreiben, worum es geht …',
     'rs.photo': 'Foto', 'rs.required': '(erforderlich)',
-    'submit': 'Absenden', 'trust1': 'Antwort innert 1 Arbeitstag', 'trust2': 'Keine Registrierung nötig',
+    'submit': 'Absenden', 'trust1': 'Antwort innert 1 Arbeitstag', 'trust2': 'Direkt beim Putzfrauenservice',
     'notice': 'Ihre Meldung geht direkt an unser Putzfrauenservice-Team — wir melden uns bei Bedarf per E-Mail bei Ihnen zurück.',
     'confirm.h1': 'Vielen Dank für Ihre Meldung',
     'confirm.lead': 'Ihr Anliegen wurde an unser Team übermittelt. Wir melden uns bei Rückfragen umgehend bei Ihnen.',
@@ -1203,10 +1322,31 @@ const translations = {
     'photo.alert': 'Bitte fügen Sie ein Foto hinzu — dieses Feld ist für diese Meldungsart erforderlich.'
   },
   en: {
+    'auth.login.h': 'Sign in',
+    'auth.login.sub': 'Your login ID is your email address. You will find your initial password on your cleaning contract.',
+    'auth.login.btn': 'Sign in',
+    'auth.email': 'Email address',
+    'auth.pw': 'Password',
+    'auth.pw.new': 'New password',
+    'auth.pw.repeat': 'Repeat password',
+    'auth.pw.rule': 'At least 8 characters.',
+    'auth.forgot.link': 'Forgot your password?',
+    'auth.forgot.h': 'Forgot password',
+    'auth.forgot.sub': 'Enter your email address. We will send you a link to set a new password.',
+    'auth.forgot.btn': 'Send link',
+    'auth.set.h': 'Set your password',
+    'auth.set.sub': 'You signed in with the initial password from your contract. Please choose your own password now — from then on, only this one applies.',
+    'auth.set.btn': 'Save password',
+    'auth.reset.h': 'Set a new password',
+    'auth.reset.sub': 'Choose a new password for your customer account.',
+    'auth.reset.btn': 'Save password',
+    'auth.back': 'Back to sign in',
+    'auth.logout': 'Sign out',
+    'auth.help': 'No credentials yet? You receive them with your cleaning contract. If you have questions, call us on 0844 355 355.',
     'nav.team': 'Team', 'nav.agb': 'Terms',
-    'hero.h1': 'Report your request in two minutes.',
-    'hero.lead': 'Reschedule, cancel or report something — you fill in a short form, we take care of the rest.',
-    'hero.b1': 'No account needed', 'hero.b2': 'Reply within one business day', 'hero.b3': 'Straight to the responsible team',
+    'hero.h1': 'Your customer portal.',
+    'hero.lead': 'Reschedule, cancel, report complaints and make requests — all in one place, available at any time.',
+    'hero.b1': 'Your details are stored', 'hero.b2': 'Reply within one business day', 'hero.b3': 'Straight to the responsible team',
     'hero.heritage': 'A tradition that shines',
     'contacts.title': 'Real people behind it', 'contacts.sub': 'Your request reaches this team.',
     'closing.title': 'Family-run since 1984',
@@ -1219,9 +1359,6 @@ const translations = {
     'form.adresse': 'Property address', 'form.adresse.ph': 'Street, no., postcode, town',
     'form.notyou': 'Not you? Change details',
     'form.step': 'Step 2 of 2 — your details',
-    'recover.summary': 'Lost your access link?',
-    'recover.text': 'Enter your email address — we will send you the link again.',
-    'recover.btn': 'Send link',
     'pick.title': 'What can we do for you?',
     'pick.sub': 'Choose a request — after that we only need a few details.',
     're.1.title': 'No email back and forth', 're.1.text': 'Your report goes straight to the responsible team, not into a general inbox.',
@@ -1244,7 +1381,7 @@ const translations = {
     'a.bemerkung': 'Note',
     'rs.what': 'What happened?', 'rs.what.ph': 'Briefly describe what happened …',
     'rs.photo': 'Photo', 'rs.required': '(required)',
-    'submit': 'Submit', 'trust1': 'Reply within 1 business day', 'trust2': 'No registration needed',
+    'submit': 'Submit', 'trust1': 'Reply within 1 business day', 'trust2': 'Straight to the cleaning team',
     'notice': 'Your report goes directly to our Putzfrauenservice team — we will get back to you by email if needed.',
     'confirm.h1': 'Thank you for your report',
     'confirm.lead': 'Your request has been sent to our team. We will contact you promptly with any questions.',
@@ -1321,107 +1458,210 @@ function toggleAbsageFolge(weitereJa){
 toggleAbsageFolge(false);
 
 
-/* --- Wiedererkennung: Stammkunden sollen ihre Angaben nur einmal eintippen --- */
-const CUST_KEY = 'cs_kunde';
-
-/* Persönlicher Zugangslink: /k/ABCD-1234 löst die Kundendaten ein.
-   Danach merkt sich das Gerät den Kunden dauerhaft — kein Passwort nötig. */
-async function zugangEinloesen(){
-  const m = window.location.pathname.match(/^\/k\/([A-Za-z0-9-]+)/);
-  if(!m) return;
-  const token = m[1].toUpperCase();
-  try{
-    const resp = await fetch('/api/zugang?token=' + encodeURIComponent(token));
-    const data = await resp.json();
-    if(!resp.ok) throw new Error(data.error || 'Zugang ungültig');
-    saveCustomer({
-      name: data.name, email: data.email,
-      objektId: data.objekt_id, adresse: data.adresse || '', token: token
-    });
-    // Token aus der Adresszeile nehmen, damit er nicht in Verläufen landet
-    window.history.replaceState({}, '', '/');
-    zeigeBegruessung(data.name);
-  }catch(err){
-    zeigeZugangsFehler(err.message);
-  }
-}
-
-function zeigeBegruessung(name){
-  const el = document.getElementById('welcome-banner');
-  if(!el) return;
-  el.querySelector('.wb-text').textContent = (currentLang === 'de'
-    ? 'Willkommen, ' + name + ' — Ihre Angaben sind hinterlegt.'
-    : 'Welcome, ' + name + ' — your details are saved.');
-  el.style.display = 'flex';
-}
-function zeigeZugangsFehler(msg){
-  const el = document.getElementById('welcome-banner');
-  if(!el) return;
-  el.classList.add('wb-error');
-  el.querySelector('.wb-text').textContent = msg;
-  el.style.display = 'flex';
-}
-
-/* Zugangslink erneut anfordern */
-async function linkAnfordern(){
-  const email = document.getElementById('recover-email').value.trim();
-  const out = document.getElementById('recover-result');
-  if(!email || !email.includes('@')){
-    out.textContent = currentLang === 'de' ? 'Bitte gültige E-Mail-Adresse angeben.' : 'Please enter a valid email address.';
-    out.style.display = 'block';
+/* --- Angaben aus dem Kundenkonto in das Formular übernehmen --- */
+function applyKnownCustomer(){
+  const box = document.getElementById('known-customer');
+  const fields = document.getElementById('ident-fields');
+  if(!KUNDE || !KUNDE.name){
+    // Sollte im angemeldeten Portal nicht vorkommen
+    if(box) box.style.display = 'none';
+    if(fields) fields.style.display = 'block';
     return;
   }
-  out.textContent = currentLang === 'de' ? 'Wird gesendet …' : 'Sending …';
-  out.style.display = 'block';
+  document.getElementById('f-name').value = KUNDE.name || '';
+  document.getElementById('f-email').value = KUNDE.email || '';
+  document.getElementById('f-objnr').value = KUNDE.objekt_id || '';
+  document.getElementById('f-adresse').value = KUNDE.adresse || '';
+
+  document.getElementById('known-name').textContent = KUNDE.name;
+  document.getElementById('known-detail').textContent =
+    [KUNDE.objekt_id ? (currentLang === 'de' ? 'Kundennummer ' : 'Customer no. ') + KUNDE.objekt_id : '',
+     KUNDE.adresse, KUNDE.email].filter(Boolean).join(' · ');
+
+  if(box) box.style.display = 'flex';
+  if(fields) fields.style.display = 'none';
+}
+
+/* ==========================================================================
+   Kundenkonto: Anmeldung, Erstpasswort, Passwort vergessen
+   ========================================================================== */
+
+let KUNDE = null;   // { name, email, objekt_id, adresse } wenn angemeldet
+
+function zeigeAuth(welche){
+  ['view-login','view-pw-setzen','view-vergessen','view-reset','view-kunde']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.classList.remove('active');
+    });
+  const ziel = document.getElementById(welche === 'kunde' ? 'view-kunde' : 'view-' + welche);
+  if(ziel) ziel.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function meldung(id, text, art){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = text;
+  el.className = 'auth-msg ' + (art || 'err');
+  el.style.display = text ? 'block' : 'none';
+}
+
+function kontoLeisteZeigen(){
+  const leiste = document.getElementById('konto-leiste');
+  if(!leiste) return;
+  if(KUNDE){
+    document.getElementById('konto-name').textContent = KUNDE.name || '';
+    document.getElementById('konto-objekt').textContent =
+      KUNDE.objekt_id ? (currentLang === 'de' ? 'Kundennummer ' : 'Customer no. ') + KUNDE.objekt_id : '';
+    leiste.style.display = 'flex';
+  } else {
+    leiste.style.display = 'none';
+  }
+}
+
+/* --- Anmelden --- */
+async function anmelden(){
+  const email = document.getElementById('l-email').value.trim();
+  const pw = document.getElementById('l-pw').value;
+  if(!email || !pw){
+    meldung('l-msg', currentLang === 'de'
+      ? 'Bitte E-Mail-Adresse und Passwort eingeben.'
+      : 'Please enter your email address and password.');
+    return;
+  }
+  meldung('l-msg', currentLang === 'de' ? 'Wird geprüft …' : 'Checking …', 'ok');
   try{
-    const resp = await fetch('/api/zugang?action=anfordern', {
+    const resp = await fetch('/api/konto?action=login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, passwort: pw })
+    });
+    const d = await resp.json();
+    if(!resp.ok) throw new Error(d.error || 'Anmeldung fehlgeschlagen');
+
+    KUNDE = d.kunde;
+    document.getElementById('l-pw').value = '';
+    meldung('l-msg', '');
+    kontoLeisteZeigen();
+
+    if(d.passwortSetzen) zeigeAuth('pw-setzen');
+    else zeigeAuth('kunde');
+  }catch(err){
+    meldung('l-msg', err.message);
+  }
+}
+
+/* --- Eigenes Passwort festlegen (nach Erstanmeldung) --- */
+async function passwortSetzen(){
+  const pw = document.getElementById('s-pw').value;
+  const pw2 = document.getElementById('s-pw2').value;
+  if(pw !== pw2){
+    meldung('s-msg', currentLang === 'de'
+      ? 'Die beiden Passwörter stimmen nicht überein.'
+      : 'The two passwords do not match.');
+    return;
+  }
+  meldung('s-msg', currentLang === 'de' ? 'Wird gespeichert …' : 'Saving …', 'ok');
+  try{
+    const resp = await fetch('/api/konto?action=passwort-setzen', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ passwort: pw })
+    });
+    const d = await resp.json();
+    if(!resp.ok) throw new Error(d.error || 'Speichern fehlgeschlagen');
+    document.getElementById('s-pw').value = '';
+    document.getElementById('s-pw2').value = '';
+    meldung('s-msg', '');
+    zeigeAuth('kunde');
+  }catch(err){
+    meldung('s-msg', err.message);
+  }
+}
+
+/* --- Passwort vergessen --- */
+async function vergessenSenden(){
+  const email = document.getElementById('v-email').value.trim();
+  if(!email || !email.includes('@')){
+    meldung('v-msg', currentLang === 'de'
+      ? 'Bitte gültige E-Mail-Adresse angeben.'
+      : 'Please enter a valid email address.');
+    return;
+  }
+  meldung('v-msg', currentLang === 'de' ? 'Wird gesendet …' : 'Sending …', 'ok');
+  try{
+    const resp = await fetch('/api/konto?action=vergessen', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ email })
     });
-    const data = await resp.json();
-    out.textContent = data.hinweis || data.error || '';
+    const d = await resp.json();
+    meldung('v-msg', d.hinweis || d.error || '', d.ok ? 'ok' : 'err');
   }catch(err){
-    out.textContent = currentLang === 'de'
+    meldung('v-msg', currentLang === 'de'
       ? 'Senden fehlgeschlagen. Bitte rufen Sie uns an: 0844 355 355.'
-      : 'Sending failed. Please call us: 0844 355 355.';
+      : 'Sending failed. Please call us: 0844 355 355.');
   }
 }
 
-function saveCustomer(c){
-  try{ localStorage.setItem(CUST_KEY, JSON.stringify(c)); }catch(e){}
-}
-function loadCustomer(){
-  try{ return JSON.parse(localStorage.getItem(CUST_KEY) || 'null'); }catch(e){ return null; }
-}
-function forgetCustomer(){
-  try{ localStorage.removeItem(CUST_KEY); }catch(e){}
-  ['f-name','f-email','f-objnr','f-adresse'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  document.getElementById('known-customer').style.display = 'none';
-  document.getElementById('ident-fields').style.display = 'block';
-  document.getElementById('f-name').focus();
-}
-function applyKnownCustomer(){
-  const c = loadCustomer();
-  const box = document.getElementById('known-customer');
-  const fields = document.getElementById('ident-fields');
-  if(!c || !c.name){
-    box.style.display = 'none';
-    fields.style.display = 'block';
+/* --- Neues Passwort nach Klick auf den Reset-Link --- */
+let RESET_TOKEN = '';
+
+async function resetSpeichern(){
+  const pw = document.getElementById('r-pw').value;
+  const pw2 = document.getElementById('r-pw2').value;
+  if(pw !== pw2){
+    meldung('r-msg', currentLang === 'de'
+      ? 'Die beiden Passwörter stimmen nicht überein.'
+      : 'The two passwords do not match.');
     return;
   }
-  document.getElementById('f-name').value = c.name || '';
-  document.getElementById('f-email').value = c.email || '';
-  document.getElementById('f-objnr').value = c.objektId || '';
-  document.getElementById('f-adresse').value = c.adresse || '';
-
-  document.getElementById('known-name').textContent = c.name;
-  const detail = [c.objektId ? (currentLang === 'de' ? 'Kundennummer ' : 'Customer no. ') + c.objektId : '', c.adresse, c.email]
-    .filter(Boolean).join(' · ');
-  document.getElementById('known-detail').textContent = detail;
-
-  box.style.display = 'flex';
-  fields.style.display = 'none';
+  meldung('r-msg', currentLang === 'de' ? 'Wird gespeichert …' : 'Saving …', 'ok');
+  try{
+    const resp = await fetch('/api/konto?action=zuruecksetzen', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token: RESET_TOKEN, passwort: pw })
+    });
+    const d = await resp.json();
+    if(!resp.ok) throw new Error(d.error || 'Speichern fehlgeschlagen');
+    RESET_TOKEN = '';
+    window.history.replaceState({}, '', '/');
+    await kontoLaden();
+  }catch(err){
+    meldung('r-msg', err.message);
+  }
 }
+
+/* --- Abmelden --- */
+async function abmelden(){
+  try{ await fetch('/api/konto?action=logout', { method:'POST' }); }catch(e){}
+  KUNDE = null;
+  kontoLeisteZeigen();
+  zeigeAuth('login');
+}
+
+/* --- Beim Laden: angemeldet? Reset-Link? --- */
+async function kontoLaden(){
+  const p = new URLSearchParams(location.search);
+  const reset = p.get('reset');
+  if(reset){
+    RESET_TOKEN = reset;
+    zeigeAuth('reset');
+    return;
+  }
+  try{
+    const resp = await fetch('/api/konto?action=ich');
+    if(!resp.ok) throw new Error('nicht angemeldet');
+    const d = await resp.json();
+    KUNDE = d.kunde;
+    kontoLeisteZeigen();
+    zeigeAuth(d.passwortSetzen ? 'pw-setzen' : 'kunde');
+  }catch(err){
+    KUNDE = null;
+    kontoLeisteZeigen();
+    zeigeAuth('login');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', kontoLaden);
 
 function gatherDetails(cat){
   if(cat === 'verschiebung'){
@@ -1547,8 +1787,6 @@ async function submitForm(){
         ' ' + (currentLang === 'de' ? PHONE_HINT_DE : PHONE_HINT_EN));
       return;
     }
-
-    saveCustomer({name: name, email: email, objektId: objektId, adresse: adresse});
     console.log('Meldung gesendet:', result); // email/beekeeper Status zu Testzwecken
     document.getElementById('confirm-next').textContent = NEXT_STEPS[currentLang][cat] || '';
     document.getElementById('form-screen').style.display = 'none';
@@ -1577,7 +1815,6 @@ function setView(name, el){
 
 
 
-document.addEventListener('DOMContentLoaded', zugangEinloesen);
 </script>
 
 </body>

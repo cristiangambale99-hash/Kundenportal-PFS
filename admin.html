@@ -127,23 +127,24 @@
 
 <div id="view-zugaenge" style="display:none; max-width:1200px; margin:0 auto; padding:0 24px 80px;">
   <div class="zugang-neu">
-    <h2 style="font-size:16px; margin:0 0 4px; color:var(--navy);">Neuen Kundenzugang anlegen</h2>
+    <h2 style="font-size:16px; margin:0 0 4px; color:var(--navy);">Neues Kundenkonto anlegen</h2>
     <p style="font-size:12.5px; color:var(--grey); margin:0 0 14px;">
-      Erzeugt einen persönlichen Zugangslink und schickt ihn per E-Mail an den Kunden.
-      Den Link zusätzlich auf die Auftragserteilung drucken (als Text oder QR-Code).
+      Für Bestandskunden ohne neuen Vertrag. Es entsteht ein Erstpasswort, das Sie dem
+      Kunden mitteilen — beim ersten Anmelden legt er sein eigenes Passwort fest.
+      Die Anmelde-ID ist immer die E-Mail-Adresse.
     </p>
     <div class="zn-row">
       <input type="text" id="zn-objnr" placeholder="Objekt-/Kundennummer">
       <input type="text" id="zn-name" placeholder="Name des Kunden">
-      <input type="email" id="zn-email" placeholder="E-Mail">
+      <input type="email" id="zn-email" placeholder="E-Mail (= Anmelde-ID)">
       <input type="text" id="zn-adresse" placeholder="Adresse (optional)">
-      <button onclick="zugangAnlegen()">Anlegen &amp; senden</button>
+      <button onclick="kontoAnlegen()">Konto anlegen</button>
     </div>
     <div id="zn-result" class="zn-result" style="display:none;"></div>
   </div>
 
   <table style="margin-top:22px;">
-    <thead><tr><th>Kunde</th><th>Objekt</th><th>Zugangslink</th><th>Zuletzt genutzt</th><th></th></tr></thead>
+    <thead><tr><th>Kunde</th><th>Objekt</th><th>Status</th><th>Zuletzt angemeldet</th><th></th></tr></thead>
     <tbody id="zugang-tbody"></tbody>
   </table>
 </div>
@@ -177,7 +178,6 @@ async function login(){
   }
 }
 
-let portalUrl = '';
 
 function showTab(tab){
   const meld = tab === 'meldungen';
@@ -199,7 +199,7 @@ function showTab(tab){
   if(!meld) loadZugaenge();
 }
 
-async function zugangAnlegen(){
+async function kontoAnlegen(){
   const body = {
     objekt_id: document.getElementById('zn-objnr').value.trim(),
     name: document.getElementById('zn-name').value.trim(),
@@ -211,13 +211,15 @@ async function zugangAnlegen(){
   out.style.display = 'block';
   out.textContent = 'Wird angelegt …';
   try{
-    const resp = await fetch('/api/admin?action=zugang-anlegen', {
+    const resp = await fetch('/api/admin?action=konto-anlegen', {
       method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
     });
     const data = await resp.json();
     if(!resp.ok) throw new Error(data.error || 'Fehlgeschlagen');
-    out.innerHTML = `Zugang angelegt. Link: <code>${data.link}</code>` +
-      (data.mail === 'sent' ? ' — E-Mail wurde an den Kunden geschickt.' : ' — <strong>E-Mail konnte nicht gesendet werden.</strong>');
+    out.innerHTML =
+      'Konto angelegt.<br>Anmelde-ID: <code>' + data.anmeldeId + '</code>' +
+      '<br>Erstpasswort: <code style="font-size:15px;">' + data.erstpasswort + '</code>' +
+      '<br><span style="color:var(--grey);">Bitte notieren — das Passwort lässt sich später nicht mehr anzeigen.</span>';
     ['zn-objnr','zn-name','zn-email','zn-adresse'].forEach(id => document.getElementById(id).value = '');
     loadZugaenge();
   }catch(err){
@@ -229,22 +231,46 @@ async function zugangAnlegen(){
 async function loadZugaenge(){
   const resp = await fetch('/api/admin?action=zugaenge');
   if(!resp.ok) return;
-  const { zugaenge, portal_url } = await resp.json();
-  portalUrl = portal_url || '';
-  document.getElementById('zugang-tbody').innerHTML = zugaenge.map(z => `
+  const { zugaenge } = await resp.json();
+  document.getElementById('zugang-tbody').innerHTML = zugaenge.map(z => {
+    const status = !z.aktiv ? '<span style="color:var(--grey);">deaktiviert</span>'
+      : z.passwort_gesetzt ? '<span style="color:#1c7a5a;">aktiv</span>'
+      : '<span style="color:#b8791f;">Erstpasswort offen</span>';
+    return `
     <tr style="${z.aktiv ? '' : 'opacity:.45;'}">
       <td>${z.name}<br><span style="color:var(--grey); font-size:11.5px;">${z.email}</span></td>
       <td>${z.objekt_id}</td>
-      <td class="link-cell"><code>${portalUrl}/k/${z.token}</code></td>
-      <td>${z.letzte_nutzung ? new Date(z.letzte_nutzung).toLocaleDateString('de-CH') : '<span style="color:var(--grey);">noch nie</span>'}</td>
-      <td>${z.aktiv ? `<button class="tab" onclick="zugangDeaktivieren('${z.token}')">Deaktivieren</button>` : 'inaktiv'}</td>
-    </tr>`).join('');
+      <td>${status}</td>
+      <td>${z.letzter_login ? new Date(z.letzter_login).toLocaleDateString('de-CH') : '<span style="color:var(--grey);">noch nie</span>'}</td>
+      <td>${z.aktiv ? `
+        <button class="tab" onclick="passwortZuruecksetzen(${z.id}, '${z.name.replace(/'/g, "\\'")}')">Passwort zurücksetzen</button>
+        <button class="tab" onclick="kontoDeaktivieren(${z.id})">Deaktivieren</button>` : 'inaktiv'}</td>
+    </tr>`;
+  }).join('');
 }
 
-async function zugangDeaktivieren(token){
-  if(!confirm('Diesen Zugang wirklich deaktivieren? Der Link funktioniert danach nicht mehr.')) return;
-  await fetch('/api/admin?action=zugang-deaktivieren', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token })
+/* Für Anrufe: erzeugt ein neues Erstpasswort, das am Telefon durchgegeben wird.
+   Beim nächsten Anmelden muss der Kunde wieder ein eigenes Passwort setzen. */
+async function passwortZuruecksetzen(id, name){
+  if(!confirm('Für ' + name + ' ein neues Erstpasswort erzeugen?\n\nDas bisherige Passwort wird ungültig.')) return;
+  try{
+    const resp = await fetch('/api/admin?action=passwort-zuruecksetzen', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id })
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || 'Fehlgeschlagen');
+    alert('Neues Erstpasswort für ' + name + ':\n\n' + data.erstpasswort +
+          '\n\nBitte dem Kunden durchgeben. Beim nächsten Anmelden legt er wieder ein eigenes Passwort fest.');
+    loadZugaenge();
+  }catch(err){
+    alert('Fehler: ' + err.message);
+  }
+}
+
+async function kontoDeaktivieren(id){
+  if(!confirm('Dieses Konto wirklich deaktivieren? Die Anmeldung funktioniert danach nicht mehr.')) return;
+  await fetch('/api/admin?action=konto-deaktivieren', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id })
   });
   loadZugaenge();
 }

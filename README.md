@@ -1,51 +1,57 @@
-# Kundenportal — Clean Service Scaramuzzo AG
+# Kundenportal Putzfrauenservice — Clean Service Scaramuzzo AG
 
-Kundenportal für den Putzfrauenservice: Kundinnen und Kunden melden Terminverschiebungen,
-Absagen, Reklamationen, Schäden und Zusatzaufträge direkt über die Webseite, statt per E-Mail.
+Ein Kundenportal mit Anmeldung. Kundinnen und Kunden melden Terminverschiebungen,
+Absagen, Reklamationen, Schäden und Zusatzarbeiten selbst — statt per E-Mail.
 
-## Aufbau
+## Anmeldung
 
-Bewusst flach gehalten — nur ein einziger Unterordner (`api/`), damit sich das
-Projekt problemlos über die GitHub-Weboberfläche hochladen lässt.
+- **Anmelde-ID** ist die E-Mail-Adresse
+- **Erstpasswort** entsteht bei Vertragsabschluss und steht auf dem Vertrag
+- Beim ersten Anmelden muss ein **eigenes Passwort** gesetzt werden
+- **Passwort vergessen** läuft selbstständig per E-Mail-Link (1 Stunde gültig)
+- Nach 5 Fehlversuchen ist ein Konto 15 Minuten gesperrt
+- Angemeldet bleibt man 30 Tage
+
+Passwörter werden mit scrypt gehasht (in Node eingebaut). Jedes Konto hat einen
+eigenen Zufallssalt; im Klartext wird nichts gespeichert.
+
+## Dateien
 
 ```
-index.html            Kundenansicht
-admin.html            Admin-Dashboard (Passwort-geschützt)
-logo.webp             Logo (freigestellt)
-drop.webp             Bildmarke
-package.json
-vercel.json
-supabase_schema.sql   Datenbankstruktur
-api/melde.js          Nimmt Meldungen entgegen (Supabase + E-Mail + Beekeeper)
-api/admin.js          Alle Admin-Funktionen (login, list, customers, stats, reply)
+index.html              Kundenansicht: Anmeldung + Meldeformulare
+admin.html              Adminbereich für das PFS-Team
+api/konto.js            Anmelden, Passwort setzen, Passwort vergessen
+api/zugang.js           Konto anlegen (wird von der Angebots-App aufgerufen)
+api/melde.js            Meldungen entgegennehmen (Supabase + E-Mail + Beekeeper)
+api/admin.js            Adminfunktionen
+supabase_schema.sql     Datenbankschema
 ```
 
-## Umgebungsvariablen (Vercel → Settings → Environment Variables)
+## Umgebungsvariablen bei Vercel
 
-| Variable | Zweck |
-|---|---|
-| `SUPABASE_URL` | Projekt-URL aus Supabase |
-| `SUPABASE_SERVICE_KEY` | Service-Role-Key aus Supabase |
-| `RESEND_API_KEY` | E-Mail-Versand über Resend |
-| `BEEKEEPER_TENANT_URL` | z.B. `https://clean-service.ch.beekeeper.io` |
-| `BEEKEEPER_API_TOKEN` | Bot-Token mit Admin-Rechten |
-| `ADMIN_PASSWORD` | Passwort für `/admin.html` |
-| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile (Captcha) |
+```
+SUPABASE_URL
+SUPABASE_SERVICE_KEY
+RESEND_API_KEY
+SESSION_SECRET          langer Zufallswert, signiert die Anmelde-Cookies
+PORTAL_URL              https://portal.clean-service.ch
+ADMIN_PASSWORD
+TURNSTILE_SECRET_KEY
+BEEKEEPER_TENANT_URL
+BEEKEEPER_API_TOKEN
+ANGEBOT_API_KEY         gemeinsamer Schlüssel mit der Angebots-App
+```
 
 ## Einrichtung
 
-1. Inhalt von `supabase_schema.sql` im Supabase SQL-Editor ausführen
-2. Umgebungsvariablen bei Vercel eintragen
-3. Repo mit Vercel verbinden — Deployment läuft automatisch
+1. `supabase_schema.sql` in Supabase ausführen
+2. Umgebungsvariablen bei Vercel setzen
+3. Domain `portal.clean-service.ch` verbinden
+4. In der Angebots-App `PORTAL_URL` und `PORTAL_API_KEY` setzen
+   (`PORTAL_API_KEY` = derselbe Wert wie `ANGEBOT_API_KEY` hier)
 
-## Objekt-/Kundennummern
+## Offen
 
-Das Portal akzeptiert nur Nummern, die in der Tabelle `objekt_beekeeper_mapping`
-hinterlegt sind. Diese wird aus dem Aduna-Export befüllt; dort steht auch die
-Beekeeper-Gruppenchat-ID, in die automatische Nachrichten gepostet werden.
-
-## Offene Punkte
-
-- Aduna-Anbindung (Version 26.1, Termin mit Yuma Bruggmann ausstehend)
-- Foto-Upload bei Reklamation/Schaden wird noch nicht gespeichert
-- Beekeeper-Bot muss manuell zu jedem Kunden-Gruppenchat hinzugefügt werden
+- Konten für die rund 550 Bestandskunden anlegen und Zugangsdaten verteilen
+- Im Adminbereich eine Möglichkeit ergänzen, ein Passwort von Hand zurückzusetzen
+- Foto-Upload bei Reklamation und Schaden (Feld vorhanden, Speicherort fehlt)

@@ -121,6 +121,25 @@ function fusszeile() {
   </p>`;
 }
 
+
+/* ------------------------------------------------------- Verwaltungskonto */
+// Das Team meldet sich ueber dieselbe Maske an wie die Kundschaft, landet
+// danach aber im Adminbereich. Die Sitzung muss exakt so signiert sein wie in
+// admin.js - sonst wuerde admin.js sie nicht anerkennen.
+const ADMIN_ID = "verwaltung";
+const ADMIN_COOKIE = "admin_session";
+const ADMIN_STUNDEN = 12;
+
+function adminSign(value) {
+  return crypto.createHmac("sha256", process.env.ADMIN_PASSWORD || "").update(value).digest("hex");
+}
+
+function adminCookie() {
+  const ablauf = Date.now() + ADMIN_STUNDEN * 60 * 60 * 1000;
+  const wert = `${ablauf}.${adminSign(String(ablauf))}`;
+  return `${ADMIN_COOKIE}=${wert}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${ADMIN_STUNDEN * 3600}`;
+}
+
 /* ---------------------------------------------------------------- Sperrung */
 const MAX_FEHLVERSUCHE = 5;
 const SPERRE_MINUTEN = 15;
@@ -153,6 +172,34 @@ module.exports = async function handler(req, res) {
       const passwort = String(body.passwort || "");
       if (!email || !passwort) {
         res.status(400).json({ error: "Bitte E-Mail-Adresse und Passwort eingeben." });
+        return;
+      }
+
+      /* Verwaltungskonto: gleiche Maske, aber Weiterleitung in den Adminbereich. */
+      if (email === ADMIN_ID) {
+        // admin.js vergleicht ebenfalls getrimmt - sonst wuerde ein versehentliches
+        // Leerzeichen in der Umgebungsvariablen die beiden Wege auseinanderlaufen lassen.
+        const soll = (process.env.ADMIN_PASSWORD || "").trim();
+        const ist = passwort.trim();
+
+        if (!soll) {
+          // Eigene Meldung: sonst sucht man den Fehler beim Passwort, obwohl
+          // schlicht die Umgebungsvariable fehlt.
+          console.error("konto.js: ADMIN_PASSWORD ist nicht gesetzt.");
+          res.status(500).json({ error: "Verwaltungszugang ist auf dem Server nicht eingerichtet (ADMIN_PASSWORD fehlt)." });
+          return;
+        }
+
+        const a = Buffer.from(ist);
+        const b = Buffer.from(soll);
+        const passt = a.length === b.length && crypto.timingSafeEqual(a, b);
+        if (!passt) {
+          res.status(401).json({ error: "Passwort für die Verwaltung stimmt nicht." });
+          return;
+        }
+
+        res.setHeader("Set-Cookie", adminCookie());
+        res.status(200).json({ ok: true, admin: true, ziel: "/admin.html" });
         return;
       }
 

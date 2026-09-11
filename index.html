@@ -910,6 +910,81 @@
   .aktionen{grid-template-columns:1fr;}
 }
 
+/* ---- Übersicht: zweispaltig --------------------------------------------- */
+.ueb-raster{display:grid; grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr); gap:var(--s7); align-items:start;}
+@media (max-width:900px){ .ueb-raster{grid-template-columns:1fr; gap:var(--s6);} }
+
+.seite{display:flex; flex-direction:column; gap:var(--s4);}
+.karte{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m); overflow:hidden;}
+.karte-kopf{padding:var(--s4) var(--s5) 0;}
+.karte-kopf h3{font-family:var(--font-head); font-size:15px; color:var(--headline); margin:0;}
+.karte-kopf p{font-size:12.5px; color:var(--grey); margin:var(--s1) 0 0; line-height:1.5;}
+.karte-inhalt{padding:var(--s4) var(--s5) var(--s5);}
+
+/* Objektkarte: der Anker der Seite */
+.objekt{
+  background:linear-gradient(160deg, #12504F 0%, #0D3A39 100%);
+  color:#fff; border:none;
+}
+.objekt .karte-inhalt{padding-top:var(--s5);}
+.objekt .adresse{font-family:var(--font-head); font-size:17px; line-height:1.4; margin:0 0 var(--s4);}
+.objekt .zeile{display:flex; justify-content:space-between; gap:var(--s4);
+               padding:var(--s3) 0; border-top:1px solid rgba(255,255,255,.14); font-size:13.5px;}
+.objekt .zeile:first-of-type{border-top:none; padding-top:0;}
+.objekt .zeile span:first-child{opacity:.7;}
+.objekt .marke{
+  display:inline-block; padding:3px 10px; border-radius:999px;
+  background:rgba(255,255,255,.15); font-size:11.5px; font-weight:600;
+  letter-spacing:.02em; margin-bottom:var(--s3);
+}
+
+/* Ansprechpartner */
+.person{display:flex; align-items:center; gap:var(--s3); padding:var(--s3) 0;
+        border-bottom:1px solid var(--line);}
+.person:last-of-type{border-bottom:none;}
+.initialen{
+  flex:0 0 38px; height:38px; border-radius:50%; background:var(--info-bg);
+  color:var(--info-fg); display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-head); font-size:13px; font-weight:600;
+}
+.person .wer strong{display:block; font-size:14px; color:var(--headline); line-height:1.3;}
+.person .wer span{font-size:12.5px; color:var(--grey);}
+.telefon{
+  display:flex; align-items:center; justify-content:center; gap:var(--s2);
+  margin-top:var(--s4); padding:var(--s3); border-radius:var(--r-s);
+  background:var(--info-bg); color:var(--info-fg);
+  font-size:15px; font-weight:600; text-decoration:none;
+}
+.telefon:hover{background:var(--tint-light);}
+
+/* Feiertage */
+.ftag{display:flex; justify-content:space-between; gap:var(--s3);
+      padding:var(--s3) 0; border-bottom:1px solid var(--line); font-size:13.5px;}
+.ftag:last-child{border-bottom:none;}
+.ftag .name{color:var(--headline);}
+.ftag .datum{color:var(--grey); white-space:nowrap;}
+
+/* Gut zu wissen */
+.wissen{margin:0; padding:0; list-style:none;}
+.wissen li{padding:var(--s3) 0; border-bottom:1px solid var(--line); font-size:13.5px; line-height:1.6;}
+.wissen li:last-child{border-bottom:none;}
+.wissen b{display:block; color:var(--headline); font-weight:600; margin-bottom:2px;}
+.wissen span{color:var(--body-text);}
+
+/* Zwei Spalten auch in der schmaleren Hauptspalte */
+.ueb-raster .aktionen{grid-template-columns:repeat(auto-fit,minmax(228px,1fr));}
+.objekt .zeile span:last-child{word-break:break-word; text-align:right;}
+
+/* Auf dem Handy steht das Objekt zuoberst: es beantwortet die Frage
+   "bin ich hier richtig?" noch vor allen Handlungsmöglichkeiten. */
+@media (max-width:900px){
+  .ueb-raster{display:flex; flex-direction:column; gap:var(--s6);}
+  .seite{display:contents;}
+  .objekt{order:-1; margin-bottom:var(--s2);}
+  #ueb-haupt{order:0;}
+  .seite > .karte:not(.objekt){order:1;}
+}
+
 </style>
 </head>
 <body>
@@ -999,7 +1074,7 @@
             <label class="f-label" for="s-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
             <input type="password" id="s-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')passwortSetzen()">
           </div>
-          <button class="btn btn-primary btn-block" onclick="passwortSetzen()" data-i18n="auth.set.btn">Speichern</button>
+          <button class="btn btn-primary btn-block" onclick="passwortSetzen()" data-i18n="auth.set.btn">Passwort speichern</button>
           <div id="s-msg" class="auth-msg"></div>
         </div>
       </div>
@@ -1019,7 +1094,7 @@
             <label class="f-label" for="v-email" data-i18n="auth.email">E-Mail-Adresse</label>
             <input type="email" id="v-email" autocomplete="username" onkeydown="if(event.key==='Enter')vergessenSenden()">
           </div>
-          <button class="btn btn-primary btn-block" onclick="vergessenSenden()" data-i18n="auth.forgot.btn">Speichern</button>
+          <button class="btn btn-primary btn-block" onclick="vergessenSenden()" data-i18n="auth.forgot.btn">Link zusenden</button>
           <div id="v-msg" class="auth-msg"></div>
           <div class="auth-foot">
             <button class="btn btn-ghost" onclick="zeigeAuth('login')" data-i18n="auth.back">Zurück zur Anmeldung</button>
@@ -1047,7 +1122,7 @@
             <label class="f-label" for="r-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
             <input type="password" id="r-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')resetSpeichern()">
           </div>
-          <button class="btn btn-primary btn-block" onclick="resetSpeichern()" data-i18n="auth.reset.btn">Speichern</button>
+          <button class="btn btn-primary btn-block" onclick="resetSpeichern()" data-i18n="auth.reset.btn">Passwort speichern</button>
           <div id="r-msg" class="auth-msg"></div>
         </div>
       </div>
@@ -1063,6 +1138,8 @@
         <p class="stand" id="ueb-stand"></p>
       </div>
 
+      <div class="ueb-raster">
+        <div id="ueb-haupt">
       <section class="abschnitt" id="ueb-offen-block" style="display:none;">
         <div class="abschnitt-kopf">
           <h2 class="t-h2" data-i18n="ueb.offen.h">In Bearbeitung</h2>
@@ -1070,7 +1147,6 @@
         </div>
         <div class="anliegen" id="ueb-offen"></div>
       </section>
-
       <section class="abschnitt">
         <div class="abschnitt-kopf">
           <h2 class="t-h2" data-i18n="ueb.schnell">Was möchten Sie melden?</h2>
@@ -1099,7 +1175,6 @@
         </button>
         </div>
       </section>
-
       <section class="abschnitt" id="ueb-verlauf-block">
         <div class="abschnitt-kopf">
           <h2 class="t-h2" data-i18n="ueb.letzte">Zuletzt gemeldet</h2>
@@ -1107,6 +1182,71 @@
         </div>
         <div id="ueb-letzte"></div>
       </section>
+        </div>
+
+        <aside class="seite">
+
+          <div class="karte objekt">
+            <div class="karte-inhalt">
+              <span class="marke" data-i18n="ueb.objekt.marke">Ihr Reinigungsobjekt</span>
+              <p class="adresse" id="ob-adresse">—</p>
+              <div class="zeile"><span data-i18n="ueb.objekt.nr">Kundennummer</span><span id="ob-nr">—</span></div>
+              <div class="zeile"><span data-i18n="ueb.objekt.mail">E-Mail</span><span id="ob-mail">—</span></div>
+            </div>
+          </div>
+
+          <div class="karte">
+            <div class="karte-kopf">
+              <h3 data-i18n="ueb.team.h">Ihr Ansprechpartner</h3>
+              <p data-i18n="ueb.team.sub">Bei Fragen ist unser Team gerne für Sie da.</p>
+            </div>
+            <div class="karte-inhalt">
+              <div class="person">
+                <span class="initialen">FS</span>
+                <span class="wer"><strong>Fiorella Scalone</strong><span data-i18n="rolle.sach">Sachbearbeiterin</span></span>
+              </div>
+              <div class="person">
+                <span class="initialen">L</span>
+                <span class="wer"><strong>Lina</strong><span data-i18n="rolle.team">Teamleiterin</span></span>
+              </div>
+              <div class="person">
+                <span class="initialen">CG</span>
+                <span class="wer"><strong>Cristian Gambale</strong><span data-i18n="rolle.leitung">Abteilungsleitung</span></span>
+              </div>
+              <a class="telefon" href="tel:0844355355">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+                0844 355 355
+              </a>
+            </div>
+          </div>
+
+          <div class="karte">
+            <div class="karte-kopf">
+              <h3 data-i18n="ueb.ftage.h">Nächste Feiertage</h3>
+              <p data-i18n="ueb.ftage.sub">An diesen Tagen findet keine Reinigung statt. Ein Ersatztermin lässt sich vereinbaren, wenn Sie sich 14 Tage vorher melden.</p>
+            </div>
+            <div class="karte-inhalt" id="ueb-ftage"></div>
+          </div>
+
+          <div class="karte">
+            <div class="karte-kopf">
+              <h3 data-i18n="ueb.wissen.h">Gut zu wissen</h3>
+              <p data-i18n="ueb.wissen.sub">Die wichtigsten Fristen aus Ihrem Vertrag.</p>
+            </div>
+            <div class="karte-inhalt">
+              <ul class="wissen">
+                <li><b data-i18n="wissen.1.t">Absagen bis 24 Stunden vorher</b><span data-i18n="wissen.1.s">Später abgesagte Einsätze werden anteilig verrechnet.</span></li>
+                <li><b data-i18n="wissen.2.t">Änderungen 14 Tage im Voraus</b><span data-i18n="wissen.2.s">So lässt sich die Einsatzplanung zuverlässig anpassen.</span></li>
+                <li><b data-i18n="wissen.3.t">4 Wochen Ferien pro Jahr</b><span data-i18n="wissen.3.s">Kostenlos, sofern rechtzeitig gemeldet.</span></li>
+                <li><b data-i18n="wissen.4.t">Reklamationen am Folgetag</b><span data-i18n="wissen.4.s">Melden Sie Beanstandungen spätestens am nächsten Arbeitstag.</span></li>
+              </ul>
+              <button class="btn btn-secondary btn-block" style="margin-top:var(--s4);"
+                      onclick="setView('agb')" data-i18n="ueb.agb">Vollständige AGB lesen</button>
+            </div>
+          </div>
+
+        </aside>
+      </div>
 
     </div>
   </div>
@@ -1718,6 +1858,17 @@ rechtliche Schritte vor.</p>
 <script>
 const translations = {
   de: {
+    'ueb.objekt.marke': 'Ihr Reinigungsobjekt', 'ueb.objekt.nr': 'Kundennummer', 'ueb.objekt.mail': 'E-Mail',
+    'ueb.team.h': 'Ihr Ansprechpartner', 'ueb.team.sub': 'Bei Fragen ist unser Team gerne für Sie da.',
+    'rolle.sach': 'Sachbearbeiterin', 'rolle.team': 'Teamleiterin', 'rolle.leitung': 'Abteilungsleitung',
+    'ueb.ftage.h': 'Nächste Feiertage',
+    'ueb.ftage.sub': 'An diesen Tagen findet keine Reinigung statt. Ein Ersatztermin lässt sich vereinbaren, wenn Sie sich 14 Tage vorher melden.',
+    'ueb.wissen.h': 'Gut zu wissen', 'ueb.wissen.sub': 'Die wichtigsten Fristen aus Ihrem Vertrag.',
+    'wissen.1.t': 'Absagen bis 24 Stunden vorher', 'wissen.1.s': 'Später abgesagte Einsätze werden anteilig verrechnet.',
+    'wissen.2.t': 'Änderungen 14 Tage im Voraus', 'wissen.2.s': 'So lässt sich die Einsatzplanung zuverlässig anpassen.',
+    'wissen.3.t': '4 Wochen Ferien pro Jahr', 'wissen.3.s': 'Kostenlos, sofern rechtzeitig gemeldet.',
+    'wissen.4.t': 'Reklamationen am Folgetag', 'wissen.4.s': 'Melden Sie Beanstandungen spätestens am nächsten Arbeitstag.',
+    'ueb.agb': 'Vollständige AGB lesen',
     'step.weiter': 'Weiter', 'step.zurueck': 'Zurück', 'step.senden': 'Meldung senden',
     'auth.claim': 'Sauberkeit, auf die Sie sich verlassen können.',
     'ueb.offen.h': 'In Bearbeitung', 'ueb.offen.sub': 'Diese Anliegen liegen bei uns.',
@@ -1826,6 +1977,17 @@ const translations = {
     'photo.alert': 'Bitte fügen Sie ein Foto hinzu — dieses Feld ist für diese Meldungsart erforderlich.'
   },
   en: {
+    'ueb.objekt.marke': 'Your property', 'ueb.objekt.nr': 'Customer number', 'ueb.objekt.mail': 'Email',
+    'ueb.team.h': 'Your contacts', 'ueb.team.sub': 'Our team is happy to help with any questions.',
+    'rolle.sach': 'Administration', 'rolle.team': 'Team lead', 'rolle.leitung': 'Head of department',
+    'ueb.ftage.h': 'Upcoming public holidays',
+    'ueb.ftage.sub': 'No cleaning takes place on these days. A replacement date can be arranged if you let us know 14 days in advance.',
+    'ueb.wissen.h': 'Good to know', 'ueb.wissen.sub': 'The key deadlines from your contract.',
+    'wissen.1.t': 'Cancel up to 24 hours ahead', 'wissen.1.s': 'Later cancellations are charged proportionally.',
+    'wissen.2.t': 'Changes 14 days in advance', 'wissen.2.s': 'This allows us to adjust the schedule reliably.',
+    'wissen.3.t': '4 weeks of holiday per year', 'wissen.3.s': 'Free of charge, provided you tell us in good time.',
+    'wissen.4.t': 'Complaints the next working day', 'wissen.4.s': 'Please report any issues by the following working day.',
+    'ueb.agb': 'Read the full terms',
     'step.weiter': 'Continue', 'step.zurueck': 'Back', 'step.senden': 'Send request',
     'auth.claim': 'Cleanliness you can rely on.',
     'ueb.offen.h': 'In progress', 'ueb.offen.sub': 'These requests are with us.',
@@ -2156,7 +2318,11 @@ async function vergessenSenden(){
       body: JSON.stringify({ email })
     });
     const d = await resp.json();
-    meldung('v-msg', d.hinweis || d.error || '', d.ok ? 'ok' : 'err');
+    if(!resp.ok){
+      meldung('v-msg', d.error || 'Senden fehlgeschlagen.', 'err');
+      return;
+    }
+    meldung('v-msg', d.hinweis || '', 'ok');
   }catch(err){
     meldung('v-msg', currentLang === 'de'
       ? 'Senden fehlgeschlagen. Bitte rufen Sie uns an: 0844 355 355.'
@@ -2337,7 +2503,12 @@ async function uebersichtFuellen(){
     const vorname = (KUNDE.name || '').split(' ')[0];
     document.getElementById('ueb-gruss').textContent =
       (L === 'de' ? 'Guten Tag, ' : 'Hello, ') + (vorname || KUNDE.name || '');
+    document.getElementById('ob-adresse').textContent = KUNDE.adresse || KUNDE.name || '—';
+    document.getElementById('ob-nr').textContent = KUNDE.objekt_id || '—';
+    document.getElementById('ob-mail').textContent = KUNDE.email || '—';
   }
+
+  feiertageZeichnen();
 
   const { offen, gesamt } = await meldungenLaden();
 
@@ -2659,6 +2830,68 @@ function pflichtfelderOk(cat){
     return false;
   }
   return true;
+}
+
+
+/* ==========================================================================
+   Feiertage Kanton Zürich
+   ==========================================================================
+   Laut AGB 3.3 entfallen die regulären Reinigungseinsätze an gesetzlichen
+   Feiertagen. Die Daten lassen sich berechnen — dafür braucht es keine
+   Schnittstelle. Ostern bestimmt vier der Termine, deshalb der Rechenweg. */
+
+function ostersonntag(jahr){
+  // Gaußsche Osterformel
+  const a = jahr % 19, b = Math.floor(jahr / 100), c = jahr % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const hh = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - hh - k) % 7;
+  const m = Math.floor((a + 11 * hh + 22 * l) / 451);
+  const monat = Math.floor((hh + l - 7 * m + 114) / 31);
+  const tag = ((hh + l - 7 * m + 114) % 31) + 1;
+  return new Date(jahr, monat - 1, tag);
+}
+
+
+function feiertageZeichnen(){
+  const box = document.getElementById('ueb-ftage');
+  if(!box) return;
+  const L = currentLang;
+  box.innerHTML = naechsteFeiertage(4).map(f => `
+    <div class="ftag">
+      <span class="name">${L === 'de' ? f.de : f.en}</span>
+      <span class="datum">${f.d.toLocaleDateString(L === 'de' ? 'de-CH' : 'en-GB',
+        { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })}</span>
+    </div>`).join('');
+}
+
+function feiertage(jahr){
+  const o = ostersonntag(jahr);
+  const plus = n => new Date(o.getFullYear(), o.getMonth(), o.getDate() + n);
+  return [
+    { d: new Date(jahr, 0, 1),   de: 'Neujahr',            en: "New Year's Day" },
+    { d: new Date(jahr, 0, 2),   de: 'Berchtoldstag',      en: 'Berchtold Day' },
+    { d: plus(-2),               de: 'Karfreitag',         en: 'Good Friday' },
+    { d: plus(1),                de: 'Ostermontag',        en: 'Easter Monday' },
+    { d: new Date(jahr, 4, 1),   de: 'Tag der Arbeit',     en: 'Labour Day' },
+    { d: plus(39),               de: 'Auffahrt',           en: 'Ascension Day' },
+    { d: plus(50),               de: 'Pfingstmontag',      en: 'Whit Monday' },
+    { d: new Date(jahr, 7, 1),   de: 'Nationalfeiertag',   en: 'Swiss National Day' },
+    { d: new Date(jahr, 11, 25), de: 'Weihnachten',        en: 'Christmas Day' },
+    { d: new Date(jahr, 11, 26), de: 'Stephanstag',        en: "St Stephen's Day" },
+  ];
+}
+
+/** Die nächsten Feiertage ab heute, über den Jahreswechsel hinweg. */
+function naechsteFeiertage(anzahl){
+  const heute = new Date(); heute.setHours(0, 0, 0, 0);
+  const j = heute.getFullYear();
+  return [...feiertage(j), ...feiertage(j + 1)]
+    .filter(f => f.d >= heute)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, anzahl);
 }
 
 function gatherDetails(cat){

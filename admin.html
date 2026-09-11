@@ -1,229 +1,389 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Kundenportal Clean Service</title>
+<meta name="robots" content="noindex, nofollow">
+<title>Verwaltung — Kundenportal Clean Service Scaramuzzo AG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --navy:#0b2740; --teal:#2bb6b7; --teal-pale:#bee2e9;
-    --paper:#f4f6f8; --panel:#ffffff; --line:#e2e6ea;
-    --ink:#1b2a35; --grey:#5b6b76;
-    --amber:#b3541e; --amber-soft:#fbeee4;
-    --ok:#1c7a5e; --ok-soft:#e6f4ef;
-    --rot:#c0392b; --rot-soft:#fbeaea;
-    --font: -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); line-height:1.5;}
+:root{
+  --font-head:'Poppins', system-ui, sans-serif;
+  --font-body:'Mulish', system-ui, sans-serif;
 
-  #login-screen{max-width:340px; margin:100px auto; padding:32px; background:var(--panel); border:1px solid var(--line); border-radius:14px;}
-  #login-screen h1{font-size:18px; margin:0 0 18px; color:var(--navy);}
-  #login-screen input{width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; margin-bottom:12px;}
-  #login-screen button{width:100%; padding:12px; border:none; border-radius:8px; background:var(--navy); color:#fff; font-size:14px; font-weight:600; cursor:pointer;}
-  #login-error{color:var(--amber); font-size:13px; margin-bottom:10px;}
+  --teal:#2bb6b7;
+  --teal-5:#9cd3d3;
+  --text-teal:#1c7878;
+  --text-teal-dark:#125555;
 
-  #dashboard{display:none; max-width:1200px; margin:0 auto; padding:32px 24px 80px;}
-  header{display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;}
-  header h1{font-size:20px; color:var(--navy); margin:0;}
-  header button{border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:12.5px;}
+  --paper:#F7F9F9;
+  --panel:#ffffff;
+  --tint:#EAF6F6;
+  --line:#E4EBEB;
+  --line-2:#EFF4F4;
 
-  .stats{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px;}
-  .stat{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px;}
-  .stat .num{font-size:22px; font-weight:700; color:var(--teal);}
-  .stat .label{font-size:11px; color:var(--grey); margin-top:2px;}
+  --ink:#14201F;
+  --headline:#10403F;
+  --body-text:#485655;
+  --grey:#78888A;
 
-  .ampel-legende{display:flex; gap:18px; margin-bottom:16px; font-size:12px; color:var(--grey); align-items:center;}
-  .ampel-legende .dot{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px;}
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px;
+  --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --r-s:8px; --r-m:14px; --r-l:20px;
 
-  .dot{display:inline-block; width:12px; height:12px; border-radius:50%;}
-  .dot.rot{background:var(--rot);}
-  .dot.gelb{background:#e0a530;}
-  .dot.gruen{background:var(--ok);}
+  --sh-1:0 1px 2px rgba(16,64,63,.05);
+  --sh-2:0 2px 10px rgba(16,64,63,.07);
+  --sh-3:0 14px 38px rgba(16,64,63,.13);
 
-  table{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
-  th, td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:middle;}
-  th{font-size:11px; text-transform:uppercase; color:var(--grey); background:#f9fafb;}
-  tr.kunde-row{cursor:pointer;}
-  tr.kunde-row:hover{background:#f9fafb;}
-  .num-cell{text-align:center; font-variant-numeric:tabular-nums;}
-  .badge-offen{background:var(--amber-soft); color:var(--amber); font-size:10.5px; padding:2px 8px; border-radius:20px; font-weight:600;}
-  .badge-zuordnung{background:#fdf4e2; color:#8a5f16; font-size:10.5px; padding:2px 8px; border-radius:20px; font-weight:600; margin-left:4px;}
+  --ok-bg:#E8F4EE;   --ok-fg:#14684C;
+  --warn-bg:#FDF3E3; --warn-fg:#8A5A12;
+  --stop-bg:#FBEDE9; --stop-fg:#A8422C;
+  --info-bg:#EAF6F6; --info-fg:#0F5C5C;
+  --klar-bg:#EDF1F8; --klar-fg:#3B5487;
 
-  /* Kunden-Detail Panel (Slide-over) */
-  #detail-overlay{display:none; position:fixed; inset:0; background:rgba(11,39,64,.35); z-index:50;}
-  #detail-panel{
-    display:none;
-    position:fixed; top:0; right:0; height:100%; width:560px; max-width:92vw;
-    background:var(--panel); z-index:51; overflow-y:auto; padding:28px;
-    box-shadow:-8px 0 30px rgba(0,0,0,.15);
-  }
-  #detail-panel h2{margin:0 0 4px; font-size:18px; color:var(--navy);}
-  #detail-panel .close-btn{position:absolute; top:20px; right:24px; border:none; background:none; font-size:20px; cursor:pointer; color:var(--grey);}
-  .detail-meta{font-size:12.5px; color:var(--grey); margin-bottom:18px;}
-  .history-item{border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:12px;}
-  .history-item .top-row{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
-  .history-item .kat{font-weight:700; font-size:13px;}
-  .history-item .datum{font-size:11.5px; color:var(--grey);}
-  .history-item .details{font-size:12.5px; color:var(--grey); white-space:pre-wrap; margin-bottom:8px;}
-  .badge{font-size:10.5px; padding:3px 8px; border-radius:20px; font-weight:600;}
-  .badge.neu{background:var(--amber-soft); color:var(--amber);}
-  .badge.erledigt, .badge.akzeptieren{background:var(--ok-soft); color:var(--ok);}
-  .badge.ablehnen{background:var(--rot-soft); color:var(--rot);}
+  --tap:44px;
+}
 
-  .actions{display:flex; gap:6px; flex-wrap:wrap;}
-  .actions button{font-size:11.5px; padding:6px 10px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer;}
-  .actions button.accept{border-color:var(--ok); color:var(--ok);}
-  .actions button.reject{border-color:var(--rot); color:var(--rot);}
-  .actions textarea{width:100%; font-size:12px; padding:6px; border:1px solid var(--line); border-radius:6px; min-height:44px; margin-top:6px;}
-  .row-msg{font-size:11px; color:var(--grey); margin-top:4px;}
-  .tab{border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:12.5px;}
-  .tab.active{background:var(--navy); color:#fff; border-color:var(--navy);}
-  .zugang-neu{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px;}
-  .zn-row{display:flex; gap:8px; flex-wrap:wrap;}
-  .zn-row input{flex:1; min-width:150px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:13px;}
-  .zn-row button{padding:10px 18px; border:none; border-radius:8px; background:var(--teal); color:#fff; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
-  .zn-result{margin-top:14px; padding:13px 15px; border-radius:9px; background:var(--ok-soft); border:1px solid #b6ded1; font-size:13px;}
-  .zn-result code{background:#fff; padding:3px 7px; border-radius:5px; font-size:12.5px; user-select:all;}
-  .zn-result.err{background:#fbeaea; border-color:#e6bcbc; color:#a33;}
-  .link-cell code{font-size:11.5px; background:#f5f7f8; padding:3px 7px; border-radius:5px; user-select:all;}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--font-body); font-size:15px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--font-head); color:var(--headline); margin:0; letter-spacing:-.01em;}
+button{font-family:inherit;}
 
-  /* ---- Pendenzen ---- */
-  .pend-kopf{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px;}
-  .pfilt{
-    background:#fff; border:1px solid var(--line); border-radius:20px;
-    padding:8px 16px; cursor:pointer; font-family:inherit; font-size:13px; color:var(--grey);
-  }
-  .pfilt:hover{border-color:var(--teal);}
-  .pfilt.active{background:var(--navy); border-color:var(--navy); color:#fff;}
-  .pfilt .n{
-    display:inline-block; margin-left:6px; padding:1px 6px; border-radius:9px;
-    background:rgba(0,0,0,.08); font-size:11.5px; font-weight:600;
-  }
-  .pfilt.active .n{background:rgba(255,255,255,.22);}
+/* ---------------------------------------------------------------- Anmeldung */
+.anmeldung{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:var(--s5);}
+.anmeldung-box{
+  width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--r-l); padding:var(--s6) var(--s5); box-shadow:var(--sh-3);
+}
+.anmeldung-box h1{font-size:21px; margin-bottom:var(--s2);}
+.anmeldung-box p{font-size:13.5px; color:var(--grey); margin:0 0 var(--s5);}
 
-  .pend{
-    background:#fff; border:1px solid var(--line); border-radius:12px;
-    padding:20px 22px; margin-bottom:14px;
-  }
-  .pend.offen{border-left:3px solid #E8A33D;}
-  .pend-zeile{display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:10px;}
-  .pend-kunde{font-weight:600; font-size:15px; color:var(--navy);}
-  .pend-meta{font-size:12.5px; color:var(--grey); margin-top:2px;}
-  .pend-kat{
-    display:inline-block; padding:3px 10px; border-radius:6px; background:#EEF5F5;
-    color:#12797A; font-size:11.5px; font-weight:600; margin-bottom:8px;
-  }
-  .pend-text{
-    font-size:13.5px; line-height:1.65; color:#333; white-space:pre-wrap;
-    background:#FAFBFB; border-radius:8px; padding:12px 14px; margin-bottom:14px;
-  }
-  .pend-antwort{
-    margin-bottom:14px; padding:11px 14px; background:#F2F9F9;
-    border-left:3px solid var(--teal); font-size:13px; line-height:1.6; color:#12797A;
-  }
-  .pend-antwort strong{display:block; font-size:11px; letter-spacing:.4px;
-    text-transform:uppercase; opacity:.7; margin-bottom:3px;}
-  .pend-aktion{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
-  .pend-aktion textarea{
-    width:100%; min-height:70px; margin-bottom:10px; padding:11px 13px;
-    border:1px solid var(--line); border-radius:8px; font-family:inherit;
-    font-size:13.5px; resize:vertical;
-  }
-  .btn-ja{background:#1c7a5a; color:#fff; border:none; border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
-  .btn-nein{background:#B4472F; color:#fff; border:none; border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
-  .btn-fertig{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
-  .btn-nur{background:#fff; color:var(--grey); border:1px solid var(--line); border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
-  .btn-ja:hover,.btn-nein:hover,.btn-fertig:hover{opacity:.88;}
-  .pend-hinweis{font-size:12px; color:var(--grey); margin-top:9px;}
-  .pend-leer{background:#fff; border:1px solid var(--line); border-radius:12px; padding:54px 24px; text-align:center;}
-  .pend-leer h3{margin:0 0 6px; font-size:16px; color:var(--navy);}
-  .pend-leer p{margin:0; font-size:13.5px; color:var(--grey);}
-  .pstat{
-    display:inline-block; padding:3px 11px; border-radius:20px;
-    font-size:11.5px; font-weight:600; white-space:nowrap;
-  }
-  .pstat.neu{background:#FFF4E0; color:#8a5a12;}
-  .pstat.akzeptieren{background:#E4F5EC; color:#1c7a5a;}
-  .pstat.ablehnen{background:#FBEDE9; color:#B4472F;}
-  .pstat.erledigt{background:#EEF5F5; color:#12797A;}
-  .zugeordnet-warn{
-    display:inline-block; margin-left:8px; padding:2px 8px; border-radius:6px;
-    background:#FFF4E0; color:#8a5a12; font-size:11px; font-weight:600;
-  }
+/* ------------------------------------------------------------------- Kopf */
+.kopf{background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+.kopf-in{
+  max-width:1180px; margin:0 auto; padding:0 var(--s5); min-height:68px;
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s4);
+}
+.kopf-titel{font-family:var(--font-head); font-size:17px; font-weight:600; color:var(--headline);}
+.kopf-titel span{display:block; font-family:var(--font-body); font-size:12px;
+                 font-weight:400; color:var(--grey); letter-spacing:0;}
+.bereiche{display:flex; gap:var(--s1); background:var(--paper); padding:4px; border-radius:10px;}
+.bereich{
+  background:none; border:none; cursor:pointer; padding:9px 15px; border-radius:7px;
+  font-size:13.5px; font-weight:600; color:var(--grey); white-space:nowrap;
+}
+.bereich:hover{color:var(--headline);}
+.bereich.active{background:var(--panel); color:var(--headline); box-shadow:var(--sh-1);}
+
+/* ---------------------------------------------------------------- Grundriss */
+.raum{max-width:1180px; margin:0 auto; padding:var(--s6) var(--s5) var(--s8);}
+.raum-kopf{margin-bottom:var(--s5);}
+.raum-kopf h1{font-size:26px; margin-bottom:var(--s2);}
+.raum-kopf p{font-size:14px; color:var(--grey); margin:0; max-width:62ch;}
+
+/* --------------------------------------------------------------- Bedienung */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
+  min-height:var(--tap); padding:0 var(--s4); border-radius:var(--r-s);
+  font-size:14px; font-weight:600; border:1px solid transparent; cursor:pointer;
+  transition:background-color .15s, border-color .15s, color .15s;
+}
+.btn:focus-visible{outline:2px solid var(--text-teal); outline-offset:2px;}
+.btn-primary{background:var(--text-teal); color:#fff;}
+.btn-primary:hover{background:var(--text-teal-dark);}
+.btn-dunkel{background:var(--headline); color:#fff;}
+.btn-dunkel:hover{opacity:.9;}
+.btn-hell{background:var(--panel); color:var(--body-text); border-color:var(--line);}
+.btn-hell:hover{border-color:var(--teal-5); color:var(--headline);}
+.btn-klein{min-height:38px; padding:0 var(--s3); font-size:13px;}
+.btn[disabled]{opacity:.45; cursor:not-allowed;}
+.btn-block{width:100%;}
+
+input[type=text], input[type=email], input[type=password], textarea, select{
+  width:100%; min-height:var(--tap); padding:var(--s3);
+  border:1px solid var(--line); border-radius:var(--r-s); background:#fff;
+  font-family:var(--font-body); font-size:14.5px; color:var(--ink);
+}
+textarea{min-height:88px; resize:vertical; line-height:1.6;}
+input:focus, textarea:focus, select:focus{
+  outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(43,182,183,.15);
+}
+label{display:block; font-size:13px; font-weight:600; color:var(--headline); margin-bottom:var(--s2);}
+
+/* ------------------------------------------------------------------ Filter */
+.filter{display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s5);}
+.filter button{
+  background:var(--panel); border:1px solid var(--line); border-radius:999px;
+  padding:9px 16px; cursor:pointer; font-size:13.5px; color:var(--grey); min-height:40px;
+  display:inline-flex; align-items:center; gap:var(--s2);
+}
+.filter button:hover{border-color:var(--teal-5); color:var(--headline);}
+.filter button.active{background:var(--headline); border-color:var(--headline); color:#fff;}
+.filter .n{
+  min-width:20px; padding:1px 6px; border-radius:999px; background:rgba(0,0,0,.07);
+  font-size:11.5px; font-weight:700; text-align:center;
+}
+.filter button.active .n{background:rgba(255,255,255,.22);}
+
+/* ---------------------------------------------------------------- Pendenzen */
+.pend{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m);
+  margin-bottom:var(--s3); overflow:hidden;
+}
+.pend.offen{border-left:3px solid #E8A33D;}
+.pend.abklaerung{border-left:3px solid #6C86BE;}
+
+.pend-zeile{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4);
+  padding:var(--s4) var(--s5); cursor:pointer; width:100%; text-align:left;
+  background:none; border:none;
+}
+.pend-zeile:hover{background:var(--line-2);}
+.pend-links{display:flex; align-items:flex-start; gap:var(--s4); min-width:0;}
+.pend-kat{
+  flex:0 0 auto; padding:4px 10px; border-radius:6px; background:var(--tint);
+  color:var(--text-teal-dark); font-size:11.5px; font-weight:700; margin-top:2px;
+}
+.pend-wer{min-width:0;}
+.pend-wer strong{display:block; font-family:var(--font-head); font-size:15.5px; color:var(--headline);}
+.pend-wer .meta{font-size:12.5px; color:var(--grey); margin-top:2px;}
+.pend-rechts{display:flex; align-items:center; gap:var(--s3); flex:0 0 auto;}
+.pend-bearb{font-size:12.5px; color:var(--grey); text-align:right;}
+.pend-bearb b{display:block; color:var(--headline); font-weight:600;}
+.pfeil{color:var(--grey); transition:transform .18s ease;}
+.pend.auf .pfeil{transform:rotate(180deg);}
+
+.pend-inhalt{display:none; padding:0 var(--s5) var(--s5); border-top:1px solid var(--line-2);}
+.pend.auf .pend-inhalt{display:block;}
+
+.pend-text{
+  font-size:14px; line-height:1.7; color:var(--body-text); white-space:pre-wrap;
+  background:var(--paper); border-radius:var(--r-s); padding:var(--s4); margin:var(--s4) 0 var(--s5);
+}
+
+.spalten{display:grid; grid-template-columns:1fr 1fr; gap:var(--s5);}
+@media (max-width:900px){ .spalten{grid-template-columns:1fr;} }
+
+.block{border:1px solid var(--line); border-radius:var(--r-m); padding:var(--s4);}
+.block-intern{background:var(--paper);}
+.block-kunde{background:var(--info-bg); border-color:var(--teal-5);}
+.block h3{font-size:14px; margin-bottom:var(--s1);}
+.block .wer-sieht{font-size:12px; color:var(--grey); margin:0 0 var(--s4); line-height:1.5;}
+.block-kunde .wer-sieht{color:var(--info-fg);}
+
+/* Notizverlauf */
+.notizen{margin-bottom:var(--s4);}
+.notiz{padding:var(--s3) 0; border-bottom:1px solid var(--line);}
+.notiz:first-child{padding-top:0;}
+.notiz:last-child{border-bottom:none;}
+.notiz .kopfzeile{font-size:11.5px; color:var(--grey); margin-bottom:3px;}
+.notiz .kopfzeile b{color:var(--headline); font-weight:600;}
+.notiz .inhalt{font-size:13.5px; line-height:1.6; color:var(--body-text); white-space:pre-wrap;}
+.keine-notizen{font-size:13px; color:var(--grey); font-style:normal; margin:0 0 var(--s4);}
+
+.statusreihe{display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s4);}
+.st-btn{
+  background:var(--panel); border:1px solid var(--line); border-radius:999px;
+  padding:7px 14px; cursor:pointer; font-size:12.5px; font-weight:600; color:var(--grey);
+  min-height:38px;
+}
+.st-btn:hover{border-color:var(--teal-5); color:var(--headline);}
+.st-btn.an{background:var(--headline); border-color:var(--headline); color:#fff;}
+
+.knopfreihe{display:flex; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s3);}
+
+/* ----------------------------------------------------------- Statusmarken */
+.pill{
+  display:inline-flex; align-items:center; gap:6px; padding:5px 12px 5px 10px;
+  border-radius:999px; font-size:12.5px; font-weight:600; white-space:nowrap;
+}
+.pill .dot{width:7px; height:7px; border-radius:50%; background:currentColor;}
+.pill-neu{background:var(--warn-bg); color:var(--warn-fg);}
+.pill-abklaerung{background:var(--klar-bg); color:var(--klar-fg);}
+.pill-akzeptieren{background:var(--ok-bg); color:var(--ok-fg);}
+.pill-ablehnen{background:var(--stop-bg); color:var(--stop-fg);}
+.pill-erledigt{background:var(--info-bg); color:var(--info-fg);}
+
+.warnung{
+  display:inline-block; margin-left:var(--s2); padding:2px 8px; border-radius:6px;
+  background:var(--warn-bg); color:var(--warn-fg); font-size:11px; font-weight:700;
+}
+
+/* ------------------------------------------------------------------ Leeres */
+.leer{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m);
+  padding:var(--s8) var(--s5); text-align:center;
+}
+.leer svg{color:var(--teal-5); margin-bottom:var(--s4);}
+.leer h3{font-size:17px; margin-bottom:var(--s2);}
+.leer p{font-size:14px; color:var(--grey); margin:0 auto; max-width:40ch;}
+
+/* ------------------------------------------------------------------ Tabellen */
+table{width:100%; border-collapse:collapse; background:var(--panel);
+      border:1px solid var(--line); border-radius:var(--r-m); overflow:hidden;}
+th{
+  text-align:left; font-size:11.5px; font-weight:700; color:var(--grey);
+  padding:var(--s3) var(--s4); border-bottom:1px solid var(--line); background:var(--paper);
+}
+td{padding:var(--s4); border-bottom:1px solid var(--line-2); font-size:14px; vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--line-2);}
+.num-cell{text-align:center;}
+
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+       gap:var(--s3); margin-bottom:var(--s5);}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m); padding:var(--s4);}
+.stat .num{font-family:var(--font-head); font-size:24px; color:var(--headline);}
+.stat .label{font-size:12px; color:var(--grey); margin-top:2px;}
+
+.ampel-legende{display:flex; gap:var(--s5); flex-wrap:wrap; font-size:12.5px;
+               color:var(--grey); margin-bottom:var(--s4);}
+.ampel-legende span{display:inline-flex; align-items:center; gap:6px;}
+.dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+.dot.rot{background:#C0533A;} .dot.gelb{background:#E8A33D;} .dot.gruen{background:#3E9E77;}
+
+.zugang-neu{background:var(--panel); border:1px solid var(--line);
+            border-radius:var(--r-m); padding:var(--s5);}
+.zn-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:var(--s3); align-items:end;}
+.zn-result{margin-top:var(--s4); padding:var(--s4); border-radius:var(--r-s);
+           background:var(--ok-bg); color:var(--ok-fg); font-size:13.5px; line-height:1.7;}
+.zn-result.err{background:var(--stop-bg); color:var(--stop-fg);}
+.zn-result code{font-family:'Courier New',monospace; font-weight:700;}
+
+/* ------------------------------------------------------------------ Details */
+#detail-overlay{display:none; position:fixed; inset:0; background:rgba(16,64,63,.35); z-index:80;}
+#detail-panel{
+  display:none; position:fixed; top:0; right:0; bottom:0; width:min(520px,100%);
+  background:var(--panel); z-index:81; padding:var(--s6) var(--s5); overflow-y:auto;
+  box-shadow:var(--sh-3);
+}
+.close-btn{position:absolute; top:var(--s4); right:var(--s4); background:none;
+           border:none; font-size:20px; color:var(--grey); cursor:pointer; padding:var(--s2);}
+.detail-meta{font-size:13px; color:var(--grey); margin:var(--s2) 0 var(--s5);}
+
+.meldung{display:none; margin-top:var(--s3); padding:var(--s3);
+         border-radius:var(--r-s); font-size:13.5px; line-height:1.55;}
+.meldung.err{background:var(--stop-bg); color:var(--stop-fg);}
+.meldung.ok{background:var(--ok-bg); color:var(--ok-fg);}
+
+@media (max-width:720px){
+  .kopf-in{flex-direction:column; align-items:stretch; gap:var(--s3); padding:var(--s3) var(--s4);}
+  .bereiche{overflow-x:auto;}
+  .raum{padding:var(--s5) var(--s4) var(--s7);}
+  .pend-zeile{flex-direction:column; gap:var(--s3);}
+  .pend-rechts{width:100%; justify-content:space-between;}
+  table{display:block; overflow-x:auto;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;}
+}
+
+.row-msg{font-size:13px; color:var(--ok-fg); background:var(--ok-bg);
+         padding:var(--s2) var(--s3); border-radius:var(--r-s);}
+.hist{border-bottom:1px solid var(--line); padding:var(--s4) 0;}
+.hist:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
 
-<div id="login-screen">
-  <h1>Admin-Bereich — Kundenportal</h1>
-  <div id="login-error" role="alert"></div>
-  <label for="login-password" style="font-size:13px; display:block; margin-bottom:6px;">Passwort</label>
-  <input type="password" id="login-password" placeholder="Passwort" onkeydown="if(event.key==='Enter') login()">
-  <button onclick="login()">Anmelden</button>
+<!-- ======================= Anmeldung ======================= -->
+<div id="login-screen" class="anmeldung">
+  <div class="anmeldung-box">
+    <h1>Verwaltung</h1>
+    <p>Kundenportal Putzfrauenservice</p>
+    <label for="login-password">Passwort</label>
+    <input type="password" id="login-password" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn btn-primary btn-block" style="margin-top:var(--s4);" onclick="login()">Anmelden</button>
+    <div id="login-error" class="meldung err" role="alert"></div>
+  </div>
 </div>
 
-<div id="dashboard">
-  <header>
-    <h1 id="page-title">Kunden-Dashboard</h1>
-    <div style="display:flex; gap:8px;">
-      <button id="tab-pendenzen" class="tab active" onclick="showTab('pendenzen')">Pendenzen</button>
-      <button id="tab-meldungen" class="tab" onclick="showTab('meldungen')">Kundenübersicht</button>
-      <button id="tab-zugaenge" class="tab" onclick="showTab('zugaenge')">Kundenzugänge</button>
-      <button onclick="loadAll()">↻ Aktualisieren</button>
+<!-- ======================= Arbeitsfläche ======================= -->
+<div id="dashboard" style="display:none;">
+
+  <header class="kopf">
+    <div class="kopf-in">
+      <div class="kopf-titel">Verwaltung<span>Kundenportal Putzfrauenservice</span></div>
+      <div class="bereiche">
+        <button id="tab-pendenzen" class="bereich active" onclick="showTab('pendenzen')">Pendenzen</button>
+        <button id="tab-meldungen" class="bereich" onclick="showTab('meldungen')">Kundenübersicht</button>
+        <button id="tab-zugaenge" class="bereich" onclick="showTab('zugaenge')">Kundenkonten</button>
+      </div>
     </div>
   </header>
 
-  <div class="stats" id="stats"></div>
-
-<div id="view-pendenzen">
-  <div class="pend-kopf" id="pend-filter">
-    <button class="pfilt active" onclick="pendFilter('offen')">Offen<span class="n" id="n-offen">0</span></button>
-    <button class="pfilt" onclick="pendFilter('alle')">Alle<span class="n" id="n-alle">0</span></button>
-    <button class="pfilt" onclick="pendFilter('erledigt')">Abgeschlossen<span class="n" id="n-erledigt">0</span></button>
-  </div>
-  <div id="pend-liste"></div>
-</div>
-
-<div id="view-meldungen" style="display:none;">
-  <div class="stats" id="stats-innen"></div>
-  <div class="ampel-legende">
-    <span><span class="dot rot"></span>Auffällig / möglicherweise kündigungsgefährdet</span>
-    <span><span class="dot gelb"></span>Beobachten</span>
-    <span><span class="dot gruen"></span>Unauffällig</span>
-  </div>
-
-  <table>
-    <thead>
-      <tr><th></th><th>Kunde</th><th>Objekt</th><th class="num-cell">Verschieb.</th><th class="num-cell">Absagen</th><th class="num-cell">Reklam.</th><th class="num-cell">Schäden</th><th class="num-cell">Zusatz</th><th>Letzte Meldung</th><th></th></tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-</div>
-</div>
-
-<div id="view-zugaenge" style="display:none; max-width:1200px; margin:0 auto; padding:0 24px 80px;">
-  <div class="zugang-neu">
-    <h2 style="font-size:16px; margin:0 0 4px; color:var(--navy);">Neues Kundenkonto anlegen</h2>
-    <p style="font-size:12.5px; color:var(--grey); margin:0 0 14px;">
-      Für Bestandskunden ohne neuen Vertrag. Es entsteht ein Erstpasswort, das Sie dem
-      Kunden mitteilen — beim ersten Anmelden legt er sein eigenes Passwort fest.
-      Die Anmelde-ID ist immer die E-Mail-Adresse.
-    </p>
-    <div class="zn-row">
-      <input type="text" id="zn-objnr" placeholder="Objekt-/Kundennummer">
-      <input type="text" id="zn-name" placeholder="Name des Kunden">
-      <input type="email" id="zn-email" placeholder="E-Mail (= Anmelde-ID)">
-      <input type="text" id="zn-adresse" placeholder="Adresse (optional)">
-      <button onclick="kontoAnlegen()">Konto anlegen</button>
+  <!-- ---------------- Pendenzen ---------------- -->
+  <div id="view-pendenzen" class="raum">
+    <div class="raum-kopf">
+      <h1>Pendenzen</h1>
+      <p>Offene Kundenmeldungen. Halten Sie den Stand mit internen Notizen fest — die Kundschaft sieht nur, was Sie ihr ausdrücklich schreiben.</p>
     </div>
-    <div id="zn-result" class="zn-result" style="display:none;"></div>
+
+    <div class="filter" id="pend-filter">
+      <button class="active" onclick="pendFilter('aktiv')">Aktiv<span class="n" id="n-aktiv">0</span></button>
+      <button onclick="pendFilter('neu')">Unbearbeitet<span class="n" id="n-neu">0</span></button>
+      <button onclick="pendFilter('abklaerung')">In Abklärung<span class="n" id="n-abklaerung">0</span></button>
+      <button onclick="pendFilter('erledigt')">Abgeschlossen<span class="n" id="n-erledigt">0</span></button>
+      <button onclick="pendFilter('alle')">Alle<span class="n" id="n-alle">0</span></button>
+    </div>
+
+    <div id="pend-liste"></div>
   </div>
 
-  <table style="margin-top:22px;">
-    <thead><tr><th>Kunde</th><th>Objekt</th><th>Status</th><th>Zuletzt angemeldet</th><th></th></tr></thead>
-    <tbody id="zugang-tbody"></tbody>
-  </table>
+  <!-- ---------------- Kundenübersicht ---------------- -->
+  <div id="view-meldungen" class="raum" style="display:none;">
+    <div class="raum-kopf">
+      <h1>Kundenübersicht</h1>
+      <p>Alle Kundinnen und Kunden mit ihrem Meldeverhalten. Die Ampel zeigt, wo sich Häufungen abzeichnen.</p>
+    </div>
+
+    <div class="stats" id="stats-innen"></div>
+
+    <div class="ampel-legende">
+      <span><span class="dot rot"></span>Auffällig — möglicherweise kündigungsgefährdet</span>
+      <span><span class="dot gelb"></span>Beobachten</span>
+      <span><span class="dot gruen"></span>Unauffällig</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th></th><th>Kunde</th><th>Objekt</th><th class="num-cell">Verschieb.</th><th class="num-cell">Absagen</th><th class="num-cell">Reklam.</th><th class="num-cell">Schäden</th><th class="num-cell">Zusatz</th><th>Letzte Meldung</th><th></th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- ---------------- Kundenkonten ---------------- -->
+  <div id="view-zugaenge" class="raum" style="display:none;">
+    <div class="raum-kopf">
+      <h1>Kundenkonten</h1>
+      <p>Zugänge zum Portal. Für Bestandskunden ohne neuen Vertrag legen Sie hier ein Konto an; das Erstpasswort geben Sie der Kundschaft weiter.</p>
+    </div>
+
+    <div class="zugang-neu">
+      <div class="zn-row">
+        <div><label for="zn-objnr">Objekt-/Kundennummer</label><input type="text" id="zn-objnr"></div>
+        <div><label for="zn-name">Name</label><input type="text" id="zn-name"></div>
+        <div><label for="zn-email">E-Mail (= Anmelde-ID)</label><input type="email" id="zn-email"></div>
+        <div><label for="zn-adresse">Adresse</label><input type="text" id="zn-adresse"></div>
+        <button class="btn btn-primary" onclick="kontoAnlegen()">Konto anlegen</button>
+      </div>
+      <div id="zn-result" class="zn-result" style="display:none;"></div>
+    </div>
+
+    <table style="margin-top:var(--s5);">
+      <thead><tr><th>Kunde</th><th>Objekt</th><th>Status</th><th>Zuletzt angemeldet</th><th></th></tr></thead>
+      <tbody id="zugang-tbody"></tbody>
+    </table>
+  </div>
+
 </div>
 
 <div id="detail-overlay" onclick="closeDetail()"></div>
@@ -235,191 +395,422 @@
 </div>
 
 <script>
-const KAT_LABEL = {verschiebung:'Terminverschiebung', absage:'Absage', reklamation:'Reklamation', schaden:'Schadenmeldung', zusatz:'Zusatzauftrag'};
-let kundenDaten = [];
+/* ==========================================================================
+   Verwaltung — Kundenportal Clean Service Scaramuzzo AG
+   ========================================================================== */
 
+const KAT = { verschiebung:'Verschiebung', absage:'Absage', reklamation:'Reklamation',
+              schaden:'Schaden', zusatz:'Zusatzarbeiten' };
+const STATUS = { neu:'Unbearbeitet', abklaerung:'In Abklärung', akzeptieren:'Angenommen',
+                 ablehnen:'Abgelehnt', erledigt:'Erledigt' };
 
-/* Beim Laden pruefen, ob schon eine gueltige Sitzung besteht.
-   Wer sich ueber die Portal-Anmeldemaske als "Verwaltung" angemeldet hat,
-   bringt das Cookie bereits mit und soll nicht ein zweites Mal tippen. */
+let PEND = [];
+let PFILTER = 'aktiv';
+let OFFEN_ID = null;          // welche Pendenz aufgeklappt ist
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function datumZeit(iso){
+  return new Date(iso).toLocaleString('de-CH',
+    { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+/* ------------------------------------------------------------- Anmeldung */
 async function sitzungPruefen(){
   try{
     const r = await fetch('/api/admin?action=stats');
     if(!r.ok) throw new Error('keine Sitzung');
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    showTab('pendenzen');
+    starten();
   }catch(e){
-    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
   }
 }
 document.addEventListener('DOMContentLoaded', sitzungPruefen);
 
+function starten(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  showTab('pendenzen');
+}
+
 async function login(){
   const password = document.getElementById('login-password').value.trim();
-  const errBox = document.getElementById('login-error');
-  errBox.style.display = 'none';
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
   try{
-    const resp = await fetch('/api/admin?action=login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password})});
-    const data = await resp.json();
-    if(!resp.ok) throw new Error((data.error || 'Anmeldung fehlgeschlagen.') + (data.diagnose ? ' (' + data.diagnose + ')' : ''));
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    showTab('pendenzen');
-  } catch(err){
-    errBox.textContent = err.message;
-    errBox.style.display = 'block';
-  }
-}
-
-
-
-/* ==========================================================================
-   Pendenzen — die Arbeitsliste des Teams
-   ========================================================================== */
-
-let PEND = [];
-let PFILTER = 'offen';
-
-const P_KAT = { verschiebung:'Terminverschiebung', absage:'Terminabsage',
-                reklamation:'Reklamation', schaden:'Schadenmeldung', zusatz:'Zusatzreinigung' };
-
-async function ladePendenzen(){
-  try{
-    const r = await fetch('/api/admin?action=list');
-    if(!r.ok) throw new Error('Laden fehlgeschlagen');
-    const d = await r.json();
-    PEND = d.meldungen || [];
-  }catch(e){
-    PEND = [];
-  }
-  const offen = PEND.filter(m => m.status === 'neu').length;
-  const erledigt = PEND.filter(m => m.status !== 'neu').length;
-  document.getElementById('n-offen').textContent = offen;
-  document.getElementById('n-alle').textContent = PEND.length;
-  document.getElementById('n-erledigt').textContent = erledigt;
-  zeichnePendenzen();
-}
-
-function pendFilter(f){
-  PFILTER = f;
-  document.querySelectorAll('.pfilt').forEach(b =>
-    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${f}'`)));
-  zeichnePendenzen();
-}
-
-function pEsc(s){
-  return String(s || '').replace(/[&<>"']/g, c =>
-    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-}
-
-function zeichnePendenzen(){
-  let liste = PEND;
-  if(PFILTER === 'offen')    liste = PEND.filter(m => m.status === 'neu');
-  if(PFILTER === 'erledigt') liste = PEND.filter(m => m.status !== 'neu');
-
-  const box = document.getElementById('pend-liste');
-  if(!liste.length){
-    box.innerHTML = `
-      <div class="pend-leer">
-        <h3>${PFILTER === 'offen' ? 'Keine offenen Pendenzen' : 'Nichts vorhanden'}</h3>
-        <p>${PFILTER === 'offen'
-             ? 'Alle Kundenmeldungen sind bearbeitet.'
-             : 'In dieser Ansicht gibt es aktuell nichts anzuzeigen.'}</p>
-      </div>`;
-    return;
-  }
-
-  box.innerHTML = liste.map(m => {
-    const offen = m.status === 'neu';
-    const datum = new Date(m.created_at).toLocaleString('de-CH',
-      { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-    const statusLbl = { neu:'Offen', akzeptieren:'Angenommen', ablehnen:'Abgelehnt', erledigt:'Erledigt' }[m.status] || m.status;
-
-    return `
-    <div class="pend ${offen ? 'offen' : ''}">
-      <div class="pend-zeile">
-        <div>
-          <div class="pend-kunde">${pEsc(m.name)}</div>
-          <div class="pend-meta">
-            ${m.objekt_id ? 'Objekt ' + pEsc(m.objekt_id) : '<span class="zugeordnet-warn">Zuordnung offen</span>'}
-            · ${pEsc(m.email || '')} · ${datum}
-          </div>
-        </div>
-        <span class="pstat ${m.status}">${statusLbl}</span>
-      </div>
-
-      <span class="pend-kat">${P_KAT[m.kategorie] || m.kategorie}</span>
-      ${m.details ? `<div class="pend-text">${pEsc(m.details)}</div>` : ''}
-      ${m.admin_note ? `<div class="pend-antwort"><strong>Bereits geantwortet</strong>${pEsc(m.admin_note)}</div>` : ''}
-
-      <div class="pend-aktion">
-        <textarea id="antw-${m.id}" placeholder="Ihre Antwort an die Kundschaft (optional — sonst wird ein Standardtext verwendet)"></textarea>
-        <button class="btn-ja" onclick="pendAntwort(${m.id}, 'akzeptieren')">Annehmen</button>
-        <button class="btn-nein" onclick="pendAntwort(${m.id}, 'ablehnen')">Ablehnen</button>
-        <button class="btn-fertig" onclick="pendAntwort(${m.id}, 'erledigt')">Erledigt</button>
-        <button class="btn-nur" onclick="pendAntwort(${m.id}, 'nachricht')">Nur Nachricht senden</button>
-      </div>
-      <div class="pend-hinweis">
-        Die Kundschaft erhält eine E-Mail mit dem neuen Stand und sieht die Antwort im Portal.
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function pendAntwort(id, aktion){
-  const feld = document.getElementById('antw-' + id);
-  const nachricht = feld ? feld.value.trim() : '';
-
-  if(aktion === 'nachricht' && !nachricht){
-    alert('Bitte zuerst eine Nachricht eingeben.');
-    return;
-  }
-
-  const knoepfe = feld ? feld.parentElement.querySelectorAll('button') : [];
-  knoepfe.forEach(b => b.disabled = true);
-
-  try{
-    const r = await fetch('/api/admin?action=reply', {
+    const resp = await fetch('/api/admin?action=login', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ id, action: aktion, nachricht })
+      body: JSON.stringify({ password })
     });
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.error || 'Fehlgeschlagen');
-
-    if(d.mail === 'error'){
-      alert('Status wurde gespeichert, aber die E-Mail konnte nicht zugestellt werden:\n' +
-            (d.mail_error || 'unbekannter Grund') +
-            '\n\nDie Kundschaft sieht die Antwort trotzdem im Portal.');
-    }
-    ladePendenzen();
-  }catch(err){
-    alert('Fehler: ' + err.message);
-    knoepfe.forEach(b => b.disabled = false);
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
+    starten();
+  }catch(e){
+    err.textContent = e.message;
+    err.style.display = 'block';
   }
 }
 
+/* ------------------------------------------------------------- Bereiche */
 function showTab(tab){
-  const bereiche = {
-    pendenzen: { titel: 'Pendenzen' },
-    meldungen: { titel: 'Kundenübersicht' },
-    zugaenge:  { titel: 'Kundenzugänge' }
-  };
-  if(!bereiche[tab]) tab = 'pendenzen';
-
+  const titel = { pendenzen:'Pendenzen', meldungen:'Kundenübersicht', zugaenge:'Kundenkonten' };
+  if(!titel[tab]) tab = 'pendenzen';
   ['pendenzen','meldungen','zugaenge'].forEach(t => {
     const v = document.getElementById('view-' + t);
     if(v) v.style.display = (t === tab) ? 'block' : 'none';
     const b = document.getElementById('tab-' + t);
     if(b) b.classList.toggle('active', t === tab);
   });
-
-  document.getElementById('page-title').textContent = bereiche[tab].titel;
-
   if(tab === 'pendenzen') ladePendenzen();
   if(tab === 'meldungen') loadAll();
   if(tab === 'zugaenge')  loadZugaenge();
+}
+
+/* ------------------------------------------------------------ Pendenzen */
+async function ladePendenzen(){
+  try{
+    const r = await fetch('/api/admin?action=list');
+    if(!r.ok) throw new Error('Laden fehlgeschlagen');
+    const d = await r.json();
+    PEND = d.meldungen || [];
+  }catch(e){ PEND = []; }
+
+  const z = k => PEND.filter(k).length;
+  document.getElementById('n-neu').textContent        = z(m => m.status === 'neu');
+  document.getElementById('n-abklaerung').textContent = z(m => m.status === 'abklaerung');
+  document.getElementById('n-aktiv').textContent      = z(m => m.status === 'neu' || m.status === 'abklaerung');
+  document.getElementById('n-erledigt').textContent   = z(m => ['akzeptieren','ablehnen','erledigt'].includes(m.status));
+  document.getElementById('n-alle').textContent       = PEND.length;
+
+  zeichnePendenzen();
+}
+
+function pendFilter(f){
+  PFILTER = f;
+  document.querySelectorAll('#pend-filter button').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${f}'`)));
+  zeichnePendenzen();
+}
+
+function gefiltert(){
+  if(PFILTER === 'aktiv')      return PEND.filter(m => m.status === 'neu' || m.status === 'abklaerung');
+  if(PFILTER === 'neu')        return PEND.filter(m => m.status === 'neu');
+  if(PFILTER === 'abklaerung') return PEND.filter(m => m.status === 'abklaerung');
+  if(PFILTER === 'erledigt')   return PEND.filter(m => ['akzeptieren','ablehnen','erledigt'].includes(m.status));
+  return PEND;
+}
+
+function zeichnePendenzen(){
+  const liste = gefiltert();
+  const box = document.getElementById('pend-liste');
+
+  if(!liste.length){
+    box.innerHTML = `
+      <div class="leer">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+        <h3>${PFILTER === 'aktiv' ? 'Keine offenen Pendenzen' : 'Nichts in dieser Ansicht'}</h3>
+        <p>${PFILTER === 'aktiv'
+             ? 'Alle Kundenmeldungen sind bearbeitet.'
+             : 'Wählen Sie oben eine andere Ansicht.'}</p>
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = liste.map(zeichnePendenz).join('');
+}
+
+function zeichnePendenz(m){
+  const auf = (OFFEN_ID === m.id);
+  const rand = m.status === 'neu' ? 'offen' : (m.status === 'abklaerung' ? 'abklaerung' : '');
+  const notizen = m.notizen || [];
+  const letzte = notizen[0];
+
+  return `
+  <div class="pend ${rand} ${auf ? 'auf' : ''}" id="pend-${m.id}">
+    <button class="pend-zeile" onclick="pendUmschalten(${m.id})" aria-expanded="${auf}">
+      <div class="pend-links">
+        <span class="pend-kat">${KAT[m.kategorie] || m.kategorie}</span>
+        <div class="pend-wer">
+          <strong>${esc(m.name)}</strong>
+          <div class="meta">
+            ${m.objekt_id ? 'Objekt ' + esc(m.objekt_id) : '<span class="warnung">Zuordnung offen</span>'}
+            &nbsp;·&nbsp; ${datumZeit(m.created_at)}
+            ${letzte ? `&nbsp;·&nbsp; ${notizen.length} ${notizen.length === 1 ? 'Notiz' : 'Notizen'}` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="pend-rechts">
+        ${m.bearbeiter ? `<span class="pend-bearb">bei<b>${esc(m.bearbeiter)}</b></span>` : ''}
+        <span class="pill pill-${m.status}"><span class="dot"></span>${STATUS[m.status] || m.status}</span>
+        <svg class="pfeil" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    </button>
+
+    <div class="pend-inhalt">
+      <div class="pend-text">${esc(m.details) || '—'}</div>
+
+      <div class="statusreihe">
+        ${['neu','abklaerung','akzeptieren','ablehnen','erledigt'].map(s => `
+          <button class="st-btn ${m.status === s ? 'an' : ''}" onclick="statusSetzen(${m.id}, '${s}')">
+            ${STATUS[s]}
+          </button>`).join('')}
+      </div>
+
+      <div class="spalten">
+        <div class="block block-intern">
+          <h3>Interner Stand</h3>
+          <p class="wer-sieht">Nur für das Team sichtbar. Die Kundschaft sieht diese Notizen nicht.</p>
+
+          <div class="notizen">
+            ${notizen.length
+              ? notizen.map(n => `
+                  <div class="notiz">
+                    <div class="kopfzeile">${n.autor ? `<b>${esc(n.autor)}</b> · ` : ''}${datumZeit(n.created_at)}</div>
+                    <div class="inhalt">${esc(n.text)}</div>
+                  </div>`).join('')
+              : '<p class="keine-notizen">Noch kein Eintrag.</p>'}
+          </div>
+
+          <label for="notiz-${m.id}">Neue Notiz</label>
+          <textarea id="notiz-${m.id}" placeholder="z.B. Rückruf bei Frau Bösiger, wartet auf Rückmeldung der Raumpflegerin"></textarea>
+          <div style="margin-top:var(--s3);">
+            <label for="autor-${m.id}">Ihr Name</label>
+            <input type="text" id="autor-${m.id}" value="${esc(m.bearbeiter || '')}" placeholder="z.B. Fiorella">
+          </div>
+          <div class="knopfreihe">
+            <button class="btn btn-dunkel btn-klein" onclick="notizSpeichern(${m.id})">Notiz speichern</button>
+            <button class="btn btn-hell btn-klein" onclick="uebernehmen(${m.id})">Bearbeitung übernehmen</button>
+          </div>
+        </div>
+
+        <div class="block block-kunde">
+          <h3>Antwort an die Kundschaft</h3>
+          <p class="wer-sieht">Geht als E-Mail raus und erscheint im Kundenportal. Bleibt das Feld leer, wird der Standardtext verwendet.</p>
+
+          ${m.admin_note ? `
+            <div class="notiz" style="margin-bottom:var(--s4);">
+              <div class="kopfzeile">Zuletzt gesendet</div>
+              <div class="inhalt">${esc(m.admin_note)}</div>
+            </div>` : ''}
+
+          <label for="antw-${m.id}">Nachricht</label>
+          <textarea id="antw-${m.id}" placeholder="Ihre Antwort an die Kundschaft"></textarea>
+          <div class="knopfreihe">
+            <button class="btn btn-primary btn-klein" onclick="pendAntwort(${m.id}, 'akzeptieren')">Annehmen &amp; senden</button>
+            <button class="btn btn-hell btn-klein" onclick="pendAntwort(${m.id}, 'ablehnen')">Ablehnen &amp; senden</button>
+            <button class="btn btn-hell btn-klein" onclick="pendAntwort(${m.id}, 'erledigt')">Erledigt &amp; senden</button>
+            <button class="btn btn-hell btn-klein" onclick="pendAntwort(${m.id}, 'nachricht')">Nur Nachricht</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pend-msg-${m.id}" class="meldung"></div>
+    </div>
+  </div>`;
+}
+
+function pendUmschalten(id){
+  OFFEN_ID = (OFFEN_ID === id) ? null : id;
+  zeichnePendenzen();
+  if(OFFEN_ID){
+    const el = document.getElementById('pend-' + OFFEN_ID);
+    if(el) el.scrollIntoView({ block:'nearest', behavior:'smooth' });
+  }
+}
+
+function pendMeldung(id, text, art){
+  const el = document.getElementById('pend-msg-' + id);
+  if(!el) return;
+  el.textContent = text;
+  el.className = 'meldung ' + (art || 'ok');
+  el.style.display = text ? 'block' : 'none';
+}
+
+/* --- Interne Notiz: geht nie an die Kundschaft --- */
+async function notizSpeichern(id){
+  const feld = document.getElementById('notiz-' + id);
+  const autorFeld = document.getElementById('autor-' + id);
+  const text = feld ? feld.value.trim() : '';
+  const autor = autorFeld ? autorFeld.value.trim() : '';
+
+  if(!text){ pendMeldung(id, 'Bitte zuerst eine Notiz eingeben.', 'err'); return; }
+
+  try{
+    const r = await fetch('/api/admin?action=notiz', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, text, autor })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Speichern fehlgeschlagen');
+    await ladePendenzen();
+  }catch(err){
+    pendMeldung(id, 'Fehler: ' + err.message, 'err');
+  }
+}
+
+/* --- Status ohne Mail: Zwischenstände festhalten --- */
+async function statusSetzen(id, status){
+  const autorFeld = document.getElementById('autor-' + id);
+  const bearbeiter = autorFeld ? autorFeld.value.trim() : '';
+  try{
+    const r = await fetch('/api/admin?action=status', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, status, bearbeiter: bearbeiter || undefined })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Fehlgeschlagen');
+    await ladePendenzen();
+  }catch(err){
+    pendMeldung(id, 'Fehler: ' + err.message, 'err');
+  }
+}
+
+async function uebernehmen(id){
+  const autorFeld = document.getElementById('autor-' + id);
+  const bearbeiter = autorFeld ? autorFeld.value.trim() : '';
+  if(!bearbeiter){ pendMeldung(id, 'Bitte tragen Sie zuerst Ihren Namen ein.', 'err'); return; }
+  try{
+    const r = await fetch('/api/admin?action=uebernehmen', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, bearbeiter })
+    });
+    if(!r.ok) throw new Error('Fehlgeschlagen');
+    await ladePendenzen();
+  }catch(err){
+    pendMeldung(id, 'Fehler: ' + err.message, 'err');
+  }
+}
+
+/* --- Antwort an die Kundschaft: löst eine E-Mail aus --- */
+async function pendAntwort(id, aktion){
+  const feld = document.getElementById('antw-' + id);
+  const autorFeld = document.getElementById('autor-' + id);
+  const nachricht = feld ? feld.value.trim() : '';
+  const bearbeiter = autorFeld ? autorFeld.value.trim() : '';
+
+  if(aktion === 'nachricht' && !nachricht){
+    pendMeldung(id, 'Bitte zuerst eine Nachricht eingeben.', 'err');
+    return;
+  }
+
+  try{
+    const r = await fetch('/api/admin?action=reply', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, action: aktion, nachricht, bearbeiter: bearbeiter || undefined })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Fehlgeschlagen');
+
+    if(d.mail === 'error'){
+      pendMeldung(id,
+        'Status gespeichert, aber die E-Mail konnte nicht zugestellt werden: ' +
+        (d.mail_error || 'unbekannter Grund') +
+        ' — die Kundschaft sieht die Antwort trotzdem im Portal.', 'err');
+      await ladePendenzen();
+      return;
+    }
+    await ladePendenzen();
+  }catch(err){
+    pendMeldung(id, 'Fehler: ' + err.message, 'err');
+  }
+}
+
+
+/* ==========================================================================
+   Kundenübersicht und Kundenkonten
+   ========================================================================== */
+
+async function loadAll(){
+  await loadStats();
+  await loadCustomers();
+}
+
+async function loadStats(){
+  const resp = await fetch('/api/admin?action=stats');
+  if(!resp.ok) return;
+  const s = await resp.json();
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${s.total}</div><div class="label">Meldungen (30 Tage)</div></div>
+    <div class="stat"><div class="num">${s.offen}</div><div class="label">Noch offen</div></div>
+    <div class="stat"><div class="num">${s.pro_kategorie.absage || 0}</div><div class="label">Absagen</div></div>
+    <div class="stat"><div class="num">${s.pro_kategorie.reklamation || 0}</div><div class="label">Reklamationen</div></div>
+    <div class="stat"><div class="num">${s.fehlgeschlagene_versuche}</div><div class="label">Fehlgeschlagene Versuche</div></div>
+  `;
+}
+
+async function loadCustomers(){
+  const resp = await fetch('/api/admin?action=customers');
+  if(!resp.ok) return;
+  const { kunden } = await resp.json();
+  kundenDaten = kunden;
+
+  document.getElementById('tbody').innerHTML = kunden.map((k, i) => `
+    <tr class="kunde-row" onclick="openDetail(${i})">
+      <td><span class="dot ${k.ampel}"></span></td>
+      <td>${k.name}${k.offen > 0 ? ` <span class="badge-offen">${k.offen} offen</span>` : ''}</td>
+      <td>${k.objekt_id}</td>
+      <td class="num-cell">${k.zaehler.verschiebung || 0}</td>
+      <td class="num-cell">${k.zaehler.absage || 0}</td>
+      <td class="num-cell">${k.zaehler.reklamation || 0}</td>
+      <td class="num-cell">${k.zaehler.schaden || 0}</td>
+      <td class="num-cell">${k.zaehler.zusatz || 0}</td>
+      <td>${new Date(k.letzte_meldung).toLocaleDateString('de-CH', {day:'2-digit', month:'2-digit', year:'2-digit'})}</td>
+      <td>→</td>
+    </tr>
+  `).join('');
+}
+
+function openDetail(i){
+  const k = kundenDaten[i];
+  document.getElementById('detail-name').textContent = k.name;
+  document.getElementById('detail-meta').innerHTML =
+    `Objekt-/Kundennummer ${k.objekt_id} · ${k.email || 'keine E-Mail'} · ${k.total} Meldungen insgesamt`;
+
+  document.getElementById('detail-history').innerHTML = k.meldungen.map(m => renderHistoryItem(m)).join('');
+  document.getElementById('detail-overlay').style.display = 'block';
+  document.getElementById('detail-panel').style.display = 'block';
+}
+
+function closeDetail(){
+  document.getElementById('detail-overlay').style.display = 'none';
+  document.getElementById('detail-panel').style.display = 'none';
+}
+
+function renderHistoryItem(m){
+  const datum = new Date(m.created_at).toLocaleString('de-CH', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'});
+  let actions = '';
+  if(m.kategorie === 'verschiebung' && (!m.status || m.status === 'neu')){
+    actions = `
+      <div class="actions" id="actions-${m.id}">
+        <button class="accept" onclick="reply(${m.id}, 'akzeptieren')">Akzeptieren</button>
+        <button class="reject" onclick="reply(${m.id}, 'ablehnen')">Ablehnen</button>
+      </div>`;
+  } else if(!m.status || m.status === 'neu'){
+    actions = `
+      <div class="actions" id="actions-${m.id}">
+        <textarea id="msg-${m.id}" placeholder="Kurze Rückmeldung an den Kunden …"></textarea>
+        <button onclick="reply(${m.id}, 'nachricht')">Antwort senden</button>
+        <button onclick="reply(${m.id}, 'erledigt')">Als erledigt markieren</button>
+      </div>`;
+  } else {
+    actions = `<div class="actions" id="actions-${m.id}"></div>`;
+  }
+
+  return `<div class="history-item">
+    <div class="top-row">
+      <span class="kat">${KAT_LABEL[m.kategorie] || m.kategorie}</span>
+      <span class="badge ${m.status || 'neu'}">${m.status || 'neu'}</span>
+    </div>
+    <div class="datum">${datum}${m.zuordnung_offen ? ' <span class="badge-zuordnung">Zuordnung offen</span>' : ''}</div>
+    ${m.adresse ? `<div class="datum">${m.adresse}</div>` : ''}
+    <div class="details">${(m.details || '').slice(0, 300)}</div>
+    ${actions}
+  </div>`;
 }
 
 async function kontoAnlegen(){
@@ -472,8 +863,6 @@ async function loadZugaenge(){
   }).join('');
 }
 
-/* Für Anrufe: erzeugt ein neues Erstpasswort, das am Telefon durchgegeben wird.
-   Beim nächsten Anmelden muss der Kunde wieder ein eigenes Passwort setzen. */
 async function passwortZuruecksetzen(id, name){
   if(!confirm('Für ' + name + ' ein neues Erstpasswort erzeugen?\n\nDas bisherige Passwort wird ungültig.')) return;
   try{
@@ -498,92 +887,6 @@ async function kontoDeaktivieren(id){
   loadZugaenge();
 }
 
-async function loadAll(){
-  await Promise.all([loadStats(), loadCustomers()]);
-}
-
-async function loadStats(){
-  const resp = await fetch('/api/admin?action=stats');
-  if(!resp.ok) return;
-  const s = await resp.json();
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="num">${s.total}</div><div class="label">Meldungen (30 Tage)</div></div>
-    <div class="stat"><div class="num">${s.offen}</div><div class="label">Noch offen</div></div>
-    <div class="stat"><div class="num">${s.pro_kategorie.absage || 0}</div><div class="label">Absagen</div></div>
-    <div class="stat"><div class="num">${s.pro_kategorie.reklamation || 0}</div><div class="label">Reklamationen</div></div>
-    <div class="stat"><div class="num">${s.fehlgeschlagene_versuche}</div><div class="label">Fehlgeschlagene Versuche</div></div>
-  `;
-}
-
-async function loadCustomers(){
-  const resp = await fetch('/api/admin?action=customers');
-  if(!resp.ok) return;
-  const { kunden } = await resp.json();
-  kundenDaten = kunden;
-
-  document.getElementById('tbody').innerHTML = kunden.map((k, i) => `
-    <tr class="kunde-row" onclick="openDetail(${i})">
-      <td><span class="dot ${k.ampel}"></span></td>
-      <td>${k.name}${k.offen > 0 ? ` <span class="badge-offen">${k.offen} offen</span>` : ''}</td>
-      <td>${k.objekt_id}</td>
-      <td class="num-cell">${k.zaehler.verschiebung || 0}</td>
-      <td class="num-cell">${k.zaehler.absage || 0}</td>
-      <td class="num-cell">${k.zaehler.reklamation || 0}</td>
-      <td class="num-cell">${k.zaehler.schaden || 0}</td>
-      <td class="num-cell">${k.zaehler.zusatz || 0}</td>
-      <td>${new Date(k.letzte_meldung).toLocaleDateString('de-CH', {day:'2-digit', month:'2-digit', year:'2-digit'})}</td>
-      <td>→</td>
-    </tr>
-  `).join('');
-}
-
-function openDetail(i){
-  const k = kundenDaten[i];
-  document.getElementById('detail-name').textContent = k.name;
-  document.getElementById('detail-meta').innerHTML =
-    `Objekt-/Kundennummer ${k.objekt_id} · ${k.email || 'keine E-Mail'} · ${k.total} Meldungen insgesamt`;
-
-  document.getElementById('detail-history').innerHTML = k.meldungen.map(m => renderHistoryItem(m)).join('');
-  document.getElementById('detail-overlay').style.display = 'block';
-  document.getElementById('detail-panel').style.display = 'block';
-}
-function closeDetail(){
-  document.getElementById('detail-overlay').style.display = 'none';
-  document.getElementById('detail-panel').style.display = 'none';
-}
-
-function renderHistoryItem(m){
-  const datum = new Date(m.created_at).toLocaleString('de-CH', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'});
-  let actions = '';
-  if(m.kategorie === 'verschiebung' && (!m.status || m.status === 'neu')){
-    actions = `
-      <div class="actions" id="actions-${m.id}">
-        <button class="accept" onclick="reply(${m.id}, 'akzeptieren')">Akzeptieren</button>
-        <button class="reject" onclick="reply(${m.id}, 'ablehnen')">Ablehnen</button>
-      </div>`;
-  } else if(!m.status || m.status === 'neu'){
-    actions = `
-      <div class="actions" id="actions-${m.id}">
-        <textarea id="msg-${m.id}" placeholder="Kurze Rückmeldung an den Kunden …"></textarea>
-        <button onclick="reply(${m.id}, 'nachricht')">Antwort senden</button>
-        <button onclick="reply(${m.id}, 'erledigt')">Als erledigt markieren</button>
-      </div>`;
-  } else {
-    actions = `<div class="actions" id="actions-${m.id}"></div>`;
-  }
-
-  return `<div class="history-item">
-    <div class="top-row">
-      <span class="kat">${KAT_LABEL[m.kategorie] || m.kategorie}</span>
-      <span class="badge ${m.status || 'neu'}">${m.status || 'neu'}</span>
-    </div>
-    <div class="datum">${datum}${m.zuordnung_offen ? ' <span class="badge-zuordnung">Zuordnung offen</span>' : ''}</div>
-    ${m.adresse ? `<div class="datum">${m.adresse}</div>` : ''}
-    <div class="details">${(m.details || '').slice(0, 300)}</div>
-    ${actions}
-  </div>`;
-}
-
 async function reply(id, action){
   const msgField = document.getElementById(`msg-${id}`);
   const nachricht = msgField ? msgField.value.trim() : '';
@@ -606,6 +909,5 @@ async function reply(id, action){
   }
 }
 </script>
-
 </body>
 </html>

@@ -676,6 +676,7 @@
 .pill-akzeptieren{background:var(--ok-bg); color:var(--ok-fg);}
 .pill-ablehnen{background:var(--stop-bg); color:var(--stop-fg);}
 .pill-erledigt{background:var(--info-bg); color:var(--info-fg);}
+.pill-abklaerung{background:#EDF1F8; color:#3B5487;}
 
 /* ---- Leere Ansichten --------------------------------------------------- */
 .empty{text-align:center; padding:var(--s8) var(--s5);}
@@ -2238,8 +2239,10 @@ const KAT_LABEL = {
         schaden:'Damage report', zusatz:'Additional cleaning' }
 };
 const STAT_LABEL = {
-  de: { neu:'In Bearbeitung', akzeptieren:'Angenommen', ablehnen:'Abgelehnt', erledigt:'Erledigt' },
-  en: { neu:'In progress', akzeptieren:'Accepted', ablehnen:'Declined', erledigt:'Done' }
+  de: { neu:'In Bearbeitung', abklaerung:'In Abklärung', akzeptieren:'Angenommen',
+        ablehnen:'Abgelehnt', erledigt:'Erledigt' },
+  en: { neu:'In progress', abklaerung:'Under review', akzeptieren:'Accepted',
+        ablehnen:'Declined', erledigt:'Done' }
 };
 
 function zeigePortal(bereich){
@@ -2276,7 +2279,7 @@ async function meldungenLaden(){
   }catch(e){
     MELDUNGEN = [];
   }
-  const offen = MELDUNGEN.filter(m => m.status === 'neu').length;
+  const offen = MELDUNGEN.filter(m => m.status === 'neu' || m.status === 'abklaerung').length;
   const zahl = document.getElementById('nav-zahl');
   if(zahl){
     zahl.textContent = MELDUNGEN.length;
@@ -2356,7 +2359,7 @@ async function uebersichtFuellen(){
 
   /* Offene Anliegen als eigener Abschnitt — nur wenn es welche gibt. */
   const offenBlock = document.getElementById('ueb-offen-block');
-  const offenListe = MELDUNGEN.filter(m => m.status === 'neu');
+  const offenListe = MELDUNGEN.filter(m => m.status === 'neu' || m.status === 'abklaerung');
   if(offenListe.length){
     offenBlock.style.display = 'block';
     document.getElementById('ueb-offen').innerHTML = offenListe.map(m => {
@@ -2384,7 +2387,7 @@ async function uebersichtFuellen(){
   } else {
     // Offene stehen schon im Abschnitt darüber - hier nur die abgeschlossenen,
     // sonst erscheint dieselbe Meldung zweimal auf einer Seite.
-    const erledigt = MELDUNGEN.filter(m => m.status !== 'neu').slice(0, 3);
+    const erledigt = MELDUNGEN.filter(m => m.status !== 'neu' && m.status !== 'abklaerung').slice(0, 3);
     if(!erledigt.length){
       verlauf.style.display = 'none';
       box.innerHTML = '';

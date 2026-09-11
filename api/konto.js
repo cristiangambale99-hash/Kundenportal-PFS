@@ -324,6 +324,20 @@ module.exports = async function handler(req, res) {
         return;
       }
 
+      /* Konfiguration zuerst prüfen, vor der Suche nach dem Konto.
+         So verrät die Fehlermeldung nicht, ob die Adresse bei uns existiert -
+         sie erscheint für jede Eingabe gleich. Ohne diese Prüfung liefe der
+         Aufruf durch, die Mail scheiterte still, und die Kundschaft sähe eine
+         Erfolgsmeldung ohne Mail im Postfach. */
+      if (!process.env.RESEND_API_KEY) {
+        console.error("konto.js: RESEND_API_KEY ist nicht gesetzt - keine Reset-Mail möglich.");
+        res.status(500).json({
+          error: "Der Mailversand ist auf dem Server nicht eingerichtet. Bitte rufen Sie uns an: 0844 355 355.",
+          detail: "RESEND_API_KEY fehlt",
+        });
+        return;
+      }
+
       // Höchstens 3 Anfragen pro Stunde und Adresse
       const seit = new Date(Date.now() - 3600 * 1000).toISOString();
       const { count } = await supabase
@@ -366,7 +380,14 @@ module.exports = async function handler(req, res) {
             ${fusszeile()}
           `);
         } catch (err) {
-          console.error("Reset-Mail fehlgeschlagen:", err.message);
+          // Technische Störung, nicht "Adresse unbekannt": darf gemeldet werden,
+          // damit niemand vergeblich auf eine Mail wartet.
+          console.error("konto.js: Reset-Mail fehlgeschlagen -", err.message);
+          res.status(502).json({
+            error: "Der Link konnte nicht zugestellt werden. Bitte versuchen Sie es später erneut oder rufen Sie uns an: 0844 355 355.",
+            detail: String(err.message || "").slice(0, 300),
+          });
+          return;
         }
       }
 

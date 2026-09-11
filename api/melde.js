@@ -78,11 +78,11 @@ const KATEGORIE_LABEL = {
 };
 
 const NAECHSTE_SCHRITTE = {
-  verschiebung: "Wir prüfen Ihren Wunschtermin und melden uns per E-Mail, sobald er bestätigt ist.",
-  absage: "Die Absage ist hiermit bestätigt.",
-  reklamation: "Wir melden uns innert 2 Arbeitstagen mit einer Rückmeldung zu Ihrer Reklamation.",
-  schaden: "Wir melden uns innert 2 Arbeitstagen mit einer ersten Einschätzung.",
-  zusatz: "Wir melden uns mit einer Offerte bzw. einem Terminvorschlag.",
+  verschiebung: "Ihr neuer Termin ist eingeplant und wird von unserem Springerteam ausgeführt. Die Reinigung findet zwischen 08.00 und 17.00 Uhr statt; die genaue Uhrzeit teilen wir Ihnen am Vortag mit.",
+  absage: "Die Absage ist hiermit bestätigt. Die betroffene Reinigung entfällt ersatzlos.",
+  reklamation: "Ihre Reklamation ist bei uns eingegangen und wurde an den Putzfrauenservice weitergeleitet. Wir melden uns innert 2 Arbeitstagen mit einer Rückmeldung.",
+  schaden: "Ihre Schadenmeldung ist bei uns eingegangen und wurde an den Putzfrauenservice weitergeleitet. Wir melden uns innert 2 Arbeitstagen mit einer ersten Einschätzung.",
+  zusatz: "Wir versuchen, Ihren Wunschtermin zu halten, und melden uns bezüglich des definitiven Termins.",
 };
 
 function resendClient() {
@@ -91,9 +91,13 @@ function resendClient() {
   return new Resend(apiKey);
 }
 
-async function sendeTeamMail(meldung) {
+async function sendeTeamMail(meldung, pdf) {
   const resend = resendClient();
   const label = KATEGORIE_LABEL[meldung.kategorie] || meldung.kategorie;
+
+  // Zusatzarbeiten gehen an die Spezialreinigung, alles andere an den PFS.
+  const ziel = MAIL_ZIEL[meldung.kategorie] || MAIL_STANDARD;
+
   const html = `
     <h2>${label} über das Kundenportal</h2>
     <p><strong>Name:</strong> ${meldung.name || "-"}</p>
@@ -103,15 +107,30 @@ async function sendeTeamMail(meldung) {
     <p><strong>E-Mail:</strong> ${meldung.email || "-"}</p>
     <p><strong>Kategorie:</strong> ${label}</p>
     <pre style="white-space:pre-wrap; font-family:inherit;">${meldung.details || ""}</pre>
+    ${pdf ? '<p style="color:#12797A;"><strong>Das vollständige Dokument liegt als PDF im Anhang.</strong></p>' : ""}
+    ${AUTOMATISCH.includes(meldung.kategorie)
+      ? '<p style="color:#1c7a5a;"><strong>Bereits automatisch bestätigt — keine Bearbeitung nötig.</strong></p>' : ""}
   `;
-  return resend.emails.send({
+
+  const mail = {
     from: ABSENDER_INTERN,
     // Damit "Antworten" im Team funktioniert - der Absender ist ja noreply.
-    replyTo: "putzfrauenservice@clean-service.ch",
-    to: "putzfrauenservice@clean-service.ch",
+    replyTo: ziel,
+    to: ziel,
     subject: `[Kundenportal] ${label} – ${meldung.name || meldung.objekt_id || "Kunde"}`,
     html,
-  });
+  };
+
+  if (pdf) {
+    const datum = new Date().toISOString().slice(0, 10);
+    const kurz = String(meldung.name || "Kunde").replace(/[^A-Za-z0-9]+/g, "-").slice(0, 30);
+    mail.attachments = [{
+      filename: `${label}_${meldung.objekt_id || "ohne-Nr"}_${kurz}_${datum}.pdf`,
+      content: pdf.toString("base64"),
+    }];
+  }
+
+  return resend.emails.send(mail);
 }
 
 async function sendeKundenBestaetigung(meldung) {
@@ -132,6 +151,52 @@ async function sendeKundenBestaetigung(meldung) {
     subject: `Ihre ${label} bei Clean Service Scaramuzzo AG`,
     html,
   });
+}
+
+
+/* ------------------------------------------------- Beekeeper-Nachrichten */
+function beekeeperText(kategorie, d) {
+  const objekt = d.objekt_id ? ` (Objekt ${d.objekt_id})` : "";
+  const kunde = `${d.name}${objekt}`;
+
+  if (kategorie === "verschiebung") {
+    return [
+      `🔄 Terminverschiebung — ${kunde}`,
+      "",
+      d.alt_datum
+        ? `Die Reinigung vom ${d.alt_datum} findet NICHT statt.`
+        : "Die ursprünglich geplante Reinigung findet NICHT statt.",
+      d.neu_datum
+        ? `Sie wird am ${d.neu_datum} durch das Springerteam ausgeführt.`
+        : "Der Ersatztermin wird durch das Springerteam ausgeführt.",
+      "",
+      "Für dich ändert sich sonst nichts — die weiteren Termine bleiben wie gewohnt.",
+      "",
+      "Gemeldet über das Kundenportal.",
+    ].join("\n");
+  }
+
+  if (kategorie === "absage") {
+    const zeilen = [
+      `❌ Terminabsage — ${kunde}`,
+      "",
+      d.alt_datum
+        ? `Die Reinigung vom ${d.alt_datum} entfällt ersatzlos.`
+        : "Die gemeldete Reinigung entfällt ersatzlos.",
+      "Es wird kein Ersatztermin eingeplant.",
+    ];
+    if (d.details) zeilen.push("", d.details);
+    zeilen.push("", "Gemeldet über das Kundenportal.");
+    return zeilen.join("\n");
+  }
+
+  const label = {
+    reklamation: "⚠️ Reklamation",
+    schaden: "🔧 Schadenmeldung",
+    zusatz: "✨ Zusatzarbeiten angefragt",
+  }[kategorie] || "Meldung";
+
+  return `${label} — ${kunde}${d.details ? `\n\n${d.details}` : ""}\n\nGemeldet über das Kundenportal.`;
 }
 
 /* --------------------------------------------------------------- Beekeeper */
@@ -156,7 +221,19 @@ async function sendGroupMessage(chatId, body) {
 
 /* ------------------------------------------------------------------ Handler */
 const ERLAUBTE_KATEGORIEN = ["verschiebung", "absage", "reklamation", "schaden", "zusatz"];
-const SOFORT_BESTAETIGEN = ["absage"];
+// Verschiebungen werden direkt mit dem Springerteam eingeplant, Absagen
+// entfallen ersatzlos - beides braucht keine Prüfung durch das Team.
+const SOFORT_BESTAETIGEN = ["absage", "verschiebung"];
+
+// Diese Kategorien laufen ohne Zutun des Admin-Teams durch und gelten
+// deshalb direkt als angenommen statt als offene Pendenz.
+const AUTOMATISCH = ["absage", "verschiebung"];
+
+// Zusatzarbeiten gehen an die Spezialreinigung, nicht an den Putzfrauenservice.
+const MAIL_ZIEL = {
+  zusatz: process.env.MAIL_SPEZIALREINIGUNG || "spezialreinigung@clean-service.ch",
+};
+const MAIL_STANDARD = process.env.MAIL_PFS || "putzfrauenservice@clean-service.ch";
 
 /* ---------------------------------------------------------------- Sitzung */
 // Muss zu konto.js passen - sonst wird niemand erkannt.
@@ -185,7 +262,8 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const { kategorie, details } = req.body || {};
+  const { kategorie, details, reinigungsdatum, beschreibung, fotos,
+          alt_datum, neu_datum } = req.body || {};
   const ip = getClientIp(req);
   const supabase = getSupabase();
 
@@ -250,7 +328,8 @@ module.exports = async function handler(req, res) {
     email,
     details: details || "",
     ip,
-    status: "neu",
+    // Automatisch abgewickelte Kategorien landen nicht als offene Pendenz.
+    status: AUTOMATISCH.includes(kategorie) ? "akzeptieren" : "neu",
     zuordnung_offen: zuordnungOffen,
   };
 
@@ -268,8 +347,30 @@ module.exports = async function handler(req, res) {
 
   const ergebnis = { id: inserted.id, team_mail: "pending", kunden_mail: "pending", beekeeper: "pending" };
 
+  /* Reklamation und Schaden werden als PDF auf dem Briefpapier verschickt.
+     Die Fotos landen ausschliesslich in diesem Dokument und werden danach
+     verworfen - es gibt keinen zweiten Speicherort. */
+  let pdf = null;
+  if (kategorie === "reklamation" || kategorie === "schaden") {
+    try {
+      const { meldungPdf } = require("./meldung-pdf.js");
+      pdf = meldungPdf({
+        kategorie, name, objekt_id, adresse, email,
+        reinigungsdatum: reinigungsdatum || "-",
+        beschreibung: beschreibung || details || "-",
+        fotos: Array.isArray(fotos) ? fotos.slice(0, 8) : [],
+      });
+      ergebnis.pdf = "ok";
+    } catch (err) {
+      // Ohne PDF geht die Meldung trotzdem raus - der Text steht in der Mail.
+      console.error("melde.js: PDF fehlgeschlagen", err);
+      ergebnis.pdf = "error";
+      ergebnis.pdf_detail = err.message;
+    }
+  }
+
   try {
-    await sendeTeamMail(meldung);
+    await sendeTeamMail(meldung, pdf);
     ergebnis.team_mail = "sent";
   } catch (err) {
     ergebnis.team_mail = "error";
@@ -297,14 +398,15 @@ module.exports = async function handler(req, res) {
       .single();
 
     if (mapping && mapping.status === "matched" && mapping.beekeeper_chat_id) {
-      const label = {
-        verschiebung: "🔄 Terminverschiebung",
-        absage: "❌ Absage",
-        reklamation: "⚠️ Reklamation",
-        schaden: "🔧 Schadenmeldung",
-        zusatz: "✨ Zusatzauftrag-Anfrage",
-      }[kategorie];
-      const text = `${label} — ${name} (Objekt ${objekt_id})${details ? `\n${details}` : ""}\n\nÜber das Kundenportal gemeldet.`;
+      /* Die Nachricht richtet sich an die fest zugeteilte Raumpflegerin.
+         Sie muss ohne Rückfrage verständlich sein: was faellt aus, was gilt
+         stattdessen. Deshalb je Kategorie ein eigener Text statt eines
+         allgemeinen Bausteins. */
+      const text = beekeeperText(kategorie, {
+        name, objekt_id, details,
+        alt_datum: alt_datum || null,
+        neu_datum: neu_datum || null,
+      });
       await sendGroupMessage(mapping.beekeeper_chat_id, text);
       ergebnis.beekeeper = "sent";
     } else {

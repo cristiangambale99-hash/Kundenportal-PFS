@@ -5,6 +5,7 @@
   "description": "Kundenportal-Backend für Clean Service Scaramuzzo AG (Absage/Verschiebung/Reklamation/Schaden/Zusatzauftrag) mit Supabase, Resend und Beekeeper-Anbindung.",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
+    "jspdf": "^2.5.2",
     "resend": "^4.0.0"
   }
 }

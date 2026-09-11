@@ -461,6 +461,26 @@
   .schnell .s-lbl{margin-bottom:2px; line-height:1.3;}
   .schnell .s-sub{line-height:1.45; display:block;}
 
+
+  /* ---- Fotoauswahl ---- */
+  .kat-hinweis{
+    margin-top:16px; padding:13px 15px; background:var(--tint-light);
+    border-left:3px solid var(--teal); border-radius:0 8px 8px 0;
+    font-size:13px; line-height:1.6; color:var(--text-teal-dark);
+  }
+  .foto-liste{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;}
+  .foto-kachel{
+    position:relative; width:84px; height:84px; border-radius:9px;
+    overflow:hidden; border:1px solid var(--line); background:var(--tint-light);
+  }
+  .foto-kachel img{width:100%; height:100%; object-fit:cover; display:block;}
+  .foto-weg{
+    position:absolute; top:3px; right:3px; width:22px; height:22px;
+    border:none; border-radius:50%; background:rgba(16,64,63,.82); color:#fff;
+    font-size:14px; line-height:1; cursor:pointer; padding:0;
+  }
+  .foto-info{font-size:12px; color:var(--grey); margin-top:8px;}
+
   /* ---- Inhaltsbereich ---- */
   main{max-width:1000px; margin:0 auto; padding:44px 28px 90px;}
   .narrow{max-width:620px; margin:0 auto;}
@@ -996,6 +1016,7 @@
             <div><label for="v-zeit" data-i18n="v.zeit">Uhrzeit</label>
           <input type="time" id="v-zeit"></div>
           </div>
+          <div class="kat-hinweis" data-i18n="v.hinweis">Der neue Termin wird durch unser Springerteam ausgeführt. Die Reinigung findet zwischen 08.00 und 17.00 Uhr statt — die genaue Uhrzeit teilen wir Ihnen am Vortag mit.</div>
           <label for="v-kommentar" data-i18n="v.kommentar">Kommentar <span class="opt" data-i18n="opt">(optional)</span></label>
           <textarea id="v-kommentar" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
         </div>
@@ -1022,18 +1043,24 @@
 
         <!-- Reklamation -->
         <div class="field-group" data-cat="reklamation">
+          <label for="r-datum" data-i18n="rs.datum">Datum der betroffenen Reinigung</label>
+          <input type="date" id="r-datum">
           <label for="r-text" data-i18n="rs.what">Was ist vorgefallen?</label>
           <textarea id="r-text" placeholder="Kurz beschreiben, worum es geht …" data-i18n-ph="rs.what.ph"></textarea>
-          <label for="r-foto" data-i18n="rs.photo">Foto <span class="req" data-i18n="rs.required">(erforderlich)</span></label>
-          <input type="file" id="r-foto" accept="image/*" required>
+          <label for="r-foto" data-i18n="rs.photos">Fotos <span class="opt" data-i18n="rs.photos.hint">(bis zu 8)</span></label>
+          <input type="file" id="r-foto" accept="image/*" multiple onchange="fotosGewaehlt(this,'r')">
+          <div class="foto-liste" id="r-foto-liste"></div>
         </div>
 
         <!-- Schadenmeldung -->
         <div class="field-group" data-cat="schaden">
+          <label for="s-datum" data-i18n="rs.datum">Datum der betroffenen Reinigung</label>
+          <input type="date" id="s-datum">
           <label for="s-text" data-i18n="rs.what">Was ist vorgefallen?</label>
           <textarea id="s-text" placeholder="Kurz beschreiben, worum es geht …" data-i18n-ph="rs.what.ph"></textarea>
-          <label for="s-foto" data-i18n="rs.photo">Foto <span class="req" data-i18n="rs.required">(erforderlich)</span></label>
-          <input type="file" id="s-foto" accept="image/*" required>
+          <label for="s-foto" data-i18n="rs.photos">Fotos <span class="opt" data-i18n="rs.photos.hint">(bis zu 8)</span></label>
+          <input type="file" id="s-foto" accept="image/*" multiple onchange="fotosGewaehlt(this,'s')">
+          <div class="foto-liste" id="s-foto-liste"></div>
         </div>
 
         <!-- Zusatzauftrag -->
@@ -1050,6 +1077,7 @@
           <input type="date" id="z-datum">
           <label for="z-details" data-i18n="z.details">Details <span class="opt" data-i18n="opt">(optional)</span></label>
           <textarea id="z-details" placeholder="z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …" data-i18n-ph="z.details.ph"></textarea>
+          <div class="kat-hinweis" data-i18n="z.hinweis">Wir versuchen, Ihren Wunschtermin zu halten, und melden uns bezüglich des definitiven Termins.</div>
         </div>
 
         <div id="form-error" class="form-error" role="alert" aria-live="assertive" style="display:none;"></div>
@@ -1491,6 +1519,10 @@ rechtliche Schritte vor.</p>
 <script>
 const translations = {
   de: {
+    'rs.datum': 'Datum der betroffenen Reinigung',
+    'rs.photos': 'Fotos', 'rs.photos.hint': '(bis zu 8)',
+    'v.hinweis': 'Der neue Termin wird durch unser Springerteam ausgeführt. Die Reinigung findet zwischen 08.00 und 17.00 Uhr statt — die genaue Uhrzeit teilen wir Ihnen am Vortag mit.',
+    'z.hinweis': 'Wir versuchen, Ihren Wunschtermin zu halten, und melden uns bezüglich des definitiven Termins.',
     'nav.ueb': 'Übersicht', 'nav.melden': 'Anliegen melden', 'nav.meine': 'Meine Meldungen',
     'nav.konto': 'Mein Konto', 'nav.kontakt': 'Kontakt',
     'ueb.offen': 'In Bearbeitung', 'ueb.gesamt': 'Meldungen insgesamt', 'ueb.objekt': 'Ihre Kundennummer',
@@ -1581,6 +1613,10 @@ const translations = {
     'photo.alert': 'Bitte fügen Sie ein Foto hinzu — dieses Feld ist für diese Meldungsart erforderlich.'
   },
   en: {
+    'rs.datum': 'Date of the cleaning concerned',
+    'rs.photos': 'Photos', 'rs.photos.hint': '(up to 8)',
+    'v.hinweis': 'The new appointment will be carried out by our stand-in team. The cleaning takes place between 08:00 and 17:00 — we will confirm the exact time the day before.',
+    'z.hinweis': 'We will try to keep your preferred date and will contact you about the final appointment.',
     'nav.ueb': 'Overview', 'nav.melden': 'Send a request', 'nav.meine': 'My requests',
     'nav.konto': 'My account', 'nav.kontakt': 'Contact',
     'ueb.offen': 'In progress', 'ueb.gesamt': 'Requests in total', 'ueb.objekt': 'Your customer number',
@@ -2166,6 +2202,126 @@ function schnellMelden(kat){
   chooseCategory(kat);
 }
 
+
+/* ==========================================================================
+   Fotos für Reklamation und Schadenmeldung
+   ==========================================================================
+   Handykameras liefern 3–6 MB pro Bild. Ungekürzt gesendet würde die Anfrage
+   die Grössengrenze des Servers sprengen. Deshalb wird jedes Bild im Browser
+   auf maximal 1600 px verkleinert und als JPEG neu kodiert — das ergibt
+   typischerweise 200–400 KB und reicht für die Beurteilung eines Schadens
+   vollkommen aus. */
+
+const FOTOS = { r: [], s: [] };
+const FOTO_MAX = 8;
+const KANTE_MAX = 1600;
+
+function bildVerkleinern(datei){
+  return new Promise((fertig, fehler) => {
+    const leser = new FileReader();
+    leser.onerror = () => fehler(new Error('Datei konnte nicht gelesen werden.'));
+    leser.onload = () => {
+      const bild = new Image();
+      bild.onerror = () => fehler(new Error('Das ist kein gültiges Bild.'));
+      bild.onload = () => {
+        let { width: b, height: hh } = bild;
+        if(b > KANTE_MAX || hh > KANTE_MAX){
+          const faktor = Math.min(KANTE_MAX / b, KANTE_MAX / hh);
+          b = Math.round(b * faktor);
+          hh = Math.round(hh * faktor);
+        }
+        const flaeche = document.createElement('canvas');
+        flaeche.width = b; flaeche.height = hh;
+        flaeche.getContext('2d').drawImage(bild, 0, 0, b, hh);
+        fertig(flaeche.toDataURL('image/jpeg', 0.8));
+      };
+      bild.src = leser.result;
+    };
+    leser.readAsDataURL(datei);
+  });
+}
+
+async function fotosGewaehlt(feld, praefix){
+  const dateien = Array.from(feld.files || []);
+  feld.value = '';   // erlaubt erneutes Wählen derselben Datei
+  if(!dateien.length) return;
+
+  const liste = FOTOS[praefix];
+  const info = document.getElementById(praefix + '-foto-liste');
+
+  for(const datei of dateien){
+    if(liste.length >= FOTO_MAX){
+      showFormError(currentLang === 'de'
+        ? `Es können höchstens ${FOTO_MAX} Fotos angehängt werden.`
+        : `You can attach at most ${FOTO_MAX} photos.`);
+      break;
+    }
+    try{
+      liste.push(await bildVerkleinern(datei));
+    }catch(err){
+      showFormError(currentLang === 'de'
+        ? `„${datei.name}" konnte nicht verarbeitet werden.`
+        : `“${datei.name}” could not be processed.`);
+    }
+  }
+  fotosZeichnen(praefix);
+}
+
+function fotosZeichnen(praefix){
+  const liste = FOTOS[praefix];
+  const box = document.getElementById(praefix + '-foto-liste');
+  if(!box) return;
+  box.innerHTML = liste.map((f, i) => `
+    <div class="foto-kachel">
+      <img src="${f}" alt="">
+      <button type="button" class="foto-weg" onclick="fotoEntfernen('${praefix}',${i})"
+              aria-label="${currentLang === 'de' ? 'Foto entfernen' : 'Remove photo'}">×</button>
+    </div>`).join('') +
+    (liste.length ? `<div class="foto-info" style="width:100%;">${
+      currentLang === 'de'
+        ? `${liste.length} von ${FOTO_MAX} Fotos ausgewählt.`
+        : `${liste.length} of ${FOTO_MAX} photos selected.`}</div>` : '');
+}
+
+function fotoEntfernen(praefix, i){
+  FOTOS[praefix].splice(i, 1);
+  fotosZeichnen(praefix);
+}
+
+function fotosZuruecksetzen(){
+  FOTOS.r = []; FOTOS.s = [];
+  fotosZeichnen('r'); fotosZeichnen('s');
+}
+
+
+/* Baut den Inhalt der Meldung. Identität kommt vom Server aus der Sitzung -
+   hier gehen nur die Angaben zum Anliegen mit. */
+function meldungsBody(cat){
+  const body = { kategorie: cat, details: gatherDetails(cat) };
+
+  if(cat === 'verschiebung'){
+    body.alt_datum = datumLesbar(document.getElementById('v-alt').value);
+    body.neu_datum = datumLesbar(document.getElementById('v-neu').value);
+  }
+  if(cat === 'absage'){
+    body.alt_datum = datumLesbar(document.getElementById('a-datum').value);
+  }
+  if(cat === 'reklamation' || cat === 'schaden'){
+    const p = cat === 'reklamation' ? 'r' : 's';
+    body.reinigungsdatum = datumLesbar(document.getElementById(p + '-datum').value);
+    body.beschreibung = document.getElementById(p + '-text').value.trim();
+    body.fotos = FOTOS[p];
+  }
+  return body;
+}
+
+/* ISO-Datum in Schweizer Schreibweise - so steht es in Beekeeper und im PDF. */
+function datumLesbar(iso){
+  if(!iso) return '';
+  const [j, m, t] = iso.split('-');
+  return (j && m && t) ? `${t}.${m}.${j}` : iso;
+}
+
 function gatherDetails(cat){
   if(cat === 'verschiebung'){
     return `Betroffener Termin: ${document.getElementById('v-alt').value || '-'}\n` +
@@ -2184,8 +2340,13 @@ function gatherDetails(cat){
     }
     return text;
   }
-  if(cat === 'reklamation') return `Beschreibung: ${document.getElementById('r-text').value || '-'}\n(Foto beigefügt, wird separat verarbeitet)`;
-  if(cat === 'schaden') return `Beschreibung: ${document.getElementById('s-text').value || '-'}\n(Foto beigefügt, wird separat verarbeitet)`;
+  if(cat === 'reklamation' || cat === 'schaden'){
+    const p = cat === 'reklamation' ? 'r' : 's';
+    const anzahl = FOTOS[p].length;
+    return `Datum der Reinigung: ${datumLesbar(document.getElementById(p + '-datum').value) || '-'}\n` +
+           `Beschreibung: ${document.getElementById(p + '-text').value || '-'}\n` +
+           `Fotos: ${anzahl ? anzahl + ' angehängt (im PDF)' : 'keine'}`;
+  }
   if(cat === 'zusatz'){
     return `Art: ${document.getElementById('z-art').value}\n` +
            `Wunschtermin: ${document.getElementById('z-datum').value || '-'}\n` +
@@ -2211,7 +2372,7 @@ const PHONE_HINT_EN = 'If this keeps happening, please call us directly: <a href
 
 const NEXT_STEPS = {
   de: {
-    verschiebung: 'Wir prüfen Ihren Wunschtermin und melden uns per E-Mail, sobald er bestätigt ist.',
+    verschiebung: 'Ihr neuer Termin ist eingeplant und wird vom Springerteam ausgeführt — zwischen 08.00 und 17.00 Uhr, die genaue Zeit erhalten Sie am Vortag.',
     absage: 'Sie erhalten in Kürze eine Bestätigung der Absage per E-Mail.',
     reklamation: 'Wir melden uns innert 2 Arbeitstagen mit einer Rückmeldung zu Ihrer Reklamation.',
     schaden: 'Wir melden uns innert 2 Arbeitstagen mit einer ersten Einschätzung zur Schadenmeldung.',
@@ -2230,10 +2391,22 @@ async function submitForm(){
   clearFormError();
   const cat = document.getElementById('form-screen').dataset.activeCat;
 
-  if((cat === 'reklamation' && !document.getElementById('r-foto').value) ||
-     (cat === 'schaden' && !document.getElementById('s-foto').value)){
-    showFormError(translations[currentLang]['photo.alert']);
-    return;
+  // Datum der betroffenen Reinigung ist Pflicht - ohne das lässt sich im
+  // Team nicht nachvollziehen, um welchen Einsatz es geht.
+  if(cat === 'reklamation' || cat === 'schaden'){
+    const praefix = cat === 'reklamation' ? 'r' : 's';
+    if(!document.getElementById(praefix + '-datum').value){
+      showFormError(currentLang === 'de'
+        ? 'Bitte geben Sie das Datum der betroffenen Reinigung an.'
+        : 'Please enter the date of the cleaning concerned.');
+      return;
+    }
+    if(!document.getElementById(praefix + '-text').value.trim()){
+      showFormError(currentLang === 'de'
+        ? 'Bitte beschreiben Sie kurz, was vorgefallen ist.'
+        : 'Please briefly describe what happened.');
+      return;
+    }
   }
 
   const name = document.getElementById('f-name').value.trim();
@@ -2264,10 +2437,7 @@ async function submitForm(){
     const resp = await fetch('/api/melde', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        kategorie: cat,
-        details: gatherDetails(cat)
-      })
+      body: JSON.stringify(meldungsBody(cat))
     });
 
     let result;

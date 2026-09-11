@@ -289,6 +289,53 @@ tr:hover td{background:var(--line-2);}
          padding:var(--s2) var(--s3); border-radius:var(--r-s);}
 .hist{border-bottom:1px solid var(--line); padding:var(--s4) 0;}
 .hist:last-child{border-bottom:none;}
+
+.st-btn.mit-mail{border-color:var(--klar-fg); color:var(--klar-fg);}
+.st-btn.mit-mail.an{background:var(--klar-fg); border-color:var(--klar-fg); color:#fff;}
+.mailzeichen{opacity:.75; margin-left:2px;}
+.statushinweis{font-size:12px; color:var(--grey); margin:calc(var(--s2) * -1) 0 var(--s4); line-height:1.5;}
+
+/* ---- Erklärung der Ampel ------------------------------------------------ */
+.erklaerung{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m);
+  margin-bottom:var(--s5); overflow:hidden;
+}
+.erkl-kopf{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s4);
+  width:100%; padding:var(--s4) var(--s5); background:none; border:none;
+  cursor:pointer; text-align:left;
+}
+.erkl-kopf:hover{background:var(--line-2);}
+.erkl-kopf .titel{font-family:var(--font-head); font-size:15px; font-weight:600; color:var(--headline);}
+.erkl-kopf .unter{font-size:12.5px; color:var(--grey); margin-top:2px;}
+.erklaerung.auf .erkl-kopf .pfeil{transform:rotate(180deg);}
+.erkl-inhalt{display:none; padding:0 var(--s5) var(--s5); border-top:1px solid var(--line-2);}
+.erklaerung.auf .erkl-inhalt{display:block;}
+.erkl-inhalt p{font-size:14px; line-height:1.7; color:var(--body-text); margin:var(--s4) 0 0; max-width:70ch;}
+
+.regeln{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+        gap:var(--s3); margin-top:var(--s4);}
+.regel{border:1px solid var(--line); border-radius:var(--r-s); padding:var(--s4);}
+.regel-kopf{display:flex; align-items:center; gap:var(--s2); margin-bottom:var(--s3);}
+.regel-kopf b{font-size:14px; color:var(--headline);}
+.regel ul{margin:0; padding-left:18px;}
+.regel li{font-size:13.5px; line-height:1.6; color:var(--body-text); margin-bottom:4px;}
+.regel .oder{font-size:12px; color:var(--grey); font-style:normal; margin:var(--s1) 0;}
+
+.grenze{
+  margin-top:var(--s5); padding:var(--s4); background:var(--warn-bg);
+  border-radius:var(--r-s); font-size:13.5px; line-height:1.65; color:var(--warn-fg);
+}
+.grenze b{display:block; margin-bottom:var(--s1);}
+
+.ampel-grund{font-size:12px; color:var(--grey); margin-top:3px; line-height:1.4;}
+
+.badge-offen{
+  display:inline-block; margin-left:var(--s2); padding:2px 9px; border-radius:999px;
+  background:var(--warn-bg); color:var(--warn-fg); font-size:11.5px; font-weight:700;
+  vertical-align:middle;
+}
+.kunde-row{cursor:pointer;}
 </style>
 </head>
 <body>
@@ -327,8 +374,7 @@ tr:hover td{background:var(--line-2);}
     </div>
 
     <div class="filter" id="pend-filter">
-      <button class="active" onclick="pendFilter('aktiv')">Aktiv<span class="n" id="n-aktiv">0</span></button>
-      <button onclick="pendFilter('neu')">Unbearbeitet<span class="n" id="n-neu">0</span></button>
+      <button class="active" onclick="pendFilter('posteingang')">Posteingang<span class="n" id="n-posteingang">0</span></button>
       <button onclick="pendFilter('abklaerung')">In Abklärung<span class="n" id="n-abklaerung">0</span></button>
       <button onclick="pendFilter('erledigt')">Abgeschlossen<span class="n" id="n-erledigt">0</span></button>
       <button onclick="pendFilter('alle')">Alle<span class="n" id="n-alle">0</span></button>
@@ -344,12 +390,63 @@ tr:hover td{background:var(--line-2);}
       <p>Alle Kundinnen und Kunden mit ihrem Meldeverhalten. Die Ampel zeigt, wo sich Häufungen abzeichnen.</p>
     </div>
 
+    <div class="erklaerung" id="erklaerung">
+      <button class="erkl-kopf" onclick="erklaerungUmschalten()" aria-expanded="false">
+        <span>
+          <span class="titel">Wie diese Ampel funktioniert</span>
+          <span class="unter">Eine Zählregel über die Portalmeldungen — keine Vorhersage</span>
+        </span>
+        <svg class="pfeil" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--grey); transition:transform .18s;"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+
+      <div class="erkl-inhalt">
+        <p>Die Ampel zählt, wie oft eine Kundin oder ein Kunde in einem bestimmten Zeitfenster gemeldet hat. Sie wird bei jedem Aufruf neu berechnet und bewertet ausschliesslich Meldungen aus dem Kundenportal. Bei jedem Eintrag steht unter dem Namen, welche Regel ausgelöst hat.</p>
+
+        <div class="regeln">
+          <div class="regel">
+            <div class="regel-kopf"><span class="dot rot"></span><b>Rot — auffällig</b></div>
+            <ul>
+              <li>3 oder mehr Reklamationen und Schäden in 90 Tagen</li>
+            </ul>
+            <div class="oder">oder</div>
+            <ul>
+              <li>mindestens 1 Absage in 30 Tagen</li>
+            </ul>
+          </div>
+
+          <div class="regel">
+            <div class="regel-kopf"><span class="dot gelb"></span><b>Gelb — beobachten</b></div>
+            <ul>
+              <li>1 Reklamation oder Schaden in 90 Tagen</li>
+            </ul>
+            <div class="oder">oder</div>
+            <ul>
+              <li>2 Verschiebungen in 90 Tagen</li>
+            </ul>
+          </div>
+
+          <div class="regel">
+            <div class="regel-kopf"><span class="dot gruen"></span><b>Grün — unauffällig</b></div>
+            <ul>
+              <li>Keine der obigen Bedingungen erfüllt</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grenze">
+          <b>Was die Ampel nicht kann</b>
+          Sie sieht nur Meldungen aus dem Portal. Wer weiterhin per E-Mail oder telefonisch absagt, bleibt grün — unabhängig davon, wie oft. Ausserdem ist die Schwelle bei Absagen derzeit sehr tief angesetzt: Bereits eine einzelne Absage innert 30 Tagen färbt rot, obwohl Ferienabwesenheiten gemäss AGB bis zu vier Wochen pro Jahr vorgesehen sind. Die Ampel ist damit eher ein Hinweis, wo sich ein Gespräch lohnt, als eine Aussage über eine drohende Kündigung.
+        </div>
+      </div>
+    </div>
+
     <div class="stats" id="stats-innen"></div>
 
     <div class="ampel-legende">
-      <span><span class="dot rot"></span>Auffällig — möglicherweise kündigungsgefährdet</span>
+      <span><span class="dot rot"></span>Auffällig</span>
       <span><span class="dot gelb"></span>Beobachten</span>
       <span><span class="dot gruen"></span>Unauffällig</span>
+      <span style="margin-left:auto;">Sortiert nach Dringlichkeit, dann nach letzter Meldung</span>
     </div>
 
     <table>
@@ -405,7 +502,7 @@ const STATUS = { neu:'Unbearbeitet', abklaerung:'In Abklärung', akzeptieren:'An
                  ablehnen:'Abgelehnt', erledigt:'Erledigt' };
 
 let PEND = [];
-let PFILTER = 'aktiv';
+let PFILTER = 'posteingang';
 let OFFEN_ID = null;          // welche Pendenz aufgeklappt ist
 
 function esc(s){
@@ -479,11 +576,10 @@ async function ladePendenzen(){
   }catch(e){ PEND = []; }
 
   const z = k => PEND.filter(k).length;
-  document.getElementById('n-neu').textContent        = z(m => m.status === 'neu');
-  document.getElementById('n-abklaerung').textContent = z(m => m.status === 'abklaerung');
-  document.getElementById('n-aktiv').textContent      = z(m => m.status === 'neu' || m.status === 'abklaerung');
-  document.getElementById('n-erledigt').textContent   = z(m => ['akzeptieren','ablehnen','erledigt'].includes(m.status));
-  document.getElementById('n-alle').textContent       = PEND.length;
+  document.getElementById('n-posteingang').textContent = z(m => m.status === 'neu');
+  document.getElementById('n-abklaerung').textContent  = z(m => m.status === 'abklaerung');
+  document.getElementById('n-erledigt').textContent    = z(m => ['akzeptieren','ablehnen','erledigt'].includes(m.status));
+  document.getElementById('n-alle').textContent        = PEND.length;
 
   zeichnePendenzen();
 }
@@ -496,10 +592,10 @@ function pendFilter(f){
 }
 
 function gefiltert(){
-  if(PFILTER === 'aktiv')      return PEND.filter(m => m.status === 'neu' || m.status === 'abklaerung');
-  if(PFILTER === 'neu')        return PEND.filter(m => m.status === 'neu');
-  if(PFILTER === 'abklaerung') return PEND.filter(m => m.status === 'abklaerung');
-  if(PFILTER === 'erledigt')   return PEND.filter(m => ['akzeptieren','ablehnen','erledigt'].includes(m.status));
+  // Alles Neue landet im Posteingang und wandert per Statuswechsel weiter.
+  if(PFILTER === 'posteingang') return PEND.filter(m => m.status === 'neu');
+  if(PFILTER === 'abklaerung')  return PEND.filter(m => m.status === 'abklaerung');
+  if(PFILTER === 'erledigt')    return PEND.filter(m => ['akzeptieren','ablehnen','erledigt'].includes(m.status));
   return PEND;
 }
 
@@ -513,9 +609,9 @@ function zeichnePendenzen(){
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 6 9 17l-5-5"/>
         </svg>
-        <h3>${PFILTER === 'aktiv' ? 'Keine offenen Pendenzen' : 'Nichts in dieser Ansicht'}</h3>
-        <p>${PFILTER === 'aktiv'
-             ? 'Alle Kundenmeldungen sind bearbeitet.'
+        <h3>${PFILTER === 'posteingang' ? 'Posteingang leer' : 'Nichts in dieser Ansicht'}</h3>
+        <p>${PFILTER === 'posteingang'
+             ? 'Alle eingegangenen Meldungen sind einem Status zugewiesen.'
              : 'Wählen Sie oben eine andere Ansicht.'}</p>
       </div>`;
     return;
@@ -556,10 +652,13 @@ function zeichnePendenz(m){
 
       <div class="statusreihe">
         ${['neu','abklaerung','akzeptieren','ablehnen','erledigt'].map(s => `
-          <button class="st-btn ${m.status === s ? 'an' : ''}" onclick="statusSetzen(${m.id}, '${s}')">
-            ${STATUS[s]}
+          <button class="st-btn ${m.status === s ? 'an' : ''} ${s === 'abklaerung' ? 'mit-mail' : ''}"
+                  onclick="statusSetzen(${m.id}, '${s}')"
+                  title="${s === 'abklaerung' ? 'Die Kundschaft erhält eine Statusmeldung per E-Mail' : 'Ändert nur den internen Stand'}">
+            ${STATUS[s]}${s === 'abklaerung' ? ' <span class="mailzeichen">✉</span>' : ''}
           </button>`).join('')}
       </div>
+      <p class="statushinweis">Nur „In Abklärung“ benachrichtigt die Kundschaft. Die übrigen Wechsel bleiben intern — für eine Entscheidung mit eigenem Text nutzen Sie den Block rechts.</p>
 
       <div class="spalten">
         <div class="block block-intern">
@@ -664,6 +763,15 @@ async function statusSetzen(id, status){
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d.error || 'Fehlgeschlagen');
+
+    if(status === 'abklaerung'){
+      if(d.mail === 'sent'){
+        pendMeldung(id, 'Status gesetzt — die Kundschaft wurde per E-Mail informiert.', 'ok');
+      } else if(d.mail === 'error'){
+        pendMeldung(id, 'Status gesetzt, aber die E-Mail konnte nicht zugestellt werden: ' +
+          (d.mail_error || 'unbekannter Grund') + ' — den Stand sieht die Kundschaft trotzdem im Portal.', 'err');
+      }
+    }
     await ladePendenzen();
   }catch(err){
     pendMeldung(id, 'Fehler: ' + err.message, 'err');
@@ -731,16 +839,31 @@ async function loadAll(){
 }
 
 async function loadStats(){
-  const resp = await fetch('/api/admin?action=stats');
-  if(!resp.ok) return;
-  const s = await resp.json();
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="num">${s.total}</div><div class="label">Meldungen (30 Tage)</div></div>
-    <div class="stat"><div class="num">${s.offen}</div><div class="label">Noch offen</div></div>
-    <div class="stat"><div class="num">${s.pro_kategorie.absage || 0}</div><div class="label">Absagen</div></div>
-    <div class="stat"><div class="num">${s.pro_kategorie.reklamation || 0}</div><div class="label">Reklamationen</div></div>
-    <div class="stat"><div class="num">${s.fehlgeschlagene_versuche}</div><div class="label">Fehlgeschlagene Versuche</div></div>
-  `;
+  const box = document.getElementById('stats-innen');
+  if(!box) return;
+  try{
+    const resp = await fetch('/api/admin?action=stats');
+    if(!resp.ok) return;
+    const s = await resp.json();
+    const k = s.pro_kategorie || {};
+    box.innerHTML = `
+      <div class="stat"><div class="num">${s.total ?? 0}</div><div class="label">Meldungen (30 Tage)</div></div>
+      <div class="stat"><div class="num">${s.offen ?? 0}</div><div class="label">Im Posteingang</div></div>
+      <div class="stat"><div class="num">${k.absage || 0}</div><div class="label">Absagen</div></div>
+      <div class="stat"><div class="num">${k.reklamation || 0}</div><div class="label">Reklamationen</div></div>
+      <div class="stat"><div class="num">${s.fehlgeschlagene_versuche ?? 0}</div><div class="label">Abgewiesene Versuche</div></div>
+    `;
+  }catch(e){
+    // Kennzahlen sind Beiwerk - ein Fehler hier darf die Tabelle nicht verhindern.
+    box.innerHTML = '';
+  }
+}
+
+
+function erklaerungUmschalten(){
+  const box = document.getElementById('erklaerung');
+  const auf = box.classList.toggle('auf');
+  box.querySelector('.erkl-kopf').setAttribute('aria-expanded', auf ? 'true' : 'false');
 }
 
 async function loadCustomers(){
@@ -752,7 +875,10 @@ async function loadCustomers(){
   document.getElementById('tbody').innerHTML = kunden.map((k, i) => `
     <tr class="kunde-row" onclick="openDetail(${i})">
       <td><span class="dot ${k.ampel}"></span></td>
-      <td>${k.name}${k.offen > 0 ? ` <span class="badge-offen">${k.offen} offen</span>` : ''}</td>
+      <td>
+        ${k.name}${k.offen > 0 ? ` <span class="badge-offen">${k.offen} offen</span>` : ''}
+        ${k.ampel_grund ? `<div class="ampel-grund">${k.ampel_grund}</div>` : ''}
+      </td>
       <td>${k.objekt_id}</td>
       <td class="num-cell">${k.zaehler.verschiebung || 0}</td>
       <td class="num-cell">${k.zaehler.absage || 0}</td>

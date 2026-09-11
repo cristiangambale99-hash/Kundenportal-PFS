@@ -87,6 +87,70 @@
   .zn-result code{background:#fff; padding:3px 7px; border-radius:5px; font-size:12.5px; user-select:all;}
   .zn-result.err{background:#fbeaea; border-color:#e6bcbc; color:#a33;}
   .link-cell code{font-size:11.5px; background:#f5f7f8; padding:3px 7px; border-radius:5px; user-select:all;}
+
+  /* ---- Pendenzen ---- */
+  .pend-kopf{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px;}
+  .pfilt{
+    background:#fff; border:1px solid var(--line); border-radius:20px;
+    padding:8px 16px; cursor:pointer; font-family:inherit; font-size:13px; color:var(--grey);
+  }
+  .pfilt:hover{border-color:var(--teal);}
+  .pfilt.active{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .pfilt .n{
+    display:inline-block; margin-left:6px; padding:1px 6px; border-radius:9px;
+    background:rgba(0,0,0,.08); font-size:11.5px; font-weight:600;
+  }
+  .pfilt.active .n{background:rgba(255,255,255,.22);}
+
+  .pend{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:20px 22px; margin-bottom:14px;
+  }
+  .pend.offen{border-left:3px solid #E8A33D;}
+  .pend-zeile{display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:10px;}
+  .pend-kunde{font-weight:600; font-size:15px; color:var(--navy);}
+  .pend-meta{font-size:12.5px; color:var(--grey); margin-top:2px;}
+  .pend-kat{
+    display:inline-block; padding:3px 10px; border-radius:6px; background:#EEF5F5;
+    color:#12797A; font-size:11.5px; font-weight:600; margin-bottom:8px;
+  }
+  .pend-text{
+    font-size:13.5px; line-height:1.65; color:#333; white-space:pre-wrap;
+    background:#FAFBFB; border-radius:8px; padding:12px 14px; margin-bottom:14px;
+  }
+  .pend-antwort{
+    margin-bottom:14px; padding:11px 14px; background:#F2F9F9;
+    border-left:3px solid var(--teal); font-size:13px; line-height:1.6; color:#12797A;
+  }
+  .pend-antwort strong{display:block; font-size:11px; letter-spacing:.4px;
+    text-transform:uppercase; opacity:.7; margin-bottom:3px;}
+  .pend-aktion{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .pend-aktion textarea{
+    width:100%; min-height:70px; margin-bottom:10px; padding:11px 13px;
+    border:1px solid var(--line); border-radius:8px; font-family:inherit;
+    font-size:13.5px; resize:vertical;
+  }
+  .btn-ja{background:#1c7a5a; color:#fff; border:none; border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
+  .btn-nein{background:#B4472F; color:#fff; border:none; border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
+  .btn-fertig{background:var(--navy); color:#fff; border:none; border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
+  .btn-nur{background:#fff; color:var(--grey); border:1px solid var(--line); border-radius:8px; padding:9px 17px; cursor:pointer; font-family:inherit; font-size:13px;}
+  .btn-ja:hover,.btn-nein:hover,.btn-fertig:hover{opacity:.88;}
+  .pend-hinweis{font-size:12px; color:var(--grey); margin-top:9px;}
+  .pend-leer{background:#fff; border:1px solid var(--line); border-radius:12px; padding:54px 24px; text-align:center;}
+  .pend-leer h3{margin:0 0 6px; font-size:16px; color:var(--navy);}
+  .pend-leer p{margin:0; font-size:13.5px; color:var(--grey);}
+  .pstat{
+    display:inline-block; padding:3px 11px; border-radius:20px;
+    font-size:11.5px; font-weight:600; white-space:nowrap;
+  }
+  .pstat.neu{background:#FFF4E0; color:#8a5a12;}
+  .pstat.akzeptieren{background:#E4F5EC; color:#1c7a5a;}
+  .pstat.ablehnen{background:#FBEDE9; color:#B4472F;}
+  .pstat.erledigt{background:#EEF5F5; color:#12797A;}
+  .zugeordnet-warn{
+    display:inline-block; margin-left:8px; padding:2px 8px; border-radius:6px;
+    background:#FFF4E0; color:#8a5a12; font-size:11px; font-weight:600;
+  }
 </style>
 </head>
 <body>
@@ -103,7 +167,8 @@
   <header>
     <h1 id="page-title">Kunden-Dashboard</h1>
     <div style="display:flex; gap:8px;">
-      <button id="tab-meldungen" class="tab active" onclick="showTab('meldungen')">Meldungen</button>
+      <button id="tab-pendenzen" class="tab active" onclick="showTab('pendenzen')">Pendenzen</button>
+      <button id="tab-meldungen" class="tab" onclick="showTab('meldungen')">Kundenübersicht</button>
       <button id="tab-zugaenge" class="tab" onclick="showTab('zugaenge')">Kundenzugänge</button>
       <button onclick="loadAll()">↻ Aktualisieren</button>
     </div>
@@ -111,6 +176,17 @@
 
   <div class="stats" id="stats"></div>
 
+<div id="view-pendenzen">
+  <div class="pend-kopf" id="pend-filter">
+    <button class="pfilt active" onclick="pendFilter('offen')">Offen<span class="n" id="n-offen">0</span></button>
+    <button class="pfilt" onclick="pendFilter('alle')">Alle<span class="n" id="n-alle">0</span></button>
+    <button class="pfilt" onclick="pendFilter('erledigt')">Abgeschlossen<span class="n" id="n-erledigt">0</span></button>
+  </div>
+  <div id="pend-liste"></div>
+</div>
+
+<div id="view-meldungen" style="display:none;">
+  <div class="stats" id="stats-innen"></div>
   <div class="ampel-legende">
     <span><span class="dot rot"></span>Auffällig / möglicherweise kündigungsgefährdet</span>
     <span><span class="dot gelb"></span>Beobachten</span>
@@ -123,6 +199,7 @@
     </thead>
     <tbody id="tbody"></tbody>
   </table>
+</div>
 </div>
 
 <div id="view-zugaenge" style="display:none; max-width:1200px; margin:0 auto; padding:0 24px 80px;">
@@ -171,7 +248,7 @@ async function login(){
     if(!resp.ok) throw new Error((data.error || 'Anmeldung fehlgeschlagen.') + (data.diagnose ? ' (' + data.diagnose + ')' : ''));
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    loadAll();
+    showTab('pendenzen');
   } catch(err){
     errBox.textContent = err.message;
     errBox.style.display = 'block';
@@ -179,24 +256,152 @@ async function login(){
 }
 
 
-function showTab(tab){
-  const meld = tab === 'meldungen';
-  const setShow = (sel, disp) => {
-    const el = document.querySelector(sel);
-    if(el) el.style.display = meld ? disp : 'none';
-  };
-  setShow('.stats', 'grid');
-  setShow('.ampel-legende', 'flex');
-  setShow('.filters', 'flex');
-  // erste Tabelle = Meldungen (die zweite gehört zu den Zugängen)
-  const meldTable = document.querySelector('#dashboard > table');
-  if(meldTable) meldTable.style.display = meld ? 'table' : 'none';
 
-  document.getElementById('view-zugaenge').style.display = meld ? 'none' : 'block';
-  document.getElementById('page-title').textContent = meld ? 'Kunden-Dashboard' : 'Kundenzugänge';
-  document.getElementById('tab-meldungen').classList.toggle('active', meld);
-  document.getElementById('tab-zugaenge').classList.toggle('active', !meld);
-  if(!meld) loadZugaenge();
+/* ==========================================================================
+   Pendenzen — die Arbeitsliste des Teams
+   ========================================================================== */
+
+let PEND = [];
+let PFILTER = 'offen';
+
+const P_KAT = { verschiebung:'Terminverschiebung', absage:'Terminabsage',
+                reklamation:'Reklamation', schaden:'Schadenmeldung', zusatz:'Zusatzreinigung' };
+
+async function ladePendenzen(){
+  try{
+    const r = await fetch('/api/admin?action=list');
+    if(!r.ok) throw new Error('Laden fehlgeschlagen');
+    const d = await r.json();
+    PEND = d.meldungen || [];
+  }catch(e){
+    PEND = [];
+  }
+  const offen = PEND.filter(m => m.status === 'neu').length;
+  const erledigt = PEND.filter(m => m.status !== 'neu').length;
+  document.getElementById('n-offen').textContent = offen;
+  document.getElementById('n-alle').textContent = PEND.length;
+  document.getElementById('n-erledigt').textContent = erledigt;
+  zeichnePendenzen();
+}
+
+function pendFilter(f){
+  PFILTER = f;
+  document.querySelectorAll('.pfilt').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${f}'`)));
+  zeichnePendenzen();
+}
+
+function pEsc(s){
+  return String(s || '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function zeichnePendenzen(){
+  let liste = PEND;
+  if(PFILTER === 'offen')    liste = PEND.filter(m => m.status === 'neu');
+  if(PFILTER === 'erledigt') liste = PEND.filter(m => m.status !== 'neu');
+
+  const box = document.getElementById('pend-liste');
+  if(!liste.length){
+    box.innerHTML = `
+      <div class="pend-leer">
+        <h3>${PFILTER === 'offen' ? 'Keine offenen Pendenzen' : 'Nichts vorhanden'}</h3>
+        <p>${PFILTER === 'offen'
+             ? 'Alle Kundenmeldungen sind bearbeitet.'
+             : 'In dieser Ansicht gibt es aktuell nichts anzuzeigen.'}</p>
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = liste.map(m => {
+    const offen = m.status === 'neu';
+    const datum = new Date(m.created_at).toLocaleString('de-CH',
+      { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const statusLbl = { neu:'Offen', akzeptieren:'Angenommen', ablehnen:'Abgelehnt', erledigt:'Erledigt' }[m.status] || m.status;
+
+    return `
+    <div class="pend ${offen ? 'offen' : ''}">
+      <div class="pend-zeile">
+        <div>
+          <div class="pend-kunde">${pEsc(m.name)}</div>
+          <div class="pend-meta">
+            ${m.objekt_id ? 'Objekt ' + pEsc(m.objekt_id) : '<span class="zugeordnet-warn">Zuordnung offen</span>'}
+            · ${pEsc(m.email || '')} · ${datum}
+          </div>
+        </div>
+        <span class="pstat ${m.status}">${statusLbl}</span>
+      </div>
+
+      <span class="pend-kat">${P_KAT[m.kategorie] || m.kategorie}</span>
+      ${m.details ? `<div class="pend-text">${pEsc(m.details)}</div>` : ''}
+      ${m.admin_note ? `<div class="pend-antwort"><strong>Bereits geantwortet</strong>${pEsc(m.admin_note)}</div>` : ''}
+
+      <div class="pend-aktion">
+        <textarea id="antw-${m.id}" placeholder="Ihre Antwort an die Kundschaft (optional — sonst wird ein Standardtext verwendet)"></textarea>
+        <button class="btn-ja" onclick="pendAntwort(${m.id}, 'akzeptieren')">Annehmen</button>
+        <button class="btn-nein" onclick="pendAntwort(${m.id}, 'ablehnen')">Ablehnen</button>
+        <button class="btn-fertig" onclick="pendAntwort(${m.id}, 'erledigt')">Erledigt</button>
+        <button class="btn-nur" onclick="pendAntwort(${m.id}, 'nachricht')">Nur Nachricht senden</button>
+      </div>
+      <div class="pend-hinweis">
+        Die Kundschaft erhält eine E-Mail mit dem neuen Stand und sieht die Antwort im Portal.
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function pendAntwort(id, aktion){
+  const feld = document.getElementById('antw-' + id);
+  const nachricht = feld ? feld.value.trim() : '';
+
+  if(aktion === 'nachricht' && !nachricht){
+    alert('Bitte zuerst eine Nachricht eingeben.');
+    return;
+  }
+
+  const knoepfe = feld ? feld.parentElement.querySelectorAll('button') : [];
+  knoepfe.forEach(b => b.disabled = true);
+
+  try{
+    const r = await fetch('/api/admin?action=reply', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, action: aktion, nachricht })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Fehlgeschlagen');
+
+    if(d.mail === 'error'){
+      alert('Status wurde gespeichert, aber die E-Mail konnte nicht zugestellt werden:\n' +
+            (d.mail_error || 'unbekannter Grund') +
+            '\n\nDie Kundschaft sieht die Antwort trotzdem im Portal.');
+    }
+    ladePendenzen();
+  }catch(err){
+    alert('Fehler: ' + err.message);
+    knoepfe.forEach(b => b.disabled = false);
+  }
+}
+
+function showTab(tab){
+  const bereiche = {
+    pendenzen: { titel: 'Pendenzen' },
+    meldungen: { titel: 'Kundenübersicht' },
+    zugaenge:  { titel: 'Kundenzugänge' }
+  };
+  if(!bereiche[tab]) tab = 'pendenzen';
+
+  ['pendenzen','meldungen','zugaenge'].forEach(t => {
+    const v = document.getElementById('view-' + t);
+    if(v) v.style.display = (t === tab) ? 'block' : 'none';
+    const b = document.getElementById('tab-' + t);
+    if(b) b.classList.toggle('active', t === tab);
+  });
+
+  document.getElementById('page-title').textContent = bereiche[tab].titel;
+
+  if(tab === 'pendenzen') ladePendenzen();
+  if(tab === 'meldungen') loadAll();
+  if(tab === 'zugaenge')  loadZugaenge();
 }
 
 async function kontoAnlegen(){

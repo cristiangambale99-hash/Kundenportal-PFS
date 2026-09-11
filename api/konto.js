@@ -17,6 +17,13 @@ const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
 
+/* Absenderadresse. Bewusst "noreply": Antworten auf diese Mails wuerden im
+   Postfach landen und muessten von Hand bearbeitet werden - genau das soll das
+   Portal ersetzen. Ueber MAIL_FROM laesst sich die Adresse ohne Codeaenderung
+   anpassen. */
+const ABSENDER = process.env.MAIL_FROM || "Clean Service Scaramuzzo AG <noreply@clean-service.ch>";
+
+
 /* ---------------------------------------------------------------- Supabase */
 let _client = null;
 function getSupabase() {
@@ -110,7 +117,7 @@ async function mailSenden(an, betreff, html) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
   return new Resend(apiKey).emails.send({
-    from: "Clean Service Scaramuzzo AG <kundenportal@clean-service.ch>",
+    from: ABSENDER,
     to: an, subject: betreff, html,
   });
 }

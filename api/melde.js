@@ -16,6 +16,14 @@ const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
 
+/* Absenderadresse. Bewusst "noreply": Antworten auf diese Mails wuerden im
+   Postfach landen und muessten von Hand bearbeitet werden - genau das soll das
+   Portal ersetzen. Ueber MAIL_FROM laesst sich die Adresse ohne Codeaenderung
+   anpassen. */
+const ABSENDER = process.env.MAIL_FROM || "Clean Service Scaramuzzo AG <noreply@clean-service.ch>";
+const ABSENDER_INTERN = process.env.MAIL_FROM_INTERN || "Kundenportal <noreply@clean-service.ch>";
+
+
 /* ---------------------------------------------------------------- Supabase */
 let _client = null;
 function getSupabase() {
@@ -97,7 +105,9 @@ async function sendeTeamMail(meldung) {
     <pre style="white-space:pre-wrap; font-family:inherit;">${meldung.details || ""}</pre>
   `;
   return resend.emails.send({
-    from: "Kundenportal <kundenportal@clean-service.ch>",
+    from: ABSENDER_INTERN,
+    // Damit "Antworten" im Team funktioniert - der Absender ist ja noreply.
+    replyTo: "putzfrauenservice@clean-service.ch",
     to: "putzfrauenservice@clean-service.ch",
     subject: `[Kundenportal] ${label} – ${meldung.name || meldung.objekt_id || "Kunde"}`,
     html,
@@ -117,7 +127,7 @@ async function sendeKundenBestaetigung(meldung) {
     </p>
   `;
   return resend.emails.send({
-    from: "Clean Service Scaramuzzo AG <kundenportal@clean-service.ch>",
+    from: ABSENDER,
     to: meldung.email,
     subject: `Ihre ${label} bei Clean Service Scaramuzzo AG`,
     html,

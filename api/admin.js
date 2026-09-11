@@ -16,6 +16,13 @@ const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
 
+/* Absenderadresse. Bewusst "noreply": Antworten auf diese Mails wuerden im
+   Postfach landen und muessten von Hand bearbeitet werden - genau das soll das
+   Portal ersetzen. Ueber MAIL_FROM laesst sich die Adresse ohne Codeaenderung
+   anpassen. */
+const ABSENDER = process.env.MAIL_FROM || "Clean Service Scaramuzzo AG <noreply@clean-service.ch>";
+
+
 /* ---------------------------------------------------------------- Supabase */
 let _client = null;
 function getSupabase() {
@@ -103,7 +110,7 @@ async function sendeAdminAntwort({ email, name, betreff, nachricht, status, kate
     </div>
   `;
   return new Resend(apiKey).emails.send({
-    from: "Clean Service Scaramuzzo AG <kundenportal@clean-service.ch>",
+    from: ABSENDER,
     to: email,
     subject: betreff || "Rückmeldung zu Ihrer Meldung",
     html,
@@ -311,6 +318,13 @@ module.exports = async function handler(req, res) {
       return;
     }
     const mail = String(email).trim().toLowerCase();
+
+    // "verwaltung" ist die Anmelde-ID des Teams. Als Kundenkonto angelegt waere
+    // es tot: die Anmeldung prueft das Verwaltungskonto zuerst.
+    if (mail === "verwaltung") {
+      res.status(400).json({ error: "Diese Anmelde-ID ist für die Verwaltung reserviert." });
+      return;
+    }
 
     const { data: vorhanden } = await supabase
       .from("kundenzugaenge").select("id, passwort_gesetzt").ilike("email", mail).maybeSingle();

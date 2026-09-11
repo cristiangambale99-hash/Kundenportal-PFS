@@ -144,6 +144,28 @@ function hashen(passwort, salt) {
  * GELB  - 1-2 Reklamationen/Schäden in 90 Tagen ODER 2+ Verschiebungen in 90 Tagen
  * GRÜN  - alles andere
  */
+/**
+ * Ampel für die Kundenübersicht.
+ *
+ * Eine reine Zählregel über die Meldungen im Portal — keine Vorhersage.
+ * Sie liefert die Farbe UND den Grund, damit im Tool nachvollziehbar ist,
+ * welche Regel ausgelöst hat. Ohne Begründung ist eine Ampel nicht
+ * überprüfbar, und was man nicht überprüfen kann, glaubt man irgendwann
+ * nicht mehr.
+ *
+ * Die Schwellen stehen bewusst an einer Stelle und sind hier dokumentiert.
+ */
+const AMPEL_REGELN = {
+  rot: [
+    { schluessel: "rs90_3",      text: "3 oder mehr Reklamationen/Schäden in 90 Tagen" },
+    { schluessel: "absagen30_1", text: "mindestens 1 Absage in 30 Tagen" },
+  ],
+  gelb: [
+    { schluessel: "rs90_1",   text: "1 Reklamation oder Schaden in 90 Tagen" },
+    { schluessel: "versch90_2", text: "2 Verschiebungen in 90 Tagen" },
+  ],
+};
+
 function berechneAmpel(meldungen) {
   const jetzt = Date.now();
   const tage = (m) => (jetzt - new Date(m.created_at).getTime()) / 86400000;
@@ -152,9 +174,13 @@ function berechneAmpel(meldungen) {
   const absagen30 = meldungen.filter(m => m.kategorie === "absage" && tage(m) <= 30).length;
   const versch90 = meldungen.filter(m => m.kategorie === "verschiebung" && tage(m) <= 90).length;
 
-  if (rs90 >= 3 || absagen30 >= 1) return "rot";
-  if (rs90 >= 1 || versch90 >= 2) return "gelb";
-  return "gruen";
+  const zahlen = { rs90, absagen30, versch90 };
+
+  if (rs90 >= 3) return { farbe: "rot", grund: `${rs90} Reklamationen/Schäden in den letzten 90 Tagen`, zahlen };
+  if (absagen30 >= 1) return { farbe: "rot", grund: `${absagen30} ${absagen30 === 1 ? "Absage" : "Absagen"} in den letzten 30 Tagen`, zahlen };
+  if (rs90 >= 1) return { farbe: "gelb", grund: `${rs90} ${rs90 === 1 ? "Reklamation/Schaden" : "Reklamationen/Schäden"} in den letzten 90 Tagen`, zahlen };
+  if (versch90 >= 2) return { farbe: "gelb", grund: `${versch90} Verschiebungen in den letzten 90 Tagen`, zahlen };
+  return { farbe: "gruen", grund: "Keine Auffälligkeiten in den Zeitfenstern", zahlen };
 }
 
 const STANDARD_TEXTE = {
@@ -248,7 +274,8 @@ module.exports = async function handler(req, res) {
         objekt_id: k.objekt_id, name: k.name, email: k.email,
         total: k.meldungen.length, offen, zaehler,
         letzte_meldung: k.meldungen[0].created_at,
-        ampel: berechneAmpel(k.meldungen),
+        ...(() => { const a = berechneAmpel(k.meldungen);
+                    return { ampel: a.farbe, ampel_grund: a.grund, ampel_zahlen: a.zahlen }; })(),
         meldungen: k.meldungen,
       };
     });
@@ -259,7 +286,7 @@ module.exports = async function handler(req, res) {
         ? rang[a.ampel] - rang[b.ampel]
         : new Date(b.letzte_meldung) - new Date(a.letzte_meldung));
 
-    res.status(200).json({ kunden });
+    res.status(200).json({ kunden, regeln: AMPEL_REGELN });
     return;
   }
 
@@ -387,9 +414,39 @@ module.exports = async function handler(req, res) {
     const felder = { status, aktualisiert_am: new Date().toISOString() };
     if (bearbeiter !== undefined) felder.bearbeiter = bearbeiter || null;
 
+    /* "In Abklärung" ist der einzige Statuswechsel, der die Kundschaft
+       benachrichtigt. Sie soll wissen, dass die Sache gesehen wurde und
+       geprüft wird - genau das erspart den Nachfrage-Anruf. Die übrigen
+       Wechsel bleiben still; für eine Entscheidung gibt es die Antwort mit
+       eigenem Text. */
+    let mailStatus = "skipped", mailError = null;
+    if (status === "abklaerung") {
+      const { data: meldung } = await supabase
+        .from("meldungen").select("*").eq("id", id).single();
+
+      if (meldung && meldung.email) {
+        const label = KATEGORIE_LABEL[meldung.kategorie] || meldung.kategorie;
+        const text = (req.body || {}).nachricht || STANDARD_TEXTE.abklaerung;
+        try {
+          await sendeAdminAntwort({
+            email: meldung.email, name: meldung.name,
+            betreff: `Ihre ${label} ist in Abklärung`, nachricht: text,
+            status, kategorie: label,
+          });
+          mailStatus = "sent";
+          felder.admin_note = text;
+        } catch (err) {
+          mailStatus = "error";
+          mailError = err.message;
+          // Der Statuswechsel gilt trotzdem - eine Mailstoerung darf die
+          // Bearbeitung nicht blockieren.
+        }
+      }
+    }
+
     const { error } = await supabase.from("meldungen").update(felder).eq("id", id);
     if (error) { res.status(500).json({ error: error.message }); return; }
-    res.status(200).json({ ok: true });
+    res.status(200).json({ ok: true, mail: mailStatus, mail_error: mailError });
     return;
   }
 

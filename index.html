@@ -669,8 +669,8 @@
         <h2 data-i18n="auth.login.h">Anmelden</h2>
         <p class="auth-sub" data-i18n="auth.login.sub">Ihre Anmelde-ID ist Ihre E-Mail-Adresse. Das Erstpasswort finden Sie auf Ihrem Reinigungsvertrag.</p>
 
-        <label for="l-email" data-i18n="auth.email">E-Mail-Adresse</label>
-        <input type="email" id="l-email" autocomplete="username" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph">
+        <label for="l-email" data-i18n="auth.loginid">Anmelde-ID</label>
+        <input type="text" id="l-email" autocomplete="username" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph">
 
         <label for="l-pw" data-i18n="auth.pw">Passwort</label>
         <input type="password" id="l-pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')anmelden()">
@@ -1508,7 +1508,7 @@ const translations = {
     'auth.login.h': 'Anmelden',
     'auth.login.sub': 'Ihre Anmelde-ID ist Ihre E-Mail-Adresse. Das Erstpasswort finden Sie auf Ihrem Reinigungsvertrag.',
     'auth.login.btn': 'Anmelden',
-    'auth.email': 'E-Mail-Adresse',
+    'auth.email': 'E-Mail-Adresse', 'auth.loginid': 'Anmelde-ID',
     'auth.pw': 'Passwort',
     'auth.pw.new': 'Neues Passwort',
     'auth.pw.repeat': 'Passwort wiederholen',
@@ -1598,7 +1598,7 @@ const translations = {
     'auth.login.h': 'Sign in',
     'auth.login.sub': 'Your login ID is your email address. You will find your initial password on your cleaning contract.',
     'auth.login.btn': 'Sign in',
-    'auth.email': 'Email address',
+    'auth.email': 'Email address', 'auth.loginid': 'Login ID',
     'auth.pw': 'Password',
     'auth.pw.new': 'New password',
     'auth.pw.repeat': 'Repeat password',
@@ -1819,8 +1819,8 @@ async function anmelden(){
   const pw = document.getElementById('l-pw').value;
   if(!email || !pw){
     meldung('l-msg', currentLang === 'de'
-      ? 'Bitte E-Mail-Adresse und Passwort eingeben.'
-      : 'Please enter your email address and password.');
+      ? 'Bitte Anmelde-ID und Passwort eingeben.'
+      : 'Please enter your login ID and password.');
     return;
   }
   meldung('l-msg', currentLang === 'de' ? 'Wird geprüft …' : 'Checking …', 'ok');
@@ -1831,6 +1831,13 @@ async function anmelden(){
     });
     const d = await resp.json();
     if(!resp.ok) throw new Error(d.error || 'Anmeldung fehlgeschlagen');
+
+    // Verwaltungskonto: direkt in den Adminbereich
+    if(d.admin){
+      meldung('l-msg', currentLang === 'de' ? 'Weiterleitung …' : 'Redirecting …', 'ok');
+      window.location.href = d.ziel || '/admin.html';
+      return;
+    }
 
     KUNDE = d.kunde;
     document.getElementById('l-pw').value = '';

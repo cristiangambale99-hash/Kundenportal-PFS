@@ -238,6 +238,24 @@
 const KAT_LABEL = {verschiebung:'Terminverschiebung', absage:'Absage', reklamation:'Reklamation', schaden:'Schadenmeldung', zusatz:'Zusatzauftrag'};
 let kundenDaten = [];
 
+
+/* Beim Laden pruefen, ob schon eine gueltige Sitzung besteht.
+   Wer sich ueber die Portal-Anmeldemaske als "Verwaltung" angemeldet hat,
+   bringt das Cookie bereits mit und soll nicht ein zweites Mal tippen. */
+async function sitzungPruefen(){
+  try{
+    const r = await fetch('/api/admin?action=stats');
+    if(!r.ok) throw new Error('keine Sitzung');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    showTab('pendenzen');
+  }catch(e){
+    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+}
+document.addEventListener('DOMContentLoaded', sitzungPruefen);
+
 async function login(){
   const password = document.getElementById('login-password').value.trim();
   const errBox = document.getElementById('login-error');

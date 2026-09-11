@@ -164,8 +164,6 @@
   .reassure h3{font-family:var(--font-head); font-size:14px; font-weight:600; margin:0 0 5px; color:var(--headline);}
   .reassure p{font-size:12.5px; color:var(--body-text); margin:0; line-height:1.5;}
 
-
-
   /* ---- Wellenform (Formwelt aus dem Corporate Design) ---- */
   .wave-divider{display:block; width:100%; height:auto; margin-bottom:-1px;}
 
@@ -219,7 +217,6 @@
   }
   .closing-call span{display:block; font-size:11.5px; color:#a8cfce; margin-top:9px; text-align:center;}
 
-
   /* ---- Grössere, ruhigere Bedienelemente (Zielgruppe: Privathaushalte, oft am Handy) ---- */
   label{font-size:14.5px; margin-top:22px;}
   input, select, textarea{padding:14px 15px; font-size:16px; border-radius:10px;}
@@ -253,7 +250,6 @@
     font-family:var(--font-head); font-size:12.5px; font-weight:600;
   }
 
-
   /* ---- Begrüssung nach Öffnen des Zugangslinks ---- */
   .welcome{
     display:flex; align-items:center; gap:10px;
@@ -283,7 +279,6 @@
     font-weight:600; font-size:14.5px; cursor:pointer; white-space:nowrap;
   }
   .recover-row button:hover{background:var(--tint-light-2);}
-
 
   /* ---- Anmeldung / Kontoansichten ---- */
   .auth-wrap{max-width:420px; margin:0 auto; padding:8px 0 40px;}
@@ -326,30 +321,6 @@
   .konto-logout:hover{border-color:var(--teal); color:var(--text-teal);}
   @media (max-width:600px){ .konto-name{display:none;} }
 
-
-  /* ---- Portalmenü ---- */
-  .portal-nav{
-    background:var(--panel); border-bottom:1px solid var(--line);
-    position:sticky; top:0; z-index:40;
-  }
-  .portal-nav-inner{
-    max-width:1080px; margin:0 auto; padding:0 24px;
-    display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
-  }
-  .portal-nav-inner::-webkit-scrollbar{display:none;}
-  .pnav{
-    background:none; border:none; cursor:pointer; white-space:nowrap;
-    font-family:var(--font-body); font-size:14px; color:var(--grey);
-    padding:16px 14px; border-bottom:2px solid transparent; margin-bottom:-1px;
-  }
-  .pnav:hover{color:var(--text-teal);}
-  .pnav.active{color:var(--text-teal-dark); border-bottom-color:var(--teal); font-weight:600;}
-  .pnav .zahl{
-    display:inline-block; margin-left:6px; min-width:19px; padding:1px 5px;
-    background:var(--tint-light); color:var(--text-teal-dark);
-    border-radius:9px; font-size:11.5px; font-weight:600; text-align:center;
-  }
-
   /* ---- Übersicht ---- */
   .ueb-wrap{max-width:1080px; margin:0 auto; padding:34px 24px 70px;}
   .ueb-gruss{margin:0 0 4px; font-family:var(--font-head); font-size:26px; color:var(--headline);}
@@ -390,13 +361,6 @@
 
   /* ---- Meldungsliste ---- */
   .mld-filter{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;}
-  .mfilt{
-    background:var(--panel); border:1px solid var(--line); border-radius:20px;
-    padding:8px 15px; cursor:pointer; font-family:var(--font-body);
-    font-size:13px; color:var(--grey);
-  }
-  .mfilt:hover{border-color:var(--teal);}
-  .mfilt.active{background:var(--text-teal-dark); border-color:var(--text-teal-dark); color:#fff;}
 
   .mld-karte{
     background:var(--panel); border:1px solid var(--line); border-radius:13px;
@@ -445,10 +409,7 @@
   @media (max-width:600px){
     .ueb-wrap{padding:24px 18px 60px;}
     .ueb-gruss{font-size:22px;}
-    .portal-nav-inner{padding:0 16px;}
-    .pnav{font-size:13.5px; padding:14px 11px;}
   }
-
 
   /* Kopfzeile im angemeldeten Portal: schmal, ohne Farbverlauf */
   .hero.kompakt{background:var(--panel); border-bottom:1px solid var(--line); padding-bottom:0;}
@@ -460,7 +421,6 @@
   .schnell{align-items:flex-start;}
   .schnell .s-lbl{margin-bottom:2px; line-height:1.3;}
   .schnell .s-sub{line-height:1.45; display:block;}
-
 
   /* ---- Fotoauswahl ---- */
   .kat-hinweis{
@@ -612,229 +572,559 @@
   tr:hover td{background:rgba(43,182,183,.05);}
   .cust-name{font-weight:600;}
   .cust-sub{font-size:11.5px; color:var(--grey);}
+
+/* ==========================================================================
+   REDESIGN 2026 — Designsystem
+   Eine Schicht über den gewachsenen Stilen. Sie legt Skala, Abstände und
+   Komponenten fest; ältere Regeln für Rechtstexte und Teamseite bleiben.
+   ========================================================================== */
+
+:root{
+  /* Abstände: 4er-Raster, durchgehend verwendet */
+  --s1:4px;  --s2:8px;  --s3:12px; --s4:16px;
+  --s5:24px; --s6:32px; --s7:48px; --s8:64px; --s9:96px;
+
+  /* Radien: nur drei Werte im ganzen Portal */
+  --r-s:8px; --r-m:14px; --r-l:22px;
+
+  /* Schatten: sehr zurückhaltend, Tiefe kommt aus Linien */
+  --sh-1:0 1px 2px rgba(16,64,63,.05);
+  --sh-2:0 2px 10px rgba(16,64,63,.07);
+  --sh-3:0 12px 34px rgba(16,64,63,.10);
+
+  /* Zustandsfarben */
+  --ok-bg:#E8F4EE;   --ok-fg:#14684C;
+  --warn-bg:#FDF3E3; --warn-fg:#8A5A12;
+  --stop-bg:#FBEDE9; --stop-fg:#A8422C;
+  --info-bg:#EAF6F6; --info-fg:#0F5C5C;
+
+  --tap:48px;   /* Mindestgrösse für Fingerziele */
+}
+
+/* ---- Typografische Skala ---------------------------------------------- */
+.t-display{font-family:var(--font-head); font-size:clamp(30px,5vw,44px); line-height:1.08;
+           letter-spacing:-.02em; color:var(--headline); margin:0;}
+.t-h1{font-family:var(--font-head); font-size:clamp(24px,3.4vw,32px); line-height:1.15;
+      letter-spacing:-.015em; color:var(--headline); margin:0;}
+.t-h2{font-family:var(--font-head); font-size:20px; line-height:1.25;
+      letter-spacing:-.01em; color:var(--headline); margin:0;}
+.t-h3{font-family:var(--font-head); font-size:16px; line-height:1.3; color:var(--headline); margin:0;}
+.t-body{font-size:15px; line-height:1.65; color:var(--body-text); margin:0; max-width:62ch;}
+.t-small{font-size:13.5px; line-height:1.6; color:var(--grey); margin:0; max-width:62ch;}
+.t-caption{font-size:12.5px; line-height:1.5; color:var(--grey); margin:0;}
+
+/* ---- Seitenbreite ------------------------------------------------------ */
+.wrap{max-width:940px; margin:0 auto; padding:var(--s7) var(--s5) var(--s9);}
+@media (max-width:640px){ .wrap{padding:var(--s5) var(--s4) var(--s8);} }
+
+/* ---- Knöpfe ------------------------------------------------------------ */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
+  min-height:var(--tap); padding:0 var(--s5); border-radius:var(--r-s);
+  font-family:var(--font-body); font-size:15px; font-weight:600;
+  border:1px solid transparent; cursor:pointer; text-decoration:none;
+  transition:background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.btn:focus-visible{outline:2px solid var(--text-teal); outline-offset:2px;}
+.btn-primary{background:var(--text-teal); color:#fff;}
+.btn-primary:hover{background:var(--text-teal-dark);}
+.btn-secondary{background:#fff; color:var(--text-teal-dark); border-color:var(--line);}
+.btn-secondary:hover{border-color:var(--teal);}
+.btn-ghost{background:none; color:var(--text-teal); padding:0 var(--s2); min-height:40px;}
+.btn-ghost:hover{color:var(--text-teal-dark); text-decoration:underline;}
+.btn-block{width:100%;}
+.btn[disabled]{opacity:.5; cursor:not-allowed;}
+
+/* ---- Eingabefelder ----------------------------------------------------- */
+.f-label{display:block; font-size:14px; font-weight:600; color:var(--headline);
+         margin:0 0 var(--s2);}
+.f-hint{font-size:12.5px; color:var(--grey); margin:var(--s2) 0 0;}
+.f-input, .rd input[type=text], .rd input[type=email], .rd input[type=password],
+.rd input[type=date], .rd input[type=time], .rd select, .rd textarea{
+  width:100%; min-height:var(--tap); padding:var(--s3) var(--s4);
+  border:1px solid var(--line); border-radius:var(--r-s); background:#fff;
+  font-family:var(--font-body); font-size:16px; color:var(--ink);
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.rd textarea{min-height:120px; resize:vertical; line-height:1.6;}
+.f-input:focus, .rd input:focus, .rd select:focus, .rd textarea:focus{
+  outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(43,182,183,.15);
+}
+.f-input[aria-invalid=true]{border-color:var(--stop-fg); box-shadow:0 0 0 3px rgba(168,66,44,.12);}
+
+/* ---- Flächen ----------------------------------------------------------- */
+.surface{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m);}
+.surface-pad{padding:var(--s5);}
+
+/* Nur was anklickbar ist, bekommt Karten-Verhalten */
+.tap-card{
+  display:flex; align-items:flex-start; gap:var(--s4); width:100%; text-align:left;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m);
+  padding:var(--s4) var(--s5); min-height:var(--tap); cursor:pointer;
+  font-family:var(--font-body); transition:border-color .15s ease, box-shadow .15s ease;
+}
+.tap-card:hover{border-color:var(--teal-5); box-shadow:var(--sh-2);}
+.tap-card:focus-visible{outline:2px solid var(--text-teal); outline-offset:2px;}
+
+/* ---- Statusmarken ------------------------------------------------------ */
+.pill{
+  display:inline-flex; align-items:center; gap:6px; padding:5px 12px 5px 10px;
+  border-radius:999px; font-size:12.5px; font-weight:600; white-space:nowrap;
+}
+.pill .dot{width:7px; height:7px; border-radius:50%; background:currentColor; flex:0 0 7px;}
+.pill-neu{background:var(--warn-bg); color:var(--warn-fg);}
+.pill-akzeptieren{background:var(--ok-bg); color:var(--ok-fg);}
+.pill-ablehnen{background:var(--stop-bg); color:var(--stop-fg);}
+.pill-erledigt{background:var(--info-bg); color:var(--info-fg);}
+
+/* ---- Leere Ansichten --------------------------------------------------- */
+.empty{text-align:center; padding:var(--s8) var(--s5);}
+.empty svg{color:var(--teal-5); margin-bottom:var(--s4);}
+.empty h3{font-family:var(--font-head); font-size:18px; color:var(--headline); margin:0 0 var(--s2);}
+.empty p{font-size:14px; color:var(--grey); margin:0 auto var(--s5); max-width:38ch; line-height:1.6;}
+
+/* ---- Bewegung nur auf Wunsch ------------------------------------------ */
+@media (prefers-reduced-motion:reduce){
+  *, *::before, *::after{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+}
+
+/* ---- Anmeldung: eigenständige Seite ------------------------------------ */
+.auth-page{
+  min-height:calc(100vh - 78px); display:flex; align-items:center; justify-content:center;
+  padding:var(--s6) var(--s4) var(--s8);
+}
+.auth-col{width:100%; max-width:400px;}
+.auth-mark{text-align:center; margin-bottom:var(--s6);}
+.auth-mark img{height:34px; width:auto;}
+.auth-claim{
+  font-family:var(--font-head); font-size:18px; line-height:1.4; color:var(--headline);
+  text-align:center; margin:var(--s4) 0 0; letter-spacing:-.01em;
+}
+.auth-box{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-l);
+          padding:var(--s6) var(--s5); box-shadow:var(--sh-3);}
+.auth-box h2{font-family:var(--font-head); font-size:21px; color:var(--headline);
+             margin:0 0 var(--s2); letter-spacing:-.01em;}
+.auth-box .lead{font-size:13.5px; line-height:1.6; color:var(--grey); margin:0 0 var(--s5);}
+.auth-field + .auth-field{margin-top:var(--s4);}
+.auth-box .btn{margin-top:var(--s5);}
+.auth-foot{margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line);
+           text-align:center;}
+.auth-foot p{font-size:12.5px; line-height:1.6; color:var(--grey); margin:var(--s3) 0 0;}
+.auth-msg{display:none; margin-top:var(--s4); padding:var(--s3) var(--s4);
+          border-radius:var(--r-s); font-size:13.5px; line-height:1.55;}
+.auth-msg.err{background:var(--stop-bg); color:var(--stop-fg);}
+.auth-msg.ok{background:var(--info-bg); color:var(--info-fg);}
+@media (max-width:480px){
+  .auth-page{padding:var(--s5) var(--s4) var(--s7);}
+  .auth-box{padding:var(--s5) var(--s4); border-radius:var(--r-m); box-shadow:var(--sh-2);}
+}
+
+/* ---- Kopfzeile ---------------------------------------------------------- */
+.kopf{background:var(--panel); border-bottom:1px solid var(--line);
+      position:sticky; top:0; z-index:50;}
+.kopf-in{max-width:940px; margin:0 auto; padding:0 var(--s5);
+         display:flex; align-items:center; justify-content:space-between; gap:var(--s4);
+         min-height:78px;}
+.kopf-logo img{height:30px; width:auto; display:block;}
+.kopf-rechts{display:flex; align-items:center; gap:var(--s4);}
+.kopf-kunde{display:none; text-align:right; line-height:1.3;}
+.kopf-kunde.zeigen{display:block;}
+.kopf-kunde strong{display:block; font-family:var(--font-head); font-size:14px; color:var(--headline);}
+.kopf-kunde span{font-size:12.5px; color:var(--grey);}
+.sprache{display:flex; gap:2px;}
+.sprache button{
+  background:none; border:none; cursor:pointer; padding:8px 9px; border-radius:6px;
+  font-family:var(--font-body); font-size:13px; font-weight:600; color:var(--grey);
+}
+.sprache button.active{color:var(--text-teal-dark); background:var(--info-bg);}
+
+/* ---- Portalmenü --------------------------------------------------------- */
+.menue{background:var(--panel); border-bottom:1px solid var(--line);
+       position:sticky; top:78px; z-index:45;}
+.menue-in{max-width:940px; margin:0 auto; padding:0 var(--s5);
+          display:flex; gap:var(--s1); overflow-x:auto; scrollbar-width:none;}
+.menue-in::-webkit-scrollbar{display:none;}
+.mnav{
+  background:none; border:none; cursor:pointer; white-space:nowrap;
+  font-family:var(--font-body); font-size:14.5px; color:var(--grey);
+  padding:var(--s4) var(--s3); border-bottom:2px solid transparent; margin-bottom:-1px;
+  display:inline-flex; align-items:center; gap:var(--s2); min-height:var(--tap);
+}
+.mnav:hover{color:var(--text-teal-dark);}
+.mnav.active{color:var(--headline); border-bottom-color:var(--teal); font-weight:600;}
+.mnav .n{
+  min-width:20px; padding:1px 6px; border-radius:999px;
+  background:var(--info-bg); color:var(--info-fg);
+  font-size:11.5px; font-weight:700; text-align:center;
+}
+@media (max-width:640px){
+  .kopf-in{padding:0 var(--s4); min-height:66px;}
+  .kopf-kunde.zeigen{display:none;}
+  .menue{top:66px;}
+  .menue-in{padding:0 var(--s4);}
+  .mnav{font-size:14px; padding:var(--s3) var(--s3);}
+}
+
+/* ---- Übersicht ---------------------------------------------------------- */
+.gruss{margin-bottom:var(--s7);}
+.gruss .t-display{margin-bottom:var(--s3);}
+.gruss .stand{font-size:16px; line-height:1.6; color:var(--body-text); margin:0; max-width:56ch;}
+.gruss .stand b{color:var(--headline); font-weight:600;}
+
+.abschnitt{margin-bottom:var(--s7);}
+.abschnitt-kopf{margin-bottom:var(--s4);}
+.abschnitt-kopf .t-h2{margin-bottom:var(--s1);}
+
+/* Aktionen: die eine Stelle, an der das Portal Farbe zeigt */
+.aktionen{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:var(--s3);}
+.aktion{
+  display:flex; align-items:center; gap:var(--s4); width:100%; text-align:left;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r-m);
+  padding:var(--s4) var(--s5); min-height:76px; cursor:pointer;
+  font-family:var(--font-body); position:relative; overflow:hidden;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.aktion::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--teal); opacity:0; transition:opacity .15s ease;
+}
+.aktion:hover{border-color:var(--teal-5); box-shadow:var(--sh-2);}
+.aktion:hover::before{opacity:1;}
+.aktion:focus-visible{outline:2px solid var(--text-teal); outline-offset:2px;}
+.aktion-ico{
+  flex:0 0 42px; height:42px; border-radius:11px; background:var(--info-bg);
+  display:flex; align-items:center; justify-content:center; color:var(--text-teal-dark);
+}
+.aktion-txt strong{display:block; font-family:var(--font-head); font-size:15.5px;
+                   color:var(--headline); line-height:1.3; margin-bottom:2px;}
+.aktion-txt span{font-size:13px; color:var(--grey); line-height:1.45;}
+
+/* Offene Anliegen: Liste mit Haarlinien, keine Kästchen */
+.anliegen{border-top:1px solid var(--line);}
+.anliegen-zeile{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s4);
+  padding:var(--s4) 0; border-bottom:1px solid var(--line);
+}
+.anliegen-zeile .was{font-family:var(--font-head); font-size:15px; color:var(--headline);}
+.anliegen-zeile .wann{font-size:12.5px; color:var(--grey); margin-top:2px;}
+
+/* ---- Meldungsliste ------------------------------------------------------ */
+.filter{display:flex; gap:var(--s2); flex-wrap:wrap; margin-bottom:var(--s5);}
+.filter button{
+  background:var(--panel); border:1px solid var(--line); border-radius:999px;
+  padding:9px 16px; cursor:pointer; font-family:var(--font-body);
+  font-size:13.5px; color:var(--grey); min-height:40px;
+}
+.filter button:hover{border-color:var(--teal-5); color:var(--text-teal-dark);}
+.filter button.active{background:var(--headline); border-color:var(--headline); color:#fff;}
+
+.mliste{border-top:1px solid var(--line);}
+.meintrag{padding:var(--s5) 0; border-bottom:1px solid var(--line);}
+.meintrag-kopf{display:flex; align-items:flex-start; justify-content:space-between;
+               gap:var(--s4); margin-bottom:var(--s3);}
+.meintrag-was{font-family:var(--font-head); font-size:16px; color:var(--headline); line-height:1.3;}
+.meintrag-wann{font-size:12.5px; color:var(--grey); margin-top:3px;}
+.meintrag-text{font-size:14px; line-height:1.65; color:var(--body-text);
+               white-space:pre-wrap; max-width:62ch;}
+.antwort{
+  margin-top:var(--s4); padding:var(--s4); background:var(--info-bg);
+  border-radius:var(--r-s); font-size:14px; line-height:1.65; color:var(--info-fg);
+  max-width:62ch;
+}
+.antwort .von{display:block; font-size:12.5px; font-weight:600; margin-bottom:var(--s2); opacity:.8;}
+
+/* ---- Konto -------------------------------------------------------------- */
+.daten{border-top:1px solid var(--line); margin-bottom:var(--s7);}
+.datenzeile{display:flex; justify-content:space-between; align-items:baseline; gap:var(--s5);
+            padding:var(--s4) 0; border-bottom:1px solid var(--line);}
+.datenzeile dt{font-size:14px; color:var(--grey); margin:0;}
+.datenzeile dd{font-size:15px; color:var(--headline); margin:0; text-align:right; font-weight:500;}
+
+/* ---- Formular ----------------------------------------------------------- */
+.form-wrap{max-width:600px; margin:0 auto; padding:var(--s6) var(--s5) var(--s9);}
+.form-zurueck{margin-bottom:var(--s5);}
+.form-kopf{margin-bottom:var(--s6);}
+.form-kopf .t-h1{margin-bottom:var(--s2);}
+
+/* Schrittanzeige: nur wo der Weg wirklich mehrstufig ist */
+.schritte{display:flex; align-items:center; gap:var(--s2); margin-bottom:var(--s5);}
+.schritt{display:flex; align-items:center; gap:var(--s2); font-size:13px; color:var(--grey);}
+.schritt .kreis{
+  width:24px; height:24px; border-radius:50%; border:1.5px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;
+}
+.schritt.aktiv{color:var(--headline); font-weight:600;}
+.schritt.aktiv .kreis{background:var(--text-teal); border-color:var(--text-teal); color:#fff;}
+.schritt.fertig .kreis{background:var(--info-bg); border-color:var(--teal-5); color:var(--text-teal-dark);}
+.schritt-strich{flex:1; height:1px; background:var(--line); min-width:12px;}
+
+.kunde-box{
+  background:var(--info-bg); border-radius:var(--r-m); padding:var(--s4) var(--s5);
+  margin-bottom:var(--s5);
+}
+.kunde-box strong{display:block; font-family:var(--font-head); font-size:15.5px;
+                  color:var(--headline); margin-bottom:var(--s1);}
+.kunde-box span{display:block; font-size:13px; color:var(--info-fg); line-height:1.55;}
+
+.feldgruppe > div + div{margin-top:var(--s5);}
+
+.hinweis-box{
+  margin-top:var(--s5); padding:var(--s4); background:var(--info-bg);
+  border-radius:var(--r-s); font-size:13.5px; line-height:1.6; color:var(--info-fg);
+}
+.fehler-box{
+  display:none; margin-top:var(--s5); padding:var(--s4);
+  background:var(--stop-bg); border-radius:var(--r-s);
+  font-size:14px; line-height:1.55; color:var(--stop-fg);
+}
+.erfolg{text-align:center; padding:var(--s8) var(--s5);}
+.erfolg .haken{
+  width:56px; height:56px; border-radius:50%; background:var(--ok-bg); color:var(--ok-fg);
+  display:flex; align-items:center; justify-content:center; margin:0 auto var(--s5);
+}
+.erfolg h2{font-family:var(--font-head); font-size:24px; color:var(--headline); margin:0 0 var(--s3);}
+.erfolg p{font-size:15px; line-height:1.65; color:var(--body-text); margin:0 auto var(--s6); max-width:44ch;}
+.erfolg-knoepfe{display:flex; gap:var(--s3); justify-content:center; flex-wrap:wrap;}
+
+/* ---- Prüfschritt -------------------------------------------------------- */
+.pruefen dl{margin:0; border-top:1px solid var(--line);}
+.pruefen .z{display:flex; justify-content:space-between; gap:var(--s5);
+            padding:var(--s4) 0; border-bottom:1px solid var(--line);}
+.pruefen dt{font-size:14px; color:var(--grey); margin:0; flex:0 0 auto;}
+.pruefen dd{font-size:15px; color:var(--headline); margin:0; text-align:right;
+            white-space:pre-wrap; max-width:38ch;}
+.pruefen-fotos{display:flex; flex-wrap:wrap; gap:var(--s2); justify-content:flex-end;}
+.pruefen-fotos img{width:56px; height:56px; object-fit:cover; border-radius:var(--r-s);
+                   border:1px solid var(--line);}
+.knopfreihe{display:flex; gap:var(--s3); margin-top:var(--s6);}
+.knopfreihe .btn{flex:1;}
+
+/* Auf schmalen Schirmen untereinander und linksbündig — rechtsbündiger
+   Fliesstext ist auf dem Handy schwer zu lesen. */
+@media (max-width:560px){
+  .pruefen .z, .datenzeile{flex-direction:column; gap:var(--s1); align-items:stretch;}
+  .pruefen dd, .datenzeile dd{text-align:left; max-width:none;}
+  .pruefen-fotos{justify-content:flex-start;}
+  .knopfreihe{flex-direction:column-reverse;}
+  .aktionen{grid-template-columns:1fr;}
+}
+
 </style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Zum Inhalt springen / Skip to content</a>
 
-<div class="hero">
-  <div class="hero-inner">
-
-  <div class="topbar">
-    <div class="brand">
-      <img src="logo.webp" alt="Clean Service by Scaramuzzo" class="brand-logo" width="150" height="47" loading="eager">
-    </div>
-    <nav class="nav">
-      <div id="konto-leiste" class="konto" style="display:none;">
-        <span class="konto-name"><strong id="konto-name"></strong><span id="konto-objekt"></span></span>
-        <button class="konto-logout" onclick="abmelden()" data-i18n="auth.logout">Abmelden</button>
+<header class="kopf">
+  <div class="kopf-in">
+    <a class="kopf-logo" href="#" onclick="zeigePortal('uebersicht'); return false;" aria-label="Clean Service — Kundenportal">
+      <img src="logo.webp" alt="Clean Service by Scaramuzzo" width="150" height="47" loading="eager">
+    </a>
+    <div class="kopf-rechts">
+      <div id="konto-leiste" class="kopf-kunde">
+        <strong id="konto-name"></strong><span id="konto-objekt"></span>
       </div>
-      <div class="lang-switch" role="group" aria-label="Sprache / Language">
-        <button data-lang="de" class="active" onclick="setLang('de')" aria-pressed="true" aria-label="Deutsch">DE</button>
-        <button data-lang="en" onclick="setLang('en')" aria-pressed="false" aria-label="English">EN</button>
+      <button id="knopf-abmelden" class="btn btn-secondary" style="display:none; min-height:40px; padding:0 var(--s4); font-size:13.5px;"
+              onclick="abmelden()" data-i18n="auth.logout">Abmelden</button>
+      <div class="sprache" role="group" aria-label="Sprache / Language">
+        <button data-lang="de" class="active" onclick="setLang('de')" aria-pressed="true">DE</button>
+        <button data-lang="en" onclick="setLang('en')" aria-pressed="false">EN</button>
       </div>
-    </nav>
-  </div>
-
-  <div class="hero-body">
-    <div class="heritage">
-      <span class="since">1984</span>
-      <span class="rule"></span>
-      <span data-i18n="hero.heritage">Tradition die glänzt</span>
-    </div>
-    <h1 data-i18n="hero.h1">Ihr Kundenportal.</h1>
-    <p class="lead" data-i18n="hero.lead">Termine verschieben, absagen, Reklamationen und Anfragen — alles an einem Ort, jederzeit erreichbar.</p>
-    <div class="hero-assurance">
-      <span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-        <span data-i18n="hero.b1">Ihre Angaben hinterlegt</span>
-      </span>
-      <span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        <span data-i18n="hero.b2">Antwort innert einem Arbeitstag</span>
-      </span>
-      <span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>
-        <span data-i18n="hero.b3">Direkt beim zuständigen Team</span>
-      </span>
     </div>
   </div>
+</header>
 
-  </div>
-  <svg class="wave-divider" viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M0 34c150 26 305 34 470 22 165-12 300-38 470-38 170 0 330 26 500 34v18H0z" fill="var(--paper)" opacity=".55"/>
-    <path d="M0 46c170 20 320 24 480 12s300-32 470-30c170 2 330 24 490 30v12H0z" fill="var(--paper)"/>
-  </svg>
-</div>
-
-<!-- ============ Portalmenü (nur angemeldet) ============ -->
-<div class="portal-nav" id="portal-nav" style="display:none;">
-  <div class="portal-nav-inner">
-    <button class="pnav active" data-ziel="uebersicht" onclick="zeigePortal('uebersicht')" data-i18n="nav.ueb">Übersicht</button>
-    <button class="pnav" data-ziel="melden" onclick="zeigePortal('melden')" data-i18n="nav.melden">Anliegen melden</button>
-    <button class="pnav" data-ziel="meldungen" onclick="zeigePortal('meldungen')">
-      <span data-i18n="nav.meine">Meine Meldungen</span><span class="zahl" id="nav-zahl" style="display:none;">0</span>
+<nav class="menue" id="portal-nav" style="display:none;" aria-label="Portalbereiche">
+  <div class="menue-in">
+    <button class="mnav active" data-ziel="uebersicht" onclick="zeigePortal('uebersicht')" data-i18n="nav.ueb">Übersicht</button>
+    <button class="mnav" data-ziel="meldungen" onclick="zeigePortal('meldungen')">
+      <span data-i18n="nav.meine">Meine Meldungen</span><span class="n" id="nav-zahl" style="display:none;">0</span>
     </button>
-    <button class="pnav" data-ziel="konto" onclick="zeigePortal('konto')" data-i18n="nav.konto">Mein Konto</button>
-    <button class="pnav" data-ziel="kontakt" onclick="zeigePortal('kontakt')" data-i18n="nav.kontakt">Kontakt</button>
+    <button class="mnav" data-ziel="konto" onclick="zeigePortal('konto')" data-i18n="nav.konto">Mein Konto</button>
+    <button class="mnav" data-ziel="kontakt" onclick="zeigePortal('kontakt')" data-i18n="nav.kontakt">Kontakt</button>
   </div>
-</div>
+</nav>
 
 <main id="main-content">
 
   <!-- ============ Anmeldung ============ -->
   <div class="view" id="view-login">
-    <div class="auth-wrap">
-      <div class="auth-card">
-        <h2 data-i18n="auth.login.h">Anmelden</h2>
-        <p class="auth-sub" data-i18n="auth.login.sub">Ihre Anmelde-ID ist Ihre E-Mail-Adresse. Das Erstpasswort finden Sie auf Ihrem Reinigungsvertrag.</p>
-
-        <label for="l-email" data-i18n="auth.loginid">Anmelde-ID</label>
-        <input type="text" id="l-email" autocomplete="username" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph">
-
-        <label for="l-pw" data-i18n="auth.pw">Passwort</label>
-        <input type="password" id="l-pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')anmelden()">
-
-        <button class="primary" onclick="anmelden()" data-i18n="auth.login.btn">Anmelden</button>
-        <div id="l-msg" class="auth-msg"></div>
-
-        <div class="auth-alt">
-          <button onclick="zeigeAuth('vergessen')" data-i18n="auth.forgot.link">Passwort vergessen?</button>
+    <div class="auth-page rd">
+      <div class="auth-col">
+        <div class="auth-mark">
+          <img src="logo.webp" alt="Clean Service by Scaramuzzo" width="150" height="47">
+          <p class="auth-claim" data-i18n="auth.claim">Sauberkeit, auf die Sie sich verlassen können.</p>
         </div>
 
-        <div class="auth-hilfe" data-i18n="auth.help">
-          Noch keine Zugangsdaten? Sie erhalten diese mit Ihrem Reinigungsvertrag. Bei Fragen erreichen Sie uns unter 0844 355 355.
+        <div class="auth-box">
+          <h2 data-i18n="auth.login.h">Anmelden</h2>
+          <p class="lead" data-i18n="auth.login.sub">Ihre Anmelde-ID ist Ihre E-Mail-Adresse. Das Erstpasswort finden Sie auf Ihrem Reinigungsvertrag.</p>
+
+          <div class="auth-field">
+            <label class="f-label" for="l-email" data-i18n="auth.loginid">Anmelde-ID</label>
+            <input type="text" id="l-email" autocomplete="username" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph">
+          </div>
+          <div class="auth-field">
+            <label class="f-label" for="l-pw" data-i18n="auth.pw">Passwort</label>
+            <input type="password" id="l-pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')anmelden()">
+          </div>
+
+          <button class="btn btn-primary btn-block" onclick="anmelden()" data-i18n="auth.login.btn">Anmelden</button>
+          <div id="l-msg" class="auth-msg"></div>
+
+          <div class="auth-foot">
+            <button class="btn btn-ghost" onclick="zeigeAuth('vergessen')" data-i18n="auth.forgot.link">Passwort vergessen?</button>
+            <p data-i18n="auth.help">Noch keine Zugangsdaten? Sie erhalten diese mit Ihrem Reinigungsvertrag. Bei Fragen erreichen Sie uns unter 0844 355 355.</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ============ Erstpasswort ersetzen ============ -->
   <div class="view" id="view-pw-setzen">
-    <div class="auth-wrap">
-      <div class="auth-card">
-        <h2 data-i18n="auth.set.h">Passwort festlegen</h2>
-        <p class="auth-sub" data-i18n="auth.set.sub">Sie haben sich mit dem Erstpasswort vom Vertrag angemeldet. Legen Sie jetzt Ihr eigenes Passwort fest — danach gilt nur noch dieses.</p>
-
-        <label for="s-pw" data-i18n="auth.pw.new">Neues Passwort</label>
-        <input type="password" id="s-pw" autocomplete="new-password">
-        <p class="field-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
-
-        <label for="s-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
-        <input type="password" id="s-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')passwortSetzen()">
-
-        <button class="primary" onclick="passwortSetzen()" data-i18n="auth.set.btn">Passwort speichern</button>
-        <div id="s-msg" class="auth-msg"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ Passwort vergessen ============ -->
-  <div class="view" id="view-vergessen">
-    <div class="auth-wrap">
-      <div class="auth-card">
-        <h2 data-i18n="auth.forgot.h">Passwort vergessen</h2>
-        <p class="auth-sub" data-i18n="auth.forgot.sub">Geben Sie Ihre E-Mail-Adresse an. Wir schicken Ihnen einen Link, mit dem Sie ein neues Passwort festlegen können.</p>
-
-        <label for="v-email" data-i18n="auth.email">E-Mail-Adresse</label>
-        <input type="email" id="v-email" autocomplete="username" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph" onkeydown="if(event.key==='Enter')vergessenSenden()">
-
-        <button class="primary" onclick="vergessenSenden()" data-i18n="auth.forgot.btn">Link zusenden</button>
-        <div id="v-msg" class="auth-msg"></div>
-
-        <div class="auth-alt">
-          <button onclick="zeigeAuth('login')" data-i18n="auth.back">Zurück zur Anmeldung</button>
+    <div class="auth-page rd">
+      <div class="auth-col">
+        <div class="auth-mark">
+          <img src="logo.webp" alt="Clean Service by Scaramuzzo" width="150" height="47">
+        </div>
+        <div class="auth-box">
+          <h2 data-i18n="auth.set.h">Passwort festlegen</h2>
+          <p class="lead" data-i18n="auth.set.sub">Sie haben sich mit dem Erstpasswort vom Vertrag angemeldet. Legen Sie jetzt Ihr eigenes Passwort fest — danach gilt nur noch dieses.</p>
+          <div class="auth-field">
+            <label class="f-label" for="s-pw" data-i18n="auth.pw.new">Neues Passwort</label>
+            <input type="password" id="s-pw" autocomplete="new-password">
+          <p class="f-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
+          </div>
+          <div class="auth-field">
+            <label class="f-label" for="s-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
+            <input type="password" id="s-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')passwortSetzen()">
+          </div>
+          <button class="btn btn-primary btn-block" onclick="passwortSetzen()" data-i18n="auth.set.btn">Speichern</button>
+          <div id="s-msg" class="auth-msg"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ============ Neues Passwort nach Reset-Link ============ -->
+  <div class="view" id="view-vergessen">
+    <div class="auth-page rd">
+      <div class="auth-col">
+        <div class="auth-mark">
+          <img src="logo.webp" alt="Clean Service by Scaramuzzo" width="150" height="47">
+        </div>
+        <div class="auth-box">
+          <h2 data-i18n="auth.forgot.h">Passwort vergessen</h2>
+          <p class="lead" data-i18n="auth.forgot.sub">Geben Sie Ihre E-Mail-Adresse an. Wir schicken Ihnen einen Link, mit dem Sie ein neues Passwort festlegen können.</p>
+          <div class="auth-field">
+            <label class="f-label" for="v-email" data-i18n="auth.email">E-Mail-Adresse</label>
+            <input type="email" id="v-email" autocomplete="username" onkeydown="if(event.key==='Enter')vergessenSenden()">
+          </div>
+          <button class="btn btn-primary btn-block" onclick="vergessenSenden()" data-i18n="auth.forgot.btn">Speichern</button>
+          <div id="v-msg" class="auth-msg"></div>
+          <div class="auth-foot">
+            <button class="btn btn-ghost" onclick="zeigeAuth('login')" data-i18n="auth.back">Zurück zur Anmeldung</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="view" id="view-reset">
-    <div class="auth-wrap">
-      <div class="auth-card">
-        <h2 data-i18n="auth.reset.h">Neues Passwort festlegen</h2>
-        <p class="auth-sub" data-i18n="auth.reset.sub">Wählen Sie ein neues Passwort für Ihr Kundenkonto.</p>
-
-        <label for="r-pw" data-i18n="auth.pw.new">Neues Passwort</label>
-        <input type="password" id="r-pw" autocomplete="new-password">
-        <p class="field-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
-
-        <label for="r-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
-        <input type="password" id="r-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')resetSpeichern()">
-
-        <button class="primary" onclick="resetSpeichern()" data-i18n="auth.reset.btn">Passwort speichern</button>
-        <div id="r-msg" class="auth-msg"></div>
+    <div class="auth-page rd">
+      <div class="auth-col">
+        <div class="auth-mark">
+          <img src="logo.webp" alt="Clean Service by Scaramuzzo" width="150" height="47">
+        </div>
+        <div class="auth-box">
+          <h2 data-i18n="auth.reset.h">Neues Passwort festlegen</h2>
+          <p class="lead" data-i18n="auth.reset.sub">Wählen Sie ein neues Passwort für Ihr Kundenkonto.</p>
+          <div class="auth-field">
+            <label class="f-label" for="r-pw" data-i18n="auth.pw.new">Neues Passwort</label>
+            <input type="password" id="r-pw" autocomplete="new-password">
+          <p class="f-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
+          </div>
+          <div class="auth-field">
+            <label class="f-label" for="r-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
+            <input type="password" id="r-pw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')resetSpeichern()">
+          </div>
+          <button class="btn btn-primary btn-block" onclick="resetSpeichern()" data-i18n="auth.reset.btn">Speichern</button>
+          <div id="r-msg" class="auth-msg"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ============ Übersicht ============ -->
   <div class="view" id="view-uebersicht">
-    <div class="ueb-wrap">
-      <h2 class="ueb-gruss" id="ueb-gruss">Guten Tag</h2>
-      <p class="ueb-sub" id="ueb-sub"></p>
+    <div class="wrap">
 
-      <div class="ueb-karten">
-        <div class="ueb-karte hell">
-          <div class="k-zahl" id="k-offen">–</div>
-          <div class="k-lbl" data-i18n="ueb.offen">In Bearbeitung</div>
-        </div>
-        <div class="ueb-karte">
-          <div class="k-zahl" id="k-gesamt">–</div>
-          <div class="k-lbl" data-i18n="ueb.gesamt">Meldungen insgesamt</div>
-        </div>
-        <div class="ueb-karte">
-          <div class="k-zahl" id="k-objekt">–</div>
-          <div class="k-lbl" data-i18n="ueb.objekt">Ihre Kundennummer</div>
-        </div>
+      <div class="gruss">
+        <h1 class="t-display" id="ueb-gruss">Guten Tag</h1>
+        <p class="stand" id="ueb-stand"></p>
       </div>
 
-      <h3 class="ueb-titel" data-i18n="ueb.schnell">Was möchten Sie melden?</h3>
-      <p class="ueb-titel-sub" data-i18n="ueb.schnell.sub">Ein Klick genügt — Ihre Angaben sind bereits hinterlegt.</p>
+      <section class="abschnitt" id="ueb-offen-block" style="display:none;">
+        <div class="abschnitt-kopf">
+          <h2 class="t-h2" data-i18n="ueb.offen.h">In Bearbeitung</h2>
+          <p class="t-small" data-i18n="ueb.offen.sub">Diese Anliegen liegen bei uns.</p>
+        </div>
+        <div class="anliegen" id="ueb-offen"></div>
+      </section>
 
-      <div class="ueb-schnell">
-        <button class="schnell" onclick="schnellMelden('verschiebung')">
-          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M10 16h5m0 0-2-2m2 2-2 2"/></svg></span>
-          <span><span class="s-lbl" data-i18n="pick.versch">Termin verschieben</span><span class="s-sub" data-i18n="ueb.s1">Auf ein neues Datum legen</span></span>
+      <section class="abschnitt">
+        <div class="abschnitt-kopf">
+          <h2 class="t-h2" data-i18n="ueb.schnell">Was möchten Sie melden?</h2>
+          <p class="t-small" data-i18n="ueb.schnell.sub">Ein Klick genügt — Ihre Angaben sind bereits hinterlegt.</p>
+        </div>
+        <div class="aktionen">
+        <button class="aktion" onclick="schnellMelden('verschiebung')">
+          <span class="aktion-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M10 16h5m0 0-2-2m2 2-2 2"/></svg></span>
+          <span class="aktion-txt"><strong data-i18n="pick.versch">Termin verschieben</strong><span data-i18n="ueb.s1">Auf ein neues Datum legen</span></span>
         </button>
-        <button class="schnell" onclick="schnellMelden('absage')">
-          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m10 15 4 4m0-4-4 4"/></svg></span>
-          <span><span class="s-lbl" data-i18n="pick.absage">Termin absagen</span><span class="s-sub" data-i18n="ueb.s2">Ersatzlos streichen</span></span>
+        <button class="aktion" onclick="schnellMelden('absage')">
+          <span class="aktion-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m10 15 4 4m0-4-4 4"/></svg></span>
+          <span class="aktion-txt"><strong data-i18n="pick.absage">Termin absagen</strong><span data-i18n="ueb.s2">Ersatzlos streichen</span></span>
         </button>
-        <button class="schnell" onclick="schnellMelden('reklamation')">
-          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-          <span><span class="s-lbl" data-i18n="pick.rekl">Reklamation</span><span class="s-sub" data-i18n="ueb.s3">Etwas war nicht wie vereinbart</span></span>
+        <button class="aktion" onclick="schnellMelden('reklamation')">
+          <span class="aktion-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span class="aktion-txt"><strong data-i18n="pick.rekl">Reklamation</strong><span data-i18n="ueb.s3">Etwas war nicht wie vereinbart</span></span>
         </button>
-        <button class="schnell" onclick="schnellMelden('schaden')">
-          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
-          <span><span class="s-lbl" data-i18n="pick.schaden">Schaden melden</span><span class="s-sub" data-i18n="ueb.s4">Ein Schaden ist entstanden</span></span>
+        <button class="aktion" onclick="schnellMelden('schaden')">
+          <span class="aktion-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
+          <span class="aktion-txt"><strong data-i18n="pick.schaden">Schaden melden</strong><span data-i18n="ueb.s4">Ein Schaden ist entstanden</span></span>
         </button>
-        <button class="schnell" onclick="schnellMelden('zusatz')">
-          <span class="s-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
-          <span><span class="s-lbl" data-i18n="pick.zusatz">Zusatzreinigung</span><span class="s-sub" data-i18n="ueb.s5">Fenster, Grundreinigung, Umzug</span></span>
+        <button class="aktion" onclick="schnellMelden('zusatz')">
+          <span class="aktion-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span class="aktion-txt"><strong data-i18n="pick.zusatz">Zusatzreinigung</strong><span data-i18n="ueb.s5">Fenster, Grundreinigung, Umzug</span></span>
         </button>
-      </div>
+        </div>
+      </section>
 
-      <h3 class="ueb-titel" data-i18n="ueb.letzte">Ihre letzten Meldungen</h3>
-      <p class="ueb-titel-sub" data-i18n="ueb.letzte.sub">Den vollständigen Verlauf finden Sie unter „Meine Meldungen“.</p>
-      <div id="ueb-letzte"></div>
+      <section class="abschnitt" id="ueb-verlauf-block">
+        <div class="abschnitt-kopf">
+          <h2 class="t-h2" data-i18n="ueb.letzte">Zuletzt gemeldet</h2>
+          <p class="t-small" data-i18n="ueb.letzte.sub">Den vollständigen Verlauf finden Sie unter „Meine Meldungen“.</p>
+        </div>
+        <div id="ueb-letzte"></div>
+      </section>
+
     </div>
   </div>
 
   <!-- ============ Meine Meldungen ============ -->
   <div class="view" id="view-meldungen">
-    <div class="ueb-wrap">
-      <h2 class="ueb-gruss" data-i18n="nav.meine">Meine Meldungen</h2>
-      <p class="ueb-sub" data-i18n="mld.sub">Alles, was Sie uns gemeldet haben — mit dem aktuellen Stand.</p>
+    <div class="wrap">
+      <div class="gruss">
+        <h1 class="t-h1" data-i18n="nav.meine">Meine Meldungen</h1>
+        <p class="t-body" style="margin-top:var(--s3);" data-i18n="mld.sub">Alles, was Sie uns gemeldet haben — mit dem aktuellen Stand.</p>
+      </div>
 
-      <div class="mld-filter" id="mld-filter">
-        <button class="mfilt active" onclick="filterMeldungen('alle')" data-i18n="mld.alle">Alle</button>
-        <button class="mfilt" onclick="filterMeldungen('verschiebung')" data-i18n="pick.versch">Verschiebungen</button>
-        <button class="mfilt" onclick="filterMeldungen('absage')" data-i18n="pick.absage">Absagen</button>
-        <button class="mfilt" onclick="filterMeldungen('reklamation')" data-i18n="pick.rekl">Reklamationen</button>
-        <button class="mfilt" onclick="filterMeldungen('schaden')" data-i18n="pick.schaden">Schäden</button>
-        <button class="mfilt" onclick="filterMeldungen('zusatz')" data-i18n="pick.zusatz">Zusatzarbeiten</button>
+      <div class="filter" id="mld-filter">
+        <button class="active" onclick="filterMeldungen('alle')" data-i18n="mld.alle">Alle</button>
+        <button onclick="filterMeldungen('verschiebung')" data-i18n="pick.versch">Verschiebungen</button>
+        <button onclick="filterMeldungen('absage')" data-i18n="pick.absage">Absagen</button>
+        <button onclick="filterMeldungen('reklamation')" data-i18n="pick.rekl">Reklamationen</button>
+        <button onclick="filterMeldungen('schaden')" data-i18n="pick.schaden">Schäden</button>
+        <button onclick="filterMeldungen('zusatz')" data-i18n="pick.zusatz">Zusatzarbeiten</button>
       </div>
 
       <div id="mld-liste"></div>
@@ -843,170 +1133,66 @@
 
   <!-- ============ Mein Konto ============ -->
   <div class="view" id="view-konto">
-    <div class="ueb-wrap" style="max-width:640px;">
-      <h2 class="ueb-gruss" data-i18n="nav.konto">Mein Konto</h2>
-      <p class="ueb-sub" data-i18n="konto.sub">Ihre hinterlegten Angaben. Änderungen nehmen wir gerne telefonisch entgegen.</p>
-
-      <div class="konto-block">
-        <h3 data-i18n="konto.daten">Ihre Angaben</h3>
-        <div class="kz"><span class="kz-l" data-i18n="form.name">Name</span><span class="kz-w" id="ko-name"></span></div>
-        <div class="kz"><span class="kz-l" data-i18n="auth.email">E-Mail-Adresse</span><span class="kz-w" id="ko-mail"></span></div>
-        <div class="kz"><span class="kz-l" data-i18n="ueb.objekt">Kundennummer</span><span class="kz-w" id="ko-objekt"></span></div>
-        <div class="kz"><span class="kz-l" data-i18n="form.adresse">Adresse</span><span class="kz-w" id="ko-adresse"></span></div>
+    <div class="wrap rd" style="max-width:640px;">
+      <div class="gruss">
+        <h1 class="t-h1" data-i18n="nav.konto">Mein Konto</h1>
+        <p class="t-body" style="margin-top:var(--s3);" data-i18n="konto.sub">Ihre hinterlegten Angaben. Änderungen nehmen wir gerne telefonisch entgegen.</p>
       </div>
 
-      <div class="konto-block">
-        <h3 data-i18n="konto.pw">Passwort ändern</h3>
-        <label for="k-pw" data-i18n="auth.pw.new">Neues Passwort</label>
-        <input type="password" id="k-pw" autocomplete="new-password">
-        <p class="field-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
-        <label for="k-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
-        <input type="password" id="k-pw2" autocomplete="new-password">
-        <button class="primary" onclick="kontoPasswortAendern()" data-i18n="auth.set.btn">Passwort speichern</button>
+      <h2 class="t-h2" style="margin-bottom:var(--s3);" data-i18n="konto.person">Persönliche Angaben</h2>
+      <dl class="daten">
+        <div class="datenzeile"><dt data-i18n="form.name">Name</dt><dd id="ko-name"></dd></div>
+        <div class="datenzeile"><dt data-i18n="auth.email">E-Mail-Adresse</dt><dd id="ko-mail"></dd></div>
+        <div class="datenzeile"><dt data-i18n="ueb.objekt">Kundennummer</dt><dd id="ko-objekt"></dd></div>
+      </dl>
+
+      <h2 class="t-h2" style="margin-bottom:var(--s3);" data-i18n="konto.objekt">Objekt</h2>
+      <dl class="daten">
+        <div class="datenzeile"><dt data-i18n="form.adresse">Adresse</dt><dd id="ko-adresse"></dd></div>
+      </dl>
+
+      <h2 class="t-h2" style="margin-bottom:var(--s3);" data-i18n="konto.sicherheit">Sicherheit</h2>
+      <div class="surface surface-pad">
+        <div class="auth-field">
+          <label class="f-label" for="k-pw" data-i18n="auth.pw.new">Neues Passwort</label>
+          <input type="password" id="k-pw" autocomplete="new-password">
+          <p class="f-hint" data-i18n="auth.pw.rule">Mindestens 8 Zeichen.</p>
+        </div>
+        <div class="auth-field" style="margin-top:var(--s4);">
+          <label class="f-label" for="k-pw2" data-i18n="auth.pw.repeat">Passwort wiederholen</label>
+          <input type="password" id="k-pw2" autocomplete="new-password">
+        </div>
+        <button class="btn btn-primary" style="margin-top:var(--s5);" onclick="kontoPasswortAendern()" data-i18n="auth.set.btn">Passwort speichern</button>
         <div id="k-msg" class="auth-msg"></div>
       </div>
     </div>
   </div>
 
-  <div class="view" id="view-kunde">
-    <!-- Schritt 1: Kategorie wählen -->
-    <div id="step-category">
-      <h2 class="pick-heading" data-i18n="pick.title">Worum geht es?</h2>
-      <p class="pick-sub" data-i18n="pick.sub">Wählen Sie ein Anliegen — danach brauchen wir nur noch wenige Angaben.</p>
+  <div class="view rd" id="view-kunde">
+    <div class="form-wrap">
 
-      <div class="pick-list">
-        <button class="pick-row" onclick="chooseCategory('verschiebung')">
-          <span class="pick-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M10 16h5m0 0-2-2m2 2-2 2"/></svg>
-          </span>
-          <span class="pick-text">
-            <span class="pick-label" data-i18n="pick.versch">Termin verschieben</span>
-            <span class="pick-desc" data-i18n="pick.versch.desc">Bestehenden Termin auf ein neues Datum legen</span>
-          </span>
-          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
-        </button>
-
-        <button class="pick-row" onclick="chooseCategory('absage')">
-          <span class="pick-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m10 14 4 4m0-4-4 4"/></svg>
-          </span>
-          <span class="pick-text">
-            <span class="pick-label" data-i18n="pick.absage">Termin absagen</span>
-            <span class="pick-desc" data-i18n="pick.absage.desc">Einen oder mehrere Termine ersatzlos streichen</span>
-          </span>
-          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
-        </button>
-
-        <button class="pick-row" onclick="chooseCategory('reklamation')">
-          <span class="pick-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4m0 3h.01"/></svg>
-          </span>
-          <span class="pick-text">
-            <span class="pick-label" data-i18n="pick.reklamation">Reklamation</span>
-            <span class="pick-desc" data-i18n="pick.reklamation.desc">Etwas war nicht wie vereinbart — mit Foto</span>
-          </span>
-          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
-        </button>
-
-        <button class="pick-row" onclick="chooseCategory('schaden')">
-          <span class="pick-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0"/><path d="M12 9v4m0 3h.01"/></svg>
-          </span>
-          <span class="pick-text">
-            <span class="pick-label" data-i18n="pick.schaden">Schaden melden</span>
-            <span class="pick-desc" data-i18n="pick.schaden.desc">Ein Schaden ist entstanden — mit Foto</span>
-          </span>
-          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
-        </button>
-
-        <button class="pick-row" onclick="chooseCategory('zusatz')">
-          <span class="pick-ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h5v4H9zM11.5 7v3"/><path d="M7 10h9a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2"/><path d="M11.5 14v3"/></svg>
-          </span>
-          <span class="pick-text">
-            <span class="pick-label" data-i18n="pick.zusatz">Zusatzreinigung anfragen</span>
-            <span class="pick-desc" data-i18n="pick.zusatz.desc">Fenster, Grundreinigung, Umzug und weitere Arbeiten</span>
-          </span>
-          <svg class="pick-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
-        </button>
+      <div class="form-zurueck">
+        <button class="btn btn-ghost" onclick="zeigePortal('uebersicht')" data-i18n="form.back">← Zurück zur Übersicht</button>
       </div>
 
-      <div class="reassure">
-        <div>
-          <h3 data-i18n="re.1.title">Kein Mailverkehr nötig</h3>
-          <p data-i18n="re.1.text">Ihre Meldung geht direkt an das zuständige Team, nicht in ein allgemeines Postfach.</p>
-        </div>
-        <div>
-          <h3 data-i18n="re.2.title">Sie bekommen eine Bestätigung</h3>
-          <p data-i18n="re.2.text">Per E-Mail, damit Sie wissen, dass Ihre Meldung angekommen ist.</p>
-        </div>
-        <div>
-          <h3 data-i18n="re.3.title">Alles an einem Ort</h3>
-          <p data-i18n="re.3.text">Termine, Reklamationen und Anfragen laufen über denselben Weg — nachvollziehbar für Sie und uns.</p>
-        </div>
+      <div class="form-kopf">
+        <h1 class="t-h1" id="form-title"></h1>
+        <p class="t-small" id="form-untertitel" style="margin-top:var(--s2);"></p>
       </div>
 
-      <div class="contacts">
-        <div class="contacts-head">
-          <h2 data-i18n="contacts.title">Dahinter stehen echte Menschen</h2>
-          <p data-i18n="contacts.sub">Ihr Anliegen landet bei diesem Team.</p>
-        </div>
-        <div class="contact-row">
-          <div class="contact">
-            <span class="initials">FS</span>
-            <span class="who"><span class="n">Fiorella Scalone</span><span class="r" data-i18n="team.fiorella.role">Sachbearbeiterin</span></span>
-          </div>
-          <div class="contact">
-            <span class="initials">L</span>
-            <span class="who"><span class="n">Lina</span><span class="r" data-i18n="team.lina.role">Teamleiterin</span></span>
-          </div>
-          <div class="contact">
-            <span class="initials">CG</span>
-            <span class="who"><span class="n">Cristian Gambale</span><span class="r" data-i18n="team.cristian.role">Abteilungsleitung Putzfrauenservice</span></span>
-          </div>
-        </div>
+      <!-- Schrittanzeige nur bei Reklamation und Schaden -->
+      <div class="schritte" id="form-schritte" style="display:none;">
+        <span class="schritt aktiv" id="schritt-1"><span class="kreis">1</span><span data-i18n="step.angaben">Angaben</span></span>
+        <span class="schritt-strich"></span>
+        <span class="schritt" id="schritt-2"><span class="kreis">2</span><span data-i18n="step.pruefen">Prüfen</span></span>
       </div>
 
-
-    </div>
-
-    <!-- Schritt 2: passendes Formular -->
-    <div id="form-screen" class="narrow" style="display:none;">
-      <a href="#" class="back-link" onclick="backToCategory(); return false;" data-i18n="form.back">← Andere Kategorie wählen</a>
-
-      <div class="steps">
-        <b>2</b><span data-i18n="form.step">Schritt 2 von 2 — Ihre Angaben</span>
+      <div class="kunde-box" id="known-customer" style="display:none;">
+        <strong id="known-name"></strong>
+        <span id="known-detail"></span>
       </div>
 
-      <div class="card">
-        <div id="form-title" class="form-title"></div>
-
-        <!-- Wiedererkennung: bei Stammkunden sind die Angaben schon da -->
-        <div id="known-customer" class="known" style="display:none;">
-          <div class="known-text">
-            <strong id="known-name"></strong>
-            <span id="known-detail"></span>
-          </div>
-        </div>
-
-        <!-- Identifikation -->
-        <div id="ident-fields">
-          <label for="f-name" data-i18n="form.name">Ihr Name</label>
-          <input type="text" id="f-name" placeholder="Vor- und Nachname" data-i18n-ph="form.name.ph" autocomplete="name">
-
-          <label for="f-email" data-i18n="form.email">E-Mail-Adresse</label>
-          <input type="email" id="f-email" placeholder="ihre@email.ch" data-i18n-ph="form.email.ph" autocomplete="email">
-          <p class="field-hint" data-i18n="form.email.hint">Hierhin schicken wir Ihre Bestätigung.</p>
-
-          <label for="f-objnr" data-i18n="form.objnr">Kundennummer <span class="opt" data-i18n="opt">(optional)</span></label>
-          <input type="text" id="f-objnr" placeholder="z.B. 109" data-i18n-ph="form.objnr.ph" inputmode="numeric">
-          <p class="field-hint" data-i18n="form.objnr.hint">Steht auf Ihrer Rechnung. Kein Problem, wenn Sie sie nicht zur Hand haben — geben Sie stattdessen einfach Ihre Adresse an.</p>
-
-          <label for="f-adresse" data-i18n="form.adresse">Adresse des Objekts</label>
-          <input type="text" id="f-adresse" placeholder="Strasse, Nr., PLZ Ort" data-i18n-ph="form.adresse.ph" autocomplete="street-address">
-        </div>
-
-        <!-- Terminverschiebung -->
+      <div class="feldgruppe">
         <div class="field-group" data-cat="verschiebung">
           <label for="v-alt" data-i18n="v.alt">Betroffener Termin</label>
           <input type="date" id="v-alt">
@@ -1020,8 +1206,6 @@
           <label for="v-kommentar" data-i18n="v.kommentar">Kommentar <span class="opt" data-i18n="opt">(optional)</span></label>
           <textarea id="v-kommentar" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
         </div>
-
-        <!-- Absage -->
         <div class="field-group" data-cat="absage">
           <label for="a-datum" data-i18n="v.alt">Betroffener Termin</label>
           <input type="date" id="a-datum">
@@ -1040,8 +1224,6 @@
             <textarea id="a-bemerkung" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
           </div>
         </div>
-
-        <!-- Reklamation -->
         <div class="field-group" data-cat="reklamation">
           <label for="r-datum" data-i18n="rs.datum">Datum der betroffenen Reinigung</label>
           <input type="date" id="r-datum">
@@ -1051,8 +1233,6 @@
           <input type="file" id="r-foto" accept="image/*" multiple onchange="fotosGewaehlt(this,'r')">
           <div class="foto-liste" id="r-foto-liste"></div>
         </div>
-
-        <!-- Schadenmeldung -->
         <div class="field-group" data-cat="schaden">
           <label for="s-datum" data-i18n="rs.datum">Datum der betroffenen Reinigung</label>
           <input type="date" id="s-datum">
@@ -1062,8 +1242,6 @@
           <input type="file" id="s-foto" accept="image/*" multiple onchange="fotosGewaehlt(this,'s')">
           <div class="foto-liste" id="s-foto-liste"></div>
         </div>
-
-        <!-- Zusatzauftrag -->
         <div class="field-group" data-cat="zusatz">
           <label for="z-art" data-i18n="z.art">Art der Zusatzreinigung</label>
           <select id="z-art">
@@ -1079,21 +1257,42 @@
           <textarea id="z-details" placeholder="z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …" data-i18n-ph="z.details.ph"></textarea>
           <div class="kat-hinweis" data-i18n="z.hinweis">Wir versuchen, Ihren Wunschtermin zu halten, und melden uns bezüglich des definitiven Termins.</div>
         </div>
-
-        <div id="form-error" class="form-error" role="alert" aria-live="assertive" style="display:none;"></div>
-        <button class="primary" onclick="submitForm()" data-i18n="submit">Absenden</button>
-        <div class="trust-line"><span data-i18n="trust1">Antwort innert 1 Arbeitstag</span><span class="sep">·</span><span data-i18n="trust2">Direkt beim Putzfrauenservice</span></div>
       </div>
 
-      <div class="notice" data-i18n="notice">Ihre Meldung geht direkt an unser Putzfrauenservice-Team — wir melden uns bei Bedarf per E-Mail bei Ihnen zurück.</div>
-    </div>
+      <!-- Schritt 2: Prüfen (nur Reklamation und Schaden) -->
+      <div class="pruefen" id="form-pruefen" style="display:none;">
+        <dl id="pruefen-liste"></dl>
+      </div>
 
-    <div id="confirm" class="narrow">
-      <div class="check-badge">✓</div>
-      <h1 data-i18n="confirm.h1">Vielen Dank für Ihre Meldung</h1>
-      <p class="lead" data-i18n="confirm.lead">Ihr Anliegen wurde an unser Team übermittelt. Wir melden uns bei Rückfragen umgehend bei Ihnen.</p>
-      <p class="lead" id="confirm-next" style="margin-top:8px;"></p>
-      <button class="primary" style="background:transparent; color:var(--teal); border:1px solid var(--teal); max-width:280px; margin:24px auto 0;" onclick="resetForm()" data-i18n="confirm.btn">Weitere Meldung erfassen</button>
+      <div id="form-error" class="fehler-box" role="alert" aria-live="assertive"></div>
+
+      <div class="knopfreihe" id="knopf-pruefen" style="display:none;">
+        <button class="btn btn-secondary" onclick="zurueckZuAngaben()" data-i18n="step.zurueck">Zurück</button>
+        <button class="btn btn-primary" onclick="submitForm()" data-i18n="step.senden">Meldung senden</button>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="knopf-weiter" style="margin-top:var(--s6);"
+              onclick="weiterZumPruefen()" data-i18n="step.weiter">Weiter</button>
+
+      <p class="t-caption" style="text-align:center; margin-top:var(--s3);" data-i18n="form.fuss">Ihre Meldung geht direkt an das zuständige Team.</p>
+
+    </div>
+  </div>
+
+  <!-- ============ Erfolg ============ -->
+  <div class="view rd" id="view-erfolg">
+    <div class="form-wrap">
+      <div class="erfolg">
+        <div class="haken">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+        </div>
+        <h2 data-i18n="ok.h">Vielen Dank für Ihre Meldung</h2>
+        <p id="ok-text" data-i18n="ok.p">Ihre Meldung wurde erfolgreich übermittelt. Unser Team prüft Ihr Anliegen und meldet sich bei Bedarf bei Ihnen.</p>
+        <div class="erfolg-knoepfe">
+          <button class="btn btn-primary" onclick="zeigePortal('uebersicht')" data-i18n="ok.btn1">Zur Übersicht</button>
+          <button class="btn btn-secondary" onclick="zeigePortal('meldungen')" data-i18n="ok.btn2">Meine Meldungen</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1502,7 +1701,6 @@ rechtliche Schritte vor.</p>
     <button class="text-link" style="display:inline-block; margin-top:16px; border:none; background:none; font-family:inherit;" onclick="setView('kunde', this)" data-i18n="back.toPortal">← Zurück zum Kundenportal</button>
   </div>
 
-
 </main>
 
 <footer>
@@ -1513,12 +1711,26 @@ rechtliche Schritte vor.</p>
     <a href="#" onclick="setView('agb', this); return false;" class="text-link" data-i18n="nav.agb">AGB</a>
     <a href="#" onclick="setView('datenschutz', this); return false;" class="text-link" data-i18n="nav.privacy">Datenschutz</a>
   </div>
-  <div style="margin-top:10px;"><a href="/admin.html" style="color:var(--line); font-size:10px; text-decoration:none;">Admin-Zugang</a></div>
+  <div style="margin-top:10px;"></div>
 </footer>
 
 <script>
 const translations = {
   de: {
+    'step.weiter': 'Weiter', 'step.zurueck': 'Zurück', 'step.senden': 'Meldung senden',
+    'auth.claim': 'Sauberkeit, auf die Sie sich verlassen können.',
+    'ueb.offen.h': 'In Bearbeitung', 'ueb.offen.sub': 'Diese Anliegen liegen bei uns.',
+    'konto.person': 'Persönliche Angaben', 'konto.objekt': 'Objekt', 'konto.sicherheit': 'Sicherheit',
+    'step.angaben': 'Angaben', 'step.pruefen': 'Prüfen',
+    'form.fuss': 'Ihre Meldung geht direkt an das zuständige Team.',
+    'sub.versch': 'Wählen Sie den betroffenen Termin und Ihr Wunschdatum.',
+    'sub.absage': 'Der betroffene Termin entfällt ersatzlos.',
+    'sub.rekl': 'Was ist bei Ihrer Reinigung nicht wie erwartet gelaufen?',
+    'sub.schaden': 'Beschreiben Sie den Schaden möglichst genau und laden Sie, wenn möglich, Fotos hoch.',
+    'sub.zusatz': 'Sagen Sie uns, was gereinigt werden soll — wir melden uns mit einem Termin.',
+    'ok.h': 'Vielen Dank für Ihre Meldung',
+    'ok.p': 'Ihre Meldung wurde erfolgreich übermittelt. Unser Team prüft Ihr Anliegen und meldet sich bei Bedarf bei Ihnen.',
+    'ok.btn1': 'Zur Übersicht', 'ok.btn2': 'Meine Meldungen',
     'rs.datum': 'Datum der betroffenen Reinigung',
     'rs.photos': 'Fotos', 'rs.photos.hint': '(bis zu 8)',
     'v.hinweis': 'Der neue Termin wird durch unser Springerteam ausgeführt. Die Reinigung findet zwischen 08.00 und 17.00 Uhr statt — die genaue Uhrzeit teilen wir Ihnen am Vortag mit.',
@@ -1588,7 +1800,7 @@ const translations = {
     'pick.zusatz': 'Zusatzreinigung anfragen',
     'z.art': 'Art der Zusatzreinigung', 'z.fenster': 'Fensterreinigung', 'z.grund': 'Grundreinigung', 'z.umzug': 'Umzugsreinigung', 'z.teppich': 'Teppich-/Polsterreinigung', 'z.sonstiges': 'Sonstiges',
     'z.wunschtermin': 'Wunschtermin', 'z.details': 'Details', 'z.details.ph': 'z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …',
-    'form.back': '← Andere Kategorie wählen',
+    'form.back': '← Zurück zur Übersicht',
     'v.alt': 'Betroffener Termin', 'v.neu': 'Gewünschter neuer Termin', 'v.zeit': 'Uhrzeit', 'v.kommentar': 'Kommentar',
     'opt': '(optional)', 'misc.details.ph': 'Ergänzende Angaben …',
     'a.weitere': 'Sollen weitere Termine ebenfalls entfallen?', 'yes': 'Ja', 'no': 'Nein',
@@ -1613,6 +1825,20 @@ const translations = {
     'photo.alert': 'Bitte fügen Sie ein Foto hinzu — dieses Feld ist für diese Meldungsart erforderlich.'
   },
   en: {
+    'step.weiter': 'Continue', 'step.zurueck': 'Back', 'step.senden': 'Send request',
+    'auth.claim': 'Cleanliness you can rely on.',
+    'ueb.offen.h': 'In progress', 'ueb.offen.sub': 'These requests are with us.',
+    'konto.person': 'Personal details', 'konto.objekt': 'Property', 'konto.sicherheit': 'Security',
+    'step.angaben': 'Details', 'step.pruefen': 'Review',
+    'form.fuss': 'Your request goes straight to the responsible team.',
+    'sub.versch': 'Choose the appointment concerned and your preferred new date.',
+    'sub.absage': 'The appointment concerned will be cancelled without replacement.',
+    'sub.rekl': 'What did not go as expected during your cleaning?',
+    'sub.schaden': 'Please describe the damage as precisely as possible and upload photos if you can.',
+    'sub.zusatz': 'Tell us what needs cleaning — we will get back to you with a date.',
+    'ok.h': 'Thank you for your request',
+    'ok.p': 'Your request has been submitted. Our team will review it and get in touch if needed.',
+    'ok.btn1': 'To overview', 'ok.btn2': 'My requests',
     'rs.datum': 'Date of the cleaning concerned',
     'rs.photos': 'Photos', 'rs.photos.hint': '(up to 8)',
     'v.hinweis': 'The new appointment will be carried out by our stand-in team. The cleaning takes place between 08:00 and 17:00 — we will confirm the exact time the day before.',
@@ -1731,7 +1957,7 @@ function setLang(lang){
   document.getElementById('agb-en').style.display = (lang === 'en') ? 'block' : 'none';
   document.getElementById('dsg-de').style.display = (lang === 'de') ? 'block' : 'none';
   document.getElementById('dsg-en').style.display = (lang === 'en') ? 'block' : 'none';
-  const activeCat = document.getElementById('form-screen').dataset.activeCat;
+  const activeCat = document.getElementById('view-kunde').dataset.activeCat;
   if(activeCat) document.getElementById('form-title').textContent = catTitles()[activeCat];
 }
 
@@ -1745,19 +1971,38 @@ function catTitles(){
   };
 }
 
+/* Untertitel je Kategorie: sie nehmen der Meldung die Härte und sagen,
+   was als Nächstes passiert. Bei Reklamation bewusst empathisch formuliert. */
+function catUntertitel(){
+  const t = translations[currentLang];
+  return {
+    verschiebung: t['sub.versch'], absage: t['sub.absage'],
+    reklamation: t['sub.rekl'], schaden: t['sub.schaden'], zusatz: t['sub.zusatz'],
+  };
+}
+
 function chooseCategory(cat){
   clearFormError();
-  document.getElementById('step-category').style.display = 'none';
-  document.getElementById('form-screen').style.display = 'block';
+  const schirm = document.getElementById('view-kunde');
   document.getElementById('form-title').textContent = catTitles()[cat];
+  document.getElementById('form-untertitel').textContent = catUntertitel()[cat] || '';
   document.querySelectorAll('.field-group').forEach(g => g.classList.toggle('active', g.dataset.cat === cat));
-  document.getElementById('form-screen').dataset.activeCat = cat;
+  schirm.dataset.activeCat = cat;
+
+  // Schrittanzeige nur, wo der Weg wirklich mehrstufig ist
+  const mehrstufig = istMehrstufig(cat);
+  document.getElementById('form-schritte').style.display = mehrstufig ? 'flex' : 'none';
+  document.getElementById('knopf-weiter').textContent =
+    translations[currentLang][mehrstufig ? 'step.weiter' : 'submit'];
+  zurueckZuAngaben();
+
   applyKnownCustomer();
+  window.scrollTo(0, 0);
 }
+
 function backToCategory(){
   clearFormError();
-  document.getElementById('form-screen').style.display = 'none';
-  document.getElementById('step-category').style.display = 'block';
+  zeigePortal('uebersicht');
 }
 function toggleAbsageFolge(weitereJa){
   document.getElementById('a-bis-wrap').style.display = weitereJa ? 'block' : 'none';
@@ -1766,29 +2011,17 @@ function toggleAbsageFolge(weitereJa){
 // Startzustand: "Nein" ist vorausgewählt -> Bemerkung zeigen, Bis-Feld verstecken
 toggleAbsageFolge(false);
 
-
-/* --- Angaben aus dem Kundenkonto in das Formular übernehmen --- */
+/* --- Angaben aus dem Kundenkonto im Formular anzeigen --- */
 function applyKnownCustomer(){
   const box = document.getElementById('known-customer');
-  const fields = document.getElementById('ident-fields');
-  if(!KUNDE || !KUNDE.name){
-    // Sollte im angemeldeten Portal nicht vorkommen
-    if(box) box.style.display = 'none';
-    if(fields) fields.style.display = 'block';
-    return;
-  }
-  document.getElementById('f-name').value = KUNDE.name || '';
-  document.getElementById('f-email').value = KUNDE.email || '';
-  document.getElementById('f-objnr').value = KUNDE.objekt_id || '';
-  document.getElementById('f-adresse').value = KUNDE.adresse || '';
-
-  document.getElementById('known-name').textContent = KUNDE.name;
-  document.getElementById('known-detail').textContent =
-    [KUNDE.objekt_id ? (currentLang === 'de' ? 'Kundennummer ' : 'Customer no. ') + KUNDE.objekt_id : '',
-     KUNDE.adresse, KUNDE.email].filter(Boolean).join(' · ');
-
-  if(box) box.style.display = 'flex';
-  if(fields) fields.style.display = 'none';
+  if(!box || !KUNDE) return;
+  document.getElementById('known-name').textContent = KUNDE.name || '';
+  const zeilen = [];
+  if(KUNDE.objekt_id) zeilen.push((currentLang === 'de' ? 'Kundennummer ' : 'Customer no. ') + KUNDE.objekt_id);
+  if(KUNDE.adresse) zeilen.push(KUNDE.adresse);
+  if(KUNDE.email) zeilen.push(KUNDE.email);
+  document.getElementById('known-detail').innerHTML = zeilen.map(z => `<span>${escapeHtml(z)}</span>`).join('');
+  box.style.display = 'block';
 }
 
 /* ==========================================================================
@@ -1798,31 +2031,20 @@ function applyKnownCustomer(){
 let KUNDE = null;   // { name, email, objekt_id, adresse } wenn angemeldet
 
 function zeigeAuth(welche){
-  ['view-login','view-pw-setzen','view-vergessen','view-reset','view-kunde',
+  ['view-login','view-pw-setzen','view-vergessen','view-reset','view-kunde','view-erfolg',
    'view-uebersicht','view-meldungen','view-konto','view-team','view-datenschutz','view-agb']
-    .forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.classList.remove('active');
-    });
+    .forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('active'); });
 
-  // Angemeldet: Menü zeigen, Hero weg. Der Hero ist Werbefläche für Gäste,
-  // im Portal nimmt er nur Platz von den eigentlichen Inhalten weg.
   const drin = (welche === 'kunde');
   const nav = document.getElementById('portal-nav');
-  // Nur den Werbeteil ausblenden - die Kopfzeile mit Logo und "Abmelden"
-  // steckt im selben Element und muss sichtbar bleiben.
-  const heroBody = document.querySelector('.hero-body');
-  const hero = document.querySelector('.hero');
-  if(nav)      nav.style.display      = drin ? 'block' : 'none';
-  if(heroBody) heroBody.style.display = drin ? 'none'  : '';
-  const welle = document.querySelector('.wave-divider');
-  if(welle) welle.style.display = drin ? 'none' : '';
-  if(hero)     hero.classList.toggle('kompakt', drin);
+  const kopf = document.querySelector('.kopf');
+  if(nav) nav.style.display = drin ? 'block' : 'none';
+  // Auf den Anmeldeseiten trägt die Karte die Marke - eine zweite Kopfzeile
+  // mit demselben Logo wäre Doppelung.
+  if(kopf) kopf.style.display = drin ? 'block' : 'none';
 
-  if(drin){
-    zeigePortal('uebersicht');
-    return;
-  }
+  if(drin){ zeigePortal('uebersicht'); return; }
+
   const ziel = document.getElementById('view-' + welche);
   if(ziel) ziel.classList.add('active');
   window.scrollTo(0, 0);
@@ -1838,14 +2060,17 @@ function meldung(id, text, art){
 
 function kontoLeisteZeigen(){
   const leiste = document.getElementById('konto-leiste');
+  const knopf = document.getElementById('knopf-abmelden');
   if(!leiste) return;
   if(KUNDE){
     document.getElementById('konto-name').textContent = KUNDE.name || '';
     document.getElementById('konto-objekt').textContent =
       KUNDE.objekt_id ? (currentLang === 'de' ? 'Kundennummer ' : 'Customer no. ') + KUNDE.objekt_id : '';
-    leiste.style.display = 'flex';
+    leiste.classList.add('zeigen');
+    if(knopf) knopf.style.display = 'inline-flex';
   } else {
-    leiste.style.display = 'none';
+    leiste.classList.remove('zeigen');
+    if(knopf) knopf.style.display = 'none';
   }
 }
 
@@ -1999,7 +2224,6 @@ async function kontoLaden(){
 
 document.addEventListener('DOMContentLoaded', kontoLaden);
 
-
 /* ==========================================================================
    Portalbereiche: Übersicht, Meldungen, Konto
    ========================================================================== */
@@ -2019,21 +2243,21 @@ const STAT_LABEL = {
 };
 
 function zeigePortal(bereich){
-  ['view-uebersicht','view-meldungen','view-konto','view-kunde','view-team','view-datenschutz','view-agb']
-    .forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('active'); });
+  const alle = ['view-uebersicht','view-meldungen','view-konto','view-kunde','view-erfolg',
+                'view-team','view-datenschutz','view-agb'];
+  alle.forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('active'); });
 
-  document.querySelectorAll('.pnav').forEach(b =>
-    b.classList.toggle('active', b.dataset.ziel === bereich));
+  // Menüpunkt markieren — Formular und Erfolg gehören zur Übersicht
+  const markiert = (bereich === 'melden' || bereich === 'erfolg') ? 'uebersicht'
+                 : (bereich === 'kontakt') ? 'kontakt' : bereich;
+  document.querySelectorAll('.mnav').forEach(b =>
+    b.classList.toggle('active', b.dataset.ziel === markiert));
 
-  if(bereich === 'melden'){
-    document.getElementById('view-kunde').classList.add('active');
-    backToCategory();
-  } else if(bereich === 'kontakt'){
-    document.getElementById('view-team').classList.add('active');
-  } else {
-    const el = document.getElementById('view-' + bereich);
-    if(el) el.classList.add('active');
-  }
+  const ziel = (bereich === 'melden')  ? 'view-kunde'
+             : (bereich === 'kontakt') ? 'view-team'
+             : 'view-' + bereich;
+  const el = document.getElementById(ziel);
+  if(el) el.classList.add('active');
 
   if(bereich === 'uebersicht') uebersichtFuellen();
   if(bereich === 'meldungen')  meldungenZeichnen();
@@ -2071,19 +2295,19 @@ function meldungKarte(m){
   const L = currentLang;
   const kat = (KAT_LABEL[L] || KAT_LABEL.de)[m.kategorie] || m.kategorie;
   const st  = (STAT_LABEL[L] || STAT_LABEL.de)[m.status] || m.status;
-  const antwortTitel = L === 'de' ? 'Antwort vom Putzfrauenservice' : 'Reply from the cleaning team';
+  const von = L === 'de' ? 'Antwort vom Putzfrauenservice' : 'Reply from the cleaning team';
   return `
-    <div class="mld-karte">
-      <div class="mld-kopf">
+    <article class="meintrag">
+      <div class="meintrag-kopf">
         <div>
-          <div class="mld-kat">${kat}</div>
-          <div class="mld-datum">${datumKurz(m.created_at)}</div>
+          <div class="meintrag-was">${kat}</div>
+          <div class="meintrag-wann">${L === 'de' ? 'Gemeldet am' : 'Submitted on'} ${datumKurz(m.created_at)}</div>
         </div>
-        <span class="stat ${m.status}">${st}</span>
+        <span class="pill pill-${m.status}"><span class="dot"></span>${st}</span>
       </div>
-      ${m.details ? `<div class="mld-text">${escapeHtml(m.details)}</div>` : ''}
-      ${m.admin_note ? `<div class="mld-antwort"><strong>${antwortTitel}</strong>${escapeHtml(m.admin_note)}</div>` : ''}
-    </div>`;
+      ${m.details ? `<div class="meintrag-text">${escapeHtml(m.details)}</div>` : ''}
+      ${m.admin_note ? `<div class="antwort"><span class="von">${von}</span>${escapeHtml(m.admin_note)}</div>` : ''}
+    </article>`;
 }
 
 function escapeHtml(s){
@@ -2093,15 +2317,13 @@ function escapeHtml(s){
 
 function leerBlock(titel, text, knopf){
   return `
-    <div class="leer">
-      <div class="l-ico">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
-        </svg>
-      </div>
+    <div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+      </svg>
       <h3>${titel}</h3>
       <p>${text}</p>
-      ${knopf ? `<button class="primary" style="max-width:260px;margin:0 auto;" onclick="zeigePortal('melden')">${knopf}</button>` : ''}
+      ${knopf ? `<button class="btn btn-primary" onclick="schnellMelden('verschiebung')">${knopf}</button>` : ''}
     </div>`;
 }
 
@@ -2109,34 +2331,74 @@ function leerBlock(titel, text, knopf){
 async function uebersichtFuellen(){
   const L = currentLang;
   if(KUNDE){
+    const vorname = (KUNDE.name || '').split(' ')[0];
     document.getElementById('ueb-gruss').textContent =
-      (L === 'de' ? 'Guten Tag, ' : 'Hello, ') + (KUNDE.name || '');
-    document.getElementById('ueb-sub').textContent =
-      [KUNDE.adresse, KUNDE.objekt_id ? (L === 'de' ? 'Kundennummer ' : 'Customer no. ') + KUNDE.objekt_id : '']
-        .filter(Boolean).join(' · ');
-    document.getElementById('k-objekt').textContent = KUNDE.objekt_id || '–';
+      (L === 'de' ? 'Guten Tag, ' : 'Hello, ') + (vorname || KUNDE.name || '');
   }
 
   const { offen, gesamt } = await meldungenLaden();
-  document.getElementById('k-offen').textContent = offen;
-  document.getElementById('k-gesamt').textContent = gesamt;
 
+  /* Eine echte Aussage über den Stand — nicht drei Kacheln mit Nullen. */
+  const stand = document.getElementById('ueb-stand');
+  if(offen === 0 && gesamt === 0){
+    stand.innerHTML = L === 'de'
+      ? 'Hier verwalten Sie alles rund um Ihre Reinigung. Im Moment ist nichts offen.'
+      : 'This is where you manage everything about your cleaning. Nothing is open right now.';
+  } else if(offen === 0){
+    stand.innerHTML = L === 'de'
+      ? 'Im Moment ist nichts offen. Alle Ihre Meldungen sind bearbeitet.'
+      : 'Nothing is open right now. All your requests have been dealt with.';
+  } else {
+    stand.innerHTML = L === 'de'
+      ? `<b>${offen} ${offen === 1 ? 'Anliegen ist' : 'Anliegen sind'} in Bearbeitung.</b> Wir melden uns, sobald es etwas Neues gibt.`
+      : `<b>${offen} ${offen === 1 ? 'request is' : 'requests are'} in progress.</b> We will get back to you as soon as there is news.`;
+  }
+
+  /* Offene Anliegen als eigener Abschnitt — nur wenn es welche gibt. */
+  const offenBlock = document.getElementById('ueb-offen-block');
+  const offenListe = MELDUNGEN.filter(m => m.status === 'neu');
+  if(offenListe.length){
+    offenBlock.style.display = 'block';
+    document.getElementById('ueb-offen').innerHTML = offenListe.map(m => {
+      const kat = (KAT_LABEL[L] || KAT_LABEL.de)[m.kategorie] || m.kategorie;
+      const st  = (STAT_LABEL[L] || STAT_LABEL.de)[m.status];
+      return `
+        <div class="anliegen-zeile">
+          <div>
+            <div class="was">${kat}</div>
+            <div class="wann">${L === 'de' ? 'Gemeldet am' : 'Submitted on'} ${datumKurz(m.created_at)}</div>
+          </div>
+          <span class="pill pill-${m.status}"><span class="dot"></span>${st}</span>
+        </div>`;
+    }).join('');
+  } else {
+    offenBlock.style.display = 'none';
+  }
+
+  /* Verlauf: die letzten drei, aber nur wenn es überhaupt welche gibt. */
+  const verlauf = document.getElementById('ueb-verlauf-block');
   const box = document.getElementById('ueb-letzte');
   if(!MELDUNGEN.length){
-    box.innerHTML = leerBlock(
-      L === 'de' ? 'Noch keine Meldungen' : 'No submissions yet',
-      L === 'de' ? 'Sobald Sie uns etwas melden, sehen Sie hier den Verlauf und unseren Bearbeitungsstand.'
-                 : 'As soon as you send us something, you will see the history and its status here.',
-      L === 'de' ? 'Erste Meldung erfassen' : 'Send your first request');
+    verlauf.style.display = 'none';
+    box.innerHTML = '';
   } else {
-    box.innerHTML = MELDUNGEN.slice(0, 3).map(meldungKarte).join('');
+    // Offene stehen schon im Abschnitt darüber - hier nur die abgeschlossenen,
+    // sonst erscheint dieselbe Meldung zweimal auf einer Seite.
+    const erledigt = MELDUNGEN.filter(m => m.status !== 'neu').slice(0, 3);
+    if(!erledigt.length){
+      verlauf.style.display = 'none';
+      box.innerHTML = '';
+    } else {
+      verlauf.style.display = 'block';
+      box.innerHTML = '<div class="mliste">' + erledigt.map(meldungKarte).join('') + '</div>';
+    }
   }
 }
 
 /* --- Meine Meldungen --- */
 function filterMeldungen(kat){
   MFILTER = kat;
-  document.querySelectorAll('.mfilt').forEach(b =>
+  document.querySelectorAll('#mld-filter button').forEach(b =>
     b.classList.toggle('active', b.getAttribute('onclick').includes(`'${kat}'`)));
   meldungenZeichnen(true);
 }
@@ -2159,7 +2421,7 @@ async function meldungenZeichnen(nurZeichnen){
                   L === 'de' ? 'Erste Meldung erfassen' : 'Send your first request');
     return;
   }
-  box.innerHTML = liste.map(meldungKarte).join('');
+  box.innerHTML = '<div class="mliste">' + liste.map(meldungKarte).join('') + '</div>';
 }
 
 /* --- Konto --- */
@@ -2201,7 +2463,6 @@ function schnellMelden(kat){
   zeigePortal('melden');
   chooseCategory(kat);
 }
-
 
 /* ==========================================================================
    Fotos für Reklamation und Schadenmeldung
@@ -2293,7 +2554,6 @@ function fotosZuruecksetzen(){
   fotosZeichnen('r'); fotosZeichnen('s');
 }
 
-
 /* Baut den Inhalt der Meldung. Identität kommt vom Server aus der Sitzung -
    hier gehen nur die Angaben zum Anliegen mit. */
 function meldungsBody(cat){
@@ -2320,6 +2580,82 @@ function datumLesbar(iso){
   if(!iso) return '';
   const [j, m, t] = iso.split('-');
   return (j && m && t) ? `${t}.${m}.${j}` : iso;
+}
+
+/* ---- Schritt 2: Prüfen ---------------------------------------------------
+   Nur für Reklamation und Schaden. Dort werden Datum, Text und Fotos
+   zusammengetragen — bei einer Absage wäre dieser Schritt reine Zeremonie. */
+
+function istMehrstufig(cat){ return cat === 'reklamation' || cat === 'schaden'; }
+
+function weiterZumPruefen(){
+  const cat = document.getElementById('view-kunde').dataset.activeCat;
+  if(!istMehrstufig(cat)){ submitForm(); return; }
+  if(!pflichtfelderOk(cat)) return;
+
+  const L = currentLang;
+  const p = cat === 'reklamation' ? 'r' : 's';
+  const fotos = FOTOS[p];
+
+  const zeilen = [
+    [L === 'de' ? 'Datum der Reinigung' : 'Date of cleaning',
+     datumLesbar(document.getElementById(p + '-datum').value)],
+    [L === 'de' ? 'Ihre Schilderung' : 'Your description',
+     document.getElementById(p + '-text').value.trim()],
+  ];
+
+  let html = zeilen.map(([k, v]) =>
+    `<div class="z"><dt>${k}</dt><dd>${escapeHtml(v)}</dd></div>`).join('');
+
+  html += `<div class="z"><dt>${L === 'de' ? 'Fotos' : 'Photos'}</dt><dd>` +
+    (fotos.length
+      ? `<div class="pruefen-fotos">${fotos.map(f => `<img src="${f}" alt="">`).join('')}</div>`
+      : (L === 'de' ? 'keine' : 'none')) + '</dd></div>';
+
+  document.getElementById('pruefen-liste').innerHTML = html;
+
+  document.querySelector('.feldgruppe').style.display = 'none';
+  document.getElementById('known-customer').style.display = 'none';
+  document.getElementById('form-pruefen').style.display = 'block';
+  document.getElementById('knopf-weiter').style.display = 'none';
+  document.getElementById('knopf-pruefen').style.display = 'flex';
+  document.getElementById('schritt-1').classList.remove('aktiv');
+  document.getElementById('schritt-1').classList.add('fertig');
+  document.getElementById('schritt-2').classList.add('aktiv');
+  window.scrollTo(0, 0);
+}
+
+function zurueckZuAngaben(){
+  clearFormError();
+  document.querySelector('.feldgruppe').style.display = '';
+  document.getElementById('known-customer').style.display = 'block';
+  document.getElementById('form-pruefen').style.display = 'none';
+  document.getElementById('knopf-weiter').style.display = 'block';
+  document.getElementById('knopf-pruefen').style.display = 'none';
+  document.getElementById('schritt-1').classList.add('aktiv');
+  document.getElementById('schritt-1').classList.remove('fertig');
+  document.getElementById('schritt-2').classList.remove('aktiv');
+  window.scrollTo(0, 0);
+}
+
+/* Pflichtprüfung, getrennt damit sie in beiden Wegen gilt. */
+function pflichtfelderOk(cat){
+  clearFormError();
+  if(!istMehrstufig(cat)) return true;
+  const p = cat === 'reklamation' ? 'r' : 's';
+  if(!document.getElementById(p + '-datum').value){
+    showFormError(currentLang === 'de'
+      ? 'Bitte geben Sie das Datum der betroffenen Reinigung an.'
+      : 'Please enter the date of the cleaning concerned.');
+    return false;
+  }
+  if(!document.getElementById(p + '-text').value.trim()){
+    showFormError(currentLang === 'de'
+      ? 'Bitte beschreiben Sie kurz, was vorgefallen ist.'
+      : 'Please briefly describe what happened.');
+    return false;
+  }
+  return true;
 }
 
 function gatherDetails(cat){
@@ -2389,46 +2725,13 @@ const NEXT_STEPS = {
 
 async function submitForm(){
   clearFormError();
-  const cat = document.getElementById('form-screen').dataset.activeCat;
+  const cat = document.getElementById('view-kunde').dataset.activeCat;
 
-  // Datum der betroffenen Reinigung ist Pflicht - ohne das lässt sich im
-  // Team nicht nachvollziehen, um welchen Einsatz es geht.
-  if(cat === 'reklamation' || cat === 'schaden'){
-    const praefix = cat === 'reklamation' ? 'r' : 's';
-    if(!document.getElementById(praefix + '-datum').value){
-      showFormError(currentLang === 'de'
-        ? 'Bitte geben Sie das Datum der betroffenen Reinigung an.'
-        : 'Please enter the date of the cleaning concerned.');
-      return;
-    }
-    if(!document.getElementById(praefix + '-text').value.trim()){
-      showFormError(currentLang === 'de'
-        ? 'Bitte beschreiben Sie kurz, was vorgefallen ist.'
-        : 'Please briefly describe what happened.');
-      return;
-    }
-  }
+  if(!pflichtfelderOk(cat)) return;
 
-  const name = document.getElementById('f-name').value.trim();
-  const objektId = document.getElementById('f-objnr').value.trim();
-  const adresse = document.getElementById('f-adresse').value.trim();
-  const email = document.getElementById('f-email').value.trim();
+  // Identität kommt aus der Sitzung — hier ist nichts mehr zu prüfen.
 
-  if(!name || !email){
-    showFormError(currentLang === 'de'
-      ? 'Bitte geben Sie Ihren Namen und Ihre E-Mail-Adresse an.'
-      : 'Please provide your name and email address.');
-    return;
-  }
-  // Kundennummer ODER Adresse genügt - niemand wird wegen einer fehlenden Nummer abgewiesen
-  if(!objektId && !adresse){
-    showFormError(currentLang === 'de'
-      ? 'Bitte geben Sie Ihre Kundennummer oder die Adresse des Objekts an.'
-      : 'Please provide either your customer number or the property address.');
-    return;
-  }
-
-  const btn = document.querySelector('#form-screen button.primary');
+  const btn = document.querySelector('#view-kunde button.btn-primary');
   const originalLabel = btn.textContent;
   btn.textContent = currentLang === 'de' ? 'Wird gesendet …' : 'Sending …';
   btn.disabled = true;
@@ -2451,9 +2754,9 @@ async function submitForm(){
       return;
     }
     console.log('Meldung gesendet:', result); // email/beekeeper Status zu Testzwecken
-    document.getElementById('confirm-next').textContent = NEXT_STEPS[currentLang][cat] || '';
-    document.getElementById('form-screen').style.display = 'none';
-    document.getElementById('confirm').style.display = 'block';
+    document.getElementById('ok-text').textContent =
+      NEXT_STEPS[currentLang][cat] || translations[currentLang]['ok.p'];
+    zeigePortal('erfolg');
   } catch(err){
     // Das ist der Fall "kein Internet / Server nicht erreichbar" (fetch selbst wirft einen Fehler)
     showFormError((currentLang === 'de'
@@ -2466,16 +2769,12 @@ async function submitForm(){
   }
 }
 function resetForm(){
-  document.getElementById('confirm').style.display = 'none';
-  document.getElementById('step-category').style.display = 'block';
-  document.getElementById('form-screen').style.display = 'none';
+  zeigePortal('uebersicht');
 }
 function setView(name, el){
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
 }
-
-
 
 </script>
 

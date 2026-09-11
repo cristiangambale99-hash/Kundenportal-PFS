@@ -61,17 +61,46 @@ const KATEGORIE_LABEL = {
   zusatz: "Zusatzauftrag-Anfrage",
 };
 
-async function sendeAdminAntwort({ email, name, betreff, nachricht }) {
+async function sendeAdminAntwort({ email, name, betreff, nachricht, status, kategorie }) {
   if (!email) throw new Error("Keine E-Mail-Adresse für diese Meldung hinterlegt.");
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
 
+  const portal = (process.env.PORTAL_URL || "https://portal.clean-service.ch").replace(/\/$/, "");
+  const statusText = { akzeptieren: "Angenommen", ablehnen: "Abgelehnt",
+                       erledigt: "Erledigt", neu: "In Bearbeitung" }[status] || "";
+
+  // Der Statusstreifen macht auf einen Blick klar, worum es geht - und der
+  // Knopf holt die Kundschaft ins Portal zurueck, statt eine Mailantwort
+  // auszuloesen, die wieder von Hand bearbeitet werden muesste.
   const html = `
-    <p>Guten Tag ${name || ""}</p>
-    <p style="white-space:pre-wrap;">${nachricht}</p>
-    <p style="color:#767676; font-size:13px; margin-top:24px;">
-      Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
-    </p>
+    <div style="font-family:Verdana,Geneva,sans-serif; color:#333; max-width:560px;">
+      <p>Guten Tag ${name || ""}</p>
+      <p>Es gibt eine Rückmeldung zu Ihrer ${kategorie || "Meldung"}.</p>
+
+      ${statusText ? `
+      <div style="margin:20px 0; padding:14px 18px; background:#F2F9F9; border-left:3px solid #2BB6B7;">
+        <div style="font-size:11px; letter-spacing:.5px; color:#767676; text-transform:uppercase; margin-bottom:4px;">Neuer Stand</div>
+        <div style="font-size:16px; font-weight:bold; color:#12797A;">${statusText}</div>
+      </div>` : ""}
+
+      <p style="white-space:pre-wrap; line-height:1.7;">${nachricht}</p>
+
+      <p style="margin:26px 0;">
+        <a href="${portal}" style="background:#2BB6B7; color:#ffffff; text-decoration:none;
+           padding:14px 26px; border-radius:8px; font-weight:bold; display:inline-block;">
+          Im Kundenportal ansehen
+        </a>
+      </p>
+
+      <p style="color:#767676; font-size:12px; line-height:1.6;">
+        Im Portal sehen Sie jederzeit alle Ihre Meldungen und deren Stand.
+        Sie müssen auf diese Nachricht nicht antworten.
+      </p>
+      <p style="color:#767676; font-size:12px; margin-top:20px;">
+        Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
+      </p>
+    </div>
   `;
   return new Resend(apiKey).emails.send({
     from: "Clean Service Scaramuzzo AG <kundenportal@clean-service.ch>",
@@ -253,6 +282,7 @@ module.exports = async function handler(req, res) {
         await sendeAdminAntwort({
           email: meldung.email, name: meldung.name,
           betreff: `Rückmeldung zu Ihrer ${label}`, nachricht: text,
+          status: neuerStatus, kategorie: label,
         });
         mailStatus = "sent";
       } catch (err) {

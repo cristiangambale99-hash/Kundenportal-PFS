@@ -158,6 +158,7 @@ function berechneAmpel(meldungen) {
 }
 
 const STANDARD_TEXTE = {
+  abklaerung: "Ihre Meldung ist bei uns eingegangen. Wir klären den Sachverhalt ab und melden uns, sobald wir mehr wissen.",
   akzeptieren: "Ihr Wunschtermin wurde bestätigt.",
   ablehnen: "Leider können wir Ihren Wunschtermin nicht wie gewünscht anbieten. Wir melden uns mit einem Alternativvorschlag.",
   erledigt: "Ihre Meldung wurde bearbeitet und ist damit abgeschlossen.",
@@ -198,7 +199,27 @@ module.exports = async function handler(req, res) {
     if (req.query.status) query = query.eq("status", req.query.status);
     const { data, error } = await query;
     if (error) { res.status(500).json({ error: error.message }); return; }
-    res.status(200).json({ meldungen: data });
+
+    /* Notizen gleich mitliefern: ein zweiter Aufruf pro Meldung würde bei
+       200 Einträgen 200 Anfragen bedeuten. */
+    const ids = (data || []).map(m => m.id);
+    let notizen = [];
+    if (ids.length) {
+      const { data: n } = await supabase
+        .from("meldung_notizen")
+        .select("id, meldung_id, autor, text, created_at")
+        .in("meldung_id", ids)
+        .order("created_at", { ascending: false });
+      notizen = n || [];
+    }
+    const proMeldung = {};
+    notizen.forEach(n => {
+      (proMeldung[n.meldung_id] = proMeldung[n.meldung_id] || []).push(n);
+    });
+
+    res.status(200).json({
+      meldungen: (data || []).map(m => ({ ...m, notizen: proMeldung[m.id] || [] })),
+    });
     return;
   }
 
@@ -272,7 +293,7 @@ module.exports = async function handler(req, res) {
   /* --- Antworten / Status setzen --- */
   if (action === "reply") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-    const { id, action: aktion, nachricht } = req.body || {};
+    const { id, action: aktion, nachricht, bearbeiter } = req.body || {};
     if (!id || !aktion) { res.status(400).json({ error: "id und action sind erforderlich." }); return; }
 
     const { data: meldung, error: fetchError } = await supabase
@@ -301,11 +322,87 @@ module.exports = async function handler(req, res) {
 
     const { error: updateError } = await supabase
       .from("meldungen")
-      .update({ status: neuerStatus, admin_note: text || meldung.admin_note })
+      .update({
+        status: neuerStatus,
+        admin_note: text || meldung.admin_note,
+        bearbeiter: bearbeiter || meldung.bearbeiter,
+        aktualisiert_am: new Date().toISOString(),
+      })
       .eq("id", id);
     if (updateError) { res.status(500).json({ error: updateError.message }); return; }
 
     res.status(200).json({ ok: true, mail: mailStatus, mail_error: mailError });
+    return;
+  }
+
+  /* --- Interne Notiz ---
+     Bleibt ausschliesslich im Adminbereich. Sie geht nie an die Kundschaft und
+     landet nicht in admin_note - das ist das Feld, das im Portal sichtbar ist. */
+  if (action === "notiz") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const { id, text, autor } = req.body || {};
+    if (!id || !text || !String(text).trim()) {
+      res.status(400).json({ error: "id und text sind erforderlich." });
+      return;
+    }
+    const { error } = await supabase.from("meldung_notizen").insert({
+      meldung_id: id, autor: autor || null, text: String(text).trim(),
+    });
+    if (error) { res.status(500).json({ error: error.message }); return; }
+
+    await supabase.from("meldungen")
+      .update({ aktualisiert_am: new Date().toISOString() })
+      .eq("id", id);
+
+    res.status(200).json({ ok: true });
+    return;
+  }
+
+  /* --- Notizen einer Meldung lesen --- */
+  if (action === "notizen") {
+    const id = (req.query || {}).id;
+    if (!id) { res.status(400).json({ error: "id ist erforderlich." }); return; }
+    const { data, error } = await supabase
+      .from("meldung_notizen")
+      .select("id, autor, text, created_at")
+      .eq("meldung_id", id)
+      .order("created_at", { ascending: false });
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    res.status(200).json({ notizen: data || [] });
+    return;
+  }
+
+  /* --- Status intern setzen, ohne Mail ---
+     Fuer Zwischenstaende wie "in Abklaerung": das Team haelt fest, wo die
+     Sache steht, ohne die Kundschaft mit einer Mail zu behelligen. Den
+     Status sieht sie im Portal trotzdem. */
+  if (action === "status") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const { id, status, bearbeiter } = req.body || {};
+    const erlaubt = ["neu", "abklaerung", "akzeptieren", "ablehnen", "erledigt"];
+    if (!id || !erlaubt.includes(status)) {
+      res.status(400).json({ error: "id und ein gültiger Status sind erforderlich." });
+      return;
+    }
+    const felder = { status, aktualisiert_am: new Date().toISOString() };
+    if (bearbeiter !== undefined) felder.bearbeiter = bearbeiter || null;
+
+    const { error } = await supabase.from("meldungen").update(felder).eq("id", id);
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    res.status(200).json({ ok: true });
+    return;
+  }
+
+  /* --- Bearbeitung uebernehmen --- */
+  if (action === "uebernehmen") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const { id, bearbeiter } = req.body || {};
+    if (!id) { res.status(400).json({ error: "id ist erforderlich." }); return; }
+    const { error } = await supabase.from("meldungen")
+      .update({ bearbeiter: bearbeiter || null, aktualisiert_am: new Date().toISOString() })
+      .eq("id", id);
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    res.status(200).json({ ok: true });
     return;
   }
 

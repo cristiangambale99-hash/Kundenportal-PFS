@@ -508,12 +508,15 @@ tr:hover td{background:var(--line-2);}
       <h1>Beekeeper-Chats</h1>
       <p>Alle Kunden-Gruppenchats, in denen der Portal-Bot Mitglied ist. Tragen Sie zu jedem Chat die Objektnummer ein —
          danach landen Absagen und Verschiebungen dieses Kunden automatisch im richtigen Chat.
-         Fehlt ein Chat in der Liste, ist der Bot dort noch nicht Mitglied.</p>
+         Fehlt ein Chat in der Liste, ist der Bot dort noch nicht Mitglied.<br>
+         Chats nach dem Muster „Name PFS Kundennummer“ ordnet das Portal automatisch zu — beim ersten Bedarf und jeden Morgen.
+         Von Hand eintragen müssen Sie nur Chats, die anders heissen.</p>
     </div>
     <div style="display:flex; gap:var(--s3); align-items:center; margin-bottom:var(--s4); flex-wrap:wrap;">
       <input type="text" id="bk-suche" placeholder="Chat oder Objektnummer suchen …" oninput="bkZeichnen()" style="max-width:320px;">
       <label style="display:flex; gap:6px; align-items:center; margin:0;"><input type="checkbox" id="bk-offen" onchange="bkZeichnen()" style="width:auto;"> nur ohne Zuordnung</label>
       <span id="bk-stand" style="font-size:13px; color:var(--grey);"></span>
+      <button class="btn btn-hell btn-klein" onclick="bkAbgleich()">Jetzt automatisch zuordnen</button>
     </div>
     <div id="bk-meldung" class="zn-result" style="display:none;"></div>
     <table>
@@ -1085,6 +1088,18 @@ function bkZeichnen(){
         <button class="tab" onclick="bkTest(${i})">Test senden</button></td>
     </tr>`;
   }).join('') || '<tr><td colspan="3">Keine Chats gefunden.</td></tr>';
+}
+async function bkAbgleich(){
+  bkHinweis('Gleiche ab …');
+  try{
+    const r = await fetch('/api/admin?action=beekeeper-abgleich');
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Abgleich fehlgeschlagen');
+    bkHinweis(`${d.neu_zugeordnet} Chats neu zugeordnet.` +
+      (d.doppelt.length ? ` Mehrfach vorhanden (bitte prüfen): PFS ${d.doppelt.join(', PFS ')}.` : '') +
+      (d.ohne_nummer.length ? ` ${d.ohne_nummer.length} Chats ohne „PFS Nummer“ im Namen.` : ''));
+    await bkLaden();
+  }catch(e){ bkHinweis('Fehler: ' + e.message, true); }
 }
 async function bkSpeichern(i){
   const c = BK[i]; const objekt = document.getElementById('bk-obj-' + i).value.trim();

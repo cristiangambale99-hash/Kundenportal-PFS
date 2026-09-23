@@ -2,7 +2,8 @@
  * Einheitliche E-Mail-Vorlage - identisch mit der Angebots-App (AngebotPFS).
  *
  * Jede Mail aus dem Kundenportal läuft über diese Datei: Kopf mit Logo und
- * Claim, türkiser Balken, Verdana, Signatur Cristian Gambale, Fusszeile.
+ * Claim, türkiser Balken, Verdana, Signatur "Administration Putzfrauenservice"
+ * (ohne Direktwahl), Fusszeile.
  * Das Logo reist als eingebettetes Bild mit (cid:cslogo) und erscheint
  * deshalb auch in Outlook sofort, ohne "Bilder herunterladen".
  *
@@ -23,9 +24,7 @@ function signatur() {
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:26px;">
     <tr><td style="padding-top:18px;border-top:2px solid ${CS_FARBE};">
       <div style="${FONT}font-size:13px;line-height:1.55;color:${CS_TEXT};">
-        <strong>Cristian Gambale</strong><br>
-        Bereichsleiter Putzfrauenservice<br>
-        Direkt 052 557 02 08 / 076 822 00 16
+        <strong>Administration Putzfrauenservice</strong>
       </div>
       <div style="border-top:1px solid #D8D8D8;margin:12px 0;width:220px;"></div>
       <div style="${FONT}font-size:12px;line-height:1.55;color:${CS_GRAU};">

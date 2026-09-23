@@ -788,7 +788,7 @@ function willkommensMail(name, email, passwort, portal) {
        <div style="font-family:Verdana,Geneva,sans-serif;font-size:18px;color:${M.CS_DUNKEL};font-weight:bold;letter-spacing:.12em;margin:4px 0 6px;">${M.esc(passwort)}</div>` +
       M.knopf("Jetzt anmelden", portal)) +
     M.absatz("Beim ersten Anmelden legen Sie ein eigenes Passwort fest, danach bleiben Sie auf Ihrem Gerät angemeldet. Absagen, Terminverschiebungen, Reklamationen und Schadenmeldungen nehmen wir künftig ausschliesslich über das Kundenportal entgegen. So gelangt Ihr Anliegen ohne Umweg an die richtige Stelle, und Sie sehen jederzeit, wie weit die Bearbeitung ist.") +
-    M.absatz("Vielen Dank für Ihr Vertrauen. Für Rückfragen stehe ich Ihnen gerne persönlich zur Verfügung.", 0);
+    M.absatz("Vielen Dank für Ihr Vertrauen. Für Rückfragen stehen wir Ihnen gerne zur Verfügung.", 0);
   return M.rahmen("Ihr Zugang zum Kundenportal", inhalt, {
     hinweis: "Diese Zugangsdaten sind ausschliesslich für Sie bestimmt. Bitte geben Sie sie nicht weiter.",
   });

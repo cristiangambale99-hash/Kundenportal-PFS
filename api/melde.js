@@ -14,9 +14,9 @@
 
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
-const { Resend } = require("resend");
 const R = require("./_regeln.js");
 const BK = require("./_beekeeper.js");
+const M = require("./_mail.js");
 
 const ABSENDER = process.env.MAIL_FROM || "Clean Service Scaramuzzo AG <noreply@clean-service.ch>";
 const ABSENDER_INTERN = process.env.MAIL_FROM_INTERN || "Kundenportal <noreply@clean-service.ch>";
@@ -141,11 +141,15 @@ function naechsterSchritt(kategorie, d, m) {
   return "";
 }
 
-/* ------------------------------------------------------------------ E-Mail */
-function resendClient() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
-  return new Resend(apiKey);
+/* ------------------------------------------------------------------ E-Mail
+   Layout wie die Angebots-App (siehe _mail.js). */
+
+/** "Schlüssel: Wert"-Zeilen der Zusammenfassung als Tabelle */
+function detailsZeilen(details) {
+  return String(details || "").split("\n").filter(Boolean).map(z => {
+    const i = z.indexOf(": ");
+    return i > 0 ? [z.slice(0, i), z.slice(i + 2)] : ["", z];
+  });
 }
 
 async function sendeTeamMail(meldung, d, pdf) {
@@ -154,32 +158,34 @@ async function sendeTeamMail(meldung, d, pdf) {
 
   // Der Kasten oben sagt, was zu tun ist - oder dass nichts zu tun ist.
   let auftrag = "";
-  if (meldung.kategorie === "absage" || meldung.kategorie === "verschiebung") {
-    auftrag = `<p style="color:#1c7a5a;"><strong>Automatisch bestätigt.</strong> ${
-      meldung.kategorie === "absage" ? esc(VERRECHNUNG_INTERN[meldung.verrechnung] || "") : "Ersatztermin durch das Springerteam einplanen."
-    }</p>`;
+  if (meldung.kategorie === "absage") {
+    auftrag = M.kasten("Automatisch bestätigt", M.esc(VERRECHNUNG_INTERN[meldung.verrechnung] || "Keine Bearbeitung nötig."));
+  }
+  if (meldung.kategorie === "verschiebung") {
+    auftrag = M.kasten("Automatisch bestätigt", "Ersatztermin durch das Springerteam einplanen.");
   }
   if (meldung.kategorie === "reklamation") {
     auftrag = d.reklamation_wunsch === "nachreinigung"
-      ? `<p style="color:#b3541e;"><strong>Nachreinigung durch das Springerteam einplanen.</strong> Intern: Die Nachreinigungszeit wird der fixen Raumpflegerin abgezogen.</p>`
-      : `<p style="color:#b3541e;"><strong>Gespräch mit dem Abteilungsleiter gewünscht.</strong> Rückruf durch ${esc(ABTEILUNGSLEITER)} innert 2 Arbeitstagen.</p>`;
+      ? M.kasten("Zu tun", "<strong>Nachreinigung durch das Springerteam einplanen.</strong><br>Intern: Die Nachreinigungszeit wird der fixen Raumpflegerin abgezogen.", "warn")
+      : M.kasten("Zu tun", `<strong>Gespräch mit dem Abteilungsleiter gewünscht.</strong><br>Rückruf durch ${M.esc(ABTEILUNGSLEITER)} innert 2 Arbeitstagen.`, "warn");
+  }
+  if (meldung.kategorie === "schaden") {
+    auftrag = M.kasten("Zu tun", "Schadenfall prüfen und der Kundschaft innert 2 Arbeitstagen eine erste Einschätzung geben.", "warn");
   }
   if (meldung.kategorie === "zusatz") {
-    auftrag = `<p style="color:#12797A;"><strong>Bitte Offerte vorbereiten.</strong> Die Kundschaft hat eine Bestätigung erhalten, dass die Offerte folgt.</p>`;
+    auftrag = M.kasten("Zu tun", "<strong>Bitte Offerte vorbereiten.</strong><br>Die Kundschaft hat eine Bestätigung erhalten, dass die Offerte folgt.", "warn");
   }
 
-  const html = `
-    <div style="font-family:Verdana,Geneva,sans-serif; color:#333; font-size:14px;">
-    <h2 style="color:#12797A;">${esc(label)} über das Kundenportal</h2>
-    ${auftrag}
-    <p><strong>Name:</strong> ${esc(meldung.name) || "-"}<br>
-       <strong>Objekt-/Kundennummer:</strong> ${esc(meldung.objekt_id) || "— nicht angegeben"}<br>
-       <strong>Adresse:</strong> ${esc(meldung.adresse) || "-"}<br>
-       <strong>E-Mail:</strong> ${esc(meldung.email) || "-"}</p>
-    <pre style="white-space:pre-wrap; font-family:inherit; background:#F2F9F9; padding:12px 14px;">${esc(meldung.details)}</pre>
-    ${pdf ? '<p style="color:#12797A;">Das vollständige Dokument mit Fotos liegt als PDF im Anhang.</p>' : ""}
-    ${meldung._bk_hinweis ? `<p style="color:#b3541e;"><strong>Achtung: Die Raumpflegerin wurde NICHT über Beekeeper informiert</strong> (${esc(meldung._bk_hinweis)}). Bitte Bot in den Kundenchat aufnehmen bzw. im Admin unter „Beekeeper“ zuordnen und die Raumpflegerin direkt informieren.</p>` : ""}
-    </div>`;
+  const inhalt =
+    (meldung._bk_hinweis ? M.kasten("Achtung", `Die Raumpflegerin wurde <strong>nicht</strong> über Beekeeper informiert (${M.esc(meldung._bk_hinweis)}). Bitte den Bot in den Kundenchat aufnehmen bzw. im Admin unter „Beekeeper“ zuordnen und die Raumpflegerin direkt informieren.`, "warn") : "") +
+    auftrag +
+    M.tabelle([
+      ["Name", meldung.name], ["Kundennummer", meldung.objekt_id || "nicht angegeben"],
+      ["Adresse", meldung.adresse], ["E-Mail", meldung.email],
+    ]) +
+    M.tabelle(detailsZeilen(meldung.details)) +
+    (pdf ? M.absatz("Das vollständige Dokument mit Fotos liegt als PDF im Anhang.") : "") +
+    M.knopf("Im Adminbereich öffnen", `${(process.env.PORTAL_URL || "https://portal.clean-service.ch").replace(/\/$/, "")}/admin.html`);
 
   const mail = {
     from: ABSENDER_INTERN,
@@ -188,7 +194,7 @@ async function sendeTeamMail(meldung, d, pdf) {
     subject: meldung.kategorie === "zusatz"
       ? `[Kundenportal] Offerte vorbereiten: ${R.ZUSATZ_ART[d.art]} – ${meldung.name}`
       : `[Kundenportal] ${label} – ${meldung.name || meldung.objekt_id || "Kunde"}`,
-    html,
+    html: M.rahmen(`${label} über das Kundenportal`, inhalt, { signatur: false }),
   };
 
   if (pdf) {
@@ -199,32 +205,26 @@ async function sendeTeamMail(meldung, d, pdf) {
       content: pdf.toString("base64"),
     }];
   }
-  return resendClient().emails.send(mail);
+  return M.senden(mail);
 }
 
 async function sendeKundenBestaetigung(meldung, text) {
   if (!meldung.email) return { skipped: true };
   const label = KATEGORIE_LABEL[meldung.kategorie];
   const portal = (process.env.PORTAL_URL || "https://portal.clean-service.ch").replace(/\/$/, "");
-  const html = `
-    <div style="font-family:Verdana,Geneva,sans-serif; color:#333; max-width:560px; font-size:14px; line-height:1.7;">
-      <p>Guten Tag ${esc(meldung.name)}</p>
-      <p>Vielen Dank, Ihre ${esc(label)} ist bei uns eingegangen.</p>
-      <p>${esc(text)}</p>
-      <p style="margin:24px 0;">
-        <a href="${portal}" style="background:#2BB6B7; color:#fff; text-decoration:none;
-           padding:13px 24px; border-radius:8px; font-weight:bold; display:inline-block;">Im Kundenportal ansehen</a>
-      </p>
-      <p style="color:#767676; font-size:12px;">Sie müssen auf diese Nachricht nicht antworten.
-        Den Stand Ihrer Meldungen sehen Sie jederzeit im Kundenportal.</p>
-      <p style="color:#767676; font-size:12px; margin-top:20px;">
-        Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355</p>
-    </div>`;
-  return resendClient().emails.send({
+  const inhalt =
+    M.absatz(`Guten Tag ${meldung.name || ""}`.trim()) +
+    M.absatz(`Vielen Dank, Ihre ${label} ist bei uns eingegangen.`) +
+    M.kasten("Ihre Meldung", M.tabelle(detailsZeilen(meldung.details))) +
+    M.absatz(text) +
+    M.knopf("Im Kundenportal ansehen", portal);
+  return M.senden({
     from: ABSENDER,
     to: meldung.email,
     subject: `Bestätigung: Ihre ${label} bei Clean Service Scaramuzzo AG`,
-    html,
+    html: M.rahmen(`Bestätigung Ihrer ${label}`, inhalt, {
+      hinweis: "Sie müssen auf diese Nachricht nicht antworten. Den Stand Ihrer Meldungen sehen Sie jederzeit im Kundenportal.",
+    }),
   });
 }
 

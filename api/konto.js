@@ -15,7 +15,7 @@
 
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
-const { Resend } = require("resend");
+const M = require("./_mail.js");
 
 /* Absenderadresse. Bewusst "noreply": Antworten auf diese Mails wuerden im
    Postfach landen und muessten von Hand bearbeitet werden - genau das soll das
@@ -114,20 +114,8 @@ function cookieLoeschen(res) {
 
 /* ------------------------------------------------------------------ E-Mail */
 async function mailSenden(an, betreff, html) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
-  return new Resend(apiKey).emails.send({
-    from: ABSENDER,
-    to: an, subject: betreff, html,
-  });
+  return M.senden({ from: ABSENDER, to: an, subject: betreff, html });
 }
-
-function fusszeile() {
-  return `<p style="color:#7c8c8b; font-size:12.5px; margin-top:26px;">
-    Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
-  </p>`;
-}
-
 
 /* ------------------------------------------------------- Verwaltungskonto */
 // Das Team meldet sich ueber dieselbe Maske an wie die Kundschaft, landet
@@ -366,21 +354,13 @@ module.exports = async function handler(req, res) {
 
         const link = `${PORTAL_URL}/?reset=${token}`;
         try {
-          await mailSenden(konto.email, "Passwort zurücksetzen — Kundenportal", `
-            <p>Guten Tag ${konto.name || ""}</p>
-            <p>Sie haben ein neues Passwort für das Kundenportal angefordert.</p>
-            <p style="margin:22px 0;">
-              <a href="${link}" style="background:#2bb6b7; color:#ffffff; text-decoration:none;
-                 padding:14px 24px; border-radius:9px; font-weight:600; display:inline-block;">
-                Neues Passwort festlegen
-              </a>
-            </p>
-            <p style="font-size:13px; color:#5b6b76;">
-              Der Link ist eine Stunde lang gültig. Falls Sie das nicht waren, können Sie
-              diese Nachricht ignorieren — Ihr bisheriges Passwort bleibt gültig.
-            </p>
-            ${fusszeile()}
-          `);
+          await mailSenden(konto.email, "Passwort zurücksetzen — Kundenportal", M.rahmen(
+            "Neues Passwort festlegen",
+            M.absatz(`Guten Tag ${konto.name || ""}`.trim()) +
+            M.absatz("Sie haben ein neues Passwort für das Clean Service Kundenportal angefordert. Über den folgenden Knopf legen Sie es fest.") +
+            M.knopf("Neues Passwort festlegen", link) +
+            M.absatz("Der Link ist eine Stunde lang gültig. Falls Sie kein neues Passwort angefordert haben, können Sie diese Nachricht ignorieren, Ihr bisheriges Passwort bleibt gültig.", 0),
+            { hinweis: "Aus Sicherheitsgründen geben wir Passwörter nie per E-Mail oder Telefon weiter." }));
         } catch (err) {
           // Technische Störung, nicht "Adresse unbekannt": darf gemeldet werden,
           // damit niemand vergeblich auf eine Mail wartet.

@@ -24,8 +24,8 @@
 
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
-const { Resend } = require("resend");
 const BK = require("./_beekeeper.js");
+const M = require("./_mail.js");
 
 /* Absenderadresse. Bewusst "noreply": Antworten auf diese Mails wuerden im
    Postfach landen und muessten von Hand bearbeitet werden - genau das soll das
@@ -95,50 +95,25 @@ const KATEGORIE_LABEL = {
 
 async function sendeAdminAntwort({ email, name, betreff, nachricht, status, kategorie }) {
   if (!email) throw new Error("Keine E-Mail-Adresse für diese Meldung hinterlegt.");
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY ist nicht gesetzt.");
-
   const portal = (process.env.PORTAL_URL || "https://portal.clean-service.ch").replace(/\/$/, "");
-  const statusText = { akzeptieren: "Angenommen", ablehnen: "Abgelehnt",
+  const statusText = { akzeptieren: "Angenommen", ablehnen: "Abgelehnt", abklaerung: "In Abklärung",
                        erledigt: "Erledigt", neu: "In Bearbeitung" }[status] || "";
 
-  // Der Statusstreifen macht auf einen Blick klar, worum es geht - und der
-  // Knopf holt die Kundschaft ins Portal zurueck, statt eine Mailantwort
-  // auszuloesen, die wieder von Hand bearbeitet werden muesste.
-  const html = `
-    <div style="font-family:Verdana,Geneva,sans-serif; color:#333; max-width:560px;">
-      <p>Guten Tag ${name || ""}</p>
-      <p>Es gibt eine Rückmeldung zu Ihrer ${kategorie || "Meldung"}.</p>
+  // Der Statuskasten macht auf einen Blick klar, worum es geht - der Knopf
+  // holt die Kundschaft ins Portal statt eine Mailantwort auszulösen.
+  const inhalt =
+    M.absatz(`Guten Tag ${name || ""}`.trim()) +
+    M.absatz(`Es gibt eine Rückmeldung zu Ihrer ${kategorie || "Meldung"}.`) +
+    (statusText ? M.kasten("Neuer Stand", `<strong style="font-size:15px;color:${M.CS_DUNKEL};">${M.esc(statusText)}</strong>`) : "") +
+    M.absatz(nachricht) +
+    M.knopf("Im Kundenportal ansehen", portal);
 
-      ${statusText ? `
-      <div style="margin:20px 0; padding:14px 18px; background:#F2F9F9; border-left:3px solid #2BB6B7;">
-        <div style="font-size:11px; letter-spacing:.5px; color:#767676; text-transform:uppercase; margin-bottom:4px;">Neuer Stand</div>
-        <div style="font-size:16px; font-weight:bold; color:#12797A;">${statusText}</div>
-      </div>` : ""}
-
-      <p style="white-space:pre-wrap; line-height:1.7;">${nachricht}</p>
-
-      <p style="margin:26px 0;">
-        <a href="${portal}" style="background:#2BB6B7; color:#ffffff; text-decoration:none;
-           padding:14px 26px; border-radius:8px; font-weight:bold; display:inline-block;">
-          Im Kundenportal ansehen
-        </a>
-      </p>
-
-      <p style="color:#767676; font-size:12px; line-height:1.6;">
-        Im Portal sehen Sie jederzeit alle Ihre Meldungen und deren Stand.
-        Sie müssen auf diese Nachricht nicht antworten.
-      </p>
-      <p style="color:#767676; font-size:12px; margin-top:20px;">
-        Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355
-      </p>
-    </div>
-  `;
-  return new Resend(apiKey).emails.send({
-    from: ABSENDER,
-    to: email,
+  return M.senden({
+    from: ABSENDER, to: email,
     subject: betreff || "Rückmeldung zu Ihrer Meldung",
-    html,
+    html: M.rahmen(`Rückmeldung zu Ihrer ${kategorie || "Meldung"}`, inhalt, {
+      hinweis: "Im Kundenportal sehen Sie jederzeit alle Ihre Meldungen und deren Stand. Sie müssen auf diese Nachricht nicht antworten.",
+    }),
   });
 }
 
@@ -691,7 +666,9 @@ module.exports = async function handler(req, res) {
       return;
     }
     if (!process.env.RESEND_API_KEY) { res.status(500).json({ error: "RESEND_API_KEY ist nicht gesetzt." }); return; }
-    const anzahl = Math.max(1, Math.min(100, Number((req.body || {}).anzahl) || 50));
+    // Höchstens 50 pro Welle: Mit eingebettetem Logo geht jede Mail einzeln
+    // raus (Resend erlaubt 2 pro Sekunde), das muss ins Zeitlimit passen.
+    const anzahl = Math.max(1, Math.min(50, Number((req.body || {}).anzahl) || 50));
 
     const { data: konten, error } = await supabase.from("kundenzugaenge")
       .select("id, name, email")
@@ -701,38 +678,32 @@ module.exports = async function handler(req, res) {
     if (error) { res.status(500).json({ error: error.message }); return; }
     if (!konten.length) { res.status(200).json({ ok: true, gesendet: 0, hinweis: "Alle Kunden haben ihre Zugangsdaten bereits erhalten." }); return; }
 
-    const mails = [], updates = [];
+    /* Pro Konto: neues Erstpasswort speichern, dann Mail senden. Scheitert
+       eine Mail, bleibt das Konto "offen" und kommt in der nächsten Welle
+       wieder dran - mit einem neuen Passwort. */
+    const pause = ms => new Promise(r => setTimeout(r, ms));
+    let gesendet = 0; const fehler = [];
     for (const k of konten) {
       const pw = erstpasswortErzeugen();
       const salt = crypto.randomBytes(16).toString("hex");
-      updates.push({ id: k.id, passwort_salt: salt, passwort_hash: hashen(pw, salt) });
-      mails.push({
-        from: ABSENDER, to: k.email,
-        subject: "Ihr persönlicher Zugang zum Clean Service Kundenportal",
-        html: willkommensMail(k.name, k.email, pw, portal),
-      });
-    }
-
-    // Erst die Passwörter speichern, dann senden - sonst käme ein Passwort an,
-    // das nicht gilt.
-    for (const u of updates) {
       await supabase.from("kundenzugaenge")
-        .update({ passwort_salt: u.passwort_salt, passwort_hash: u.passwort_hash, fehlversuche: 0, gesperrt_bis: null })
-        .eq("id", u.id);
+        .update({ passwort_salt: salt, passwort_hash: hashen(pw, salt), fehlversuche: 0, gesperrt_bis: null })
+        .eq("id", k.id);
+      try {
+        await M.senden({
+          from: ABSENDER, to: k.email,
+          subject: "Ihr persönlicher Zugang zum Clean Service Kundenportal",
+          html: willkommensMail(k.name, k.email, pw, portal),
+        });
+        await supabase.from("kundenzugaenge").update({ info_gesendet_am: new Date().toISOString() }).eq("id", k.id);
+        gesendet++;
+      } catch (err) {
+        fehler.push({ email: k.email, grund: err.message });
+      }
+      await pause(550);
     }
 
-    try {
-      await new Resend(process.env.RESEND_API_KEY).batch.send(mails);
-    } catch (err) {
-      res.status(500).json({ error: `Versand fehlgeschlagen: ${err.message}. Es wurde nichts als gesendet markiert.` });
-      return;
-    }
-
-    await supabase.from("kundenzugaenge")
-      .update({ info_gesendet_am: new Date().toISOString() })
-      .in("id", konten.map(k => k.id));
-
-    res.status(200).json({ ok: true, gesendet: konten.length, von: ICH });
+    res.status(200).json({ ok: true, gesendet, fehler, von: ICH });
     return;
   }
 
@@ -808,40 +779,17 @@ module.exports = async function handler(req, res) {
 
 /* ------------------------------------------------------- Willkommensmail */
 function willkommensMail(name, email, passwort, portal) {
-  const e = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const leiter = process.env.ABTEILUNGSLEITER || "Cristian Gambale";
-  return `
-  <div style="font-family:Verdana,Geneva,sans-serif; color:#333; max-width:580px; font-size:14px; line-height:1.7;">
-    <p>Guten Tag ${e(name)}</p>
-    <p>Ab sofort erledigen Sie alle Anliegen rund um Ihre Reinigung bequem online. Im neuen Clean Service
-    Kundenportal sagen Sie Termine ab, melden Ferienabwesenheiten, verschieben eine Reinigung auf einen
-    Ersatztermin mit unserem Springerteam, erfassen Reklamationen und Schäden und fragen Zusatzarbeiten wie
-    eine Fensterreinigung an. Das dauert rund zwei Minuten, und Sie erhalten sofort eine Bestätigung.</p>
-
-    <div style="margin:24px 0; padding:18px 20px; background:#F2F9F9; border-left:3px solid #2BB6B7;">
-      <div style="font-size:12px; color:#767676;">Portal</div>
-      <div style="font-weight:bold; margin-bottom:10px;"><a href="${e(portal)}" style="color:#12797A;">${e(portal.replace(/^https?:\/\//, ""))}</a></div>
-      <div style="font-size:12px; color:#767676;">Anmelde-ID</div>
-      <div style="font-weight:bold; margin-bottom:10px;">${e(email)}</div>
-      <div style="font-size:12px; color:#767676;">Ihr Erstpasswort</div>
-      <div style="font-weight:bold; font-size:18px; letter-spacing:2px; font-family:Consolas,monospace;">${e(passwort)}</div>
-    </div>
-
-    <p style="margin:24px 0;">
-      <a href="${e(portal)}" style="background:#2BB6B7; color:#fff; text-decoration:none;
-         padding:13px 24px; border-radius:8px; font-weight:bold; display:inline-block;">Jetzt anmelden</a>
-    </p>
-
-    <p>Beim ersten Anmelden legen Sie ein eigenes Passwort fest, danach bleiben Sie auf Ihrem Gerät angemeldet.
-    Absagen, Terminverschiebungen, Reklamationen und Schadenmeldungen nehmen wir künftig ausschliesslich über
-    das Kundenportal entgegen. So gelangt Ihr Anliegen ohne Umweg an die richtige Stelle, und Sie sehen jederzeit,
-    wie weit die Bearbeitung ist.</p>
-
-    <p>Vielen Dank für Ihr Vertrauen. Bei Fragen erreichen Sie uns unter 0844 355 355.</p>
-
-    <p>Freundliche Grüsse<br><br>${e(leiter)}<br>Abteilungsleiter Putzfrauenservice<br>Clean Service Scaramuzzo AG</p>
-    <p style="color:#767676; font-size:12px; margin-top:20px;">
-      Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355</p>
-  </div>`;
+  const inhalt =
+    M.absatz(`Guten Tag ${name || ""}`.trim()) +
+    M.absatz("Ab sofort erledigen Sie alle Anliegen rund um Ihre Reinigung bequem online. Im neuen Clean Service Kundenportal sagen Sie Termine ab, melden Ferienabwesenheiten, verschieben eine Reinigung auf einen Ersatztermin mit unserem Springerteam, erfassen Reklamationen und Schäden und fragen Zusatzarbeiten wie eine Fensterreinigung an. Das dauert rund zwei Minuten, und Sie erhalten sofort eine Bestätigung.") +
+    M.kasten("Ihr persönlicher Zugang",
+      M.tabelle([["Portal", portal.replace(/^https?:\/\//, "")], ["Anmelde-ID", email]]) +
+      `<div style="font-family:Verdana,Geneva,sans-serif;font-size:12px;color:#767676;">Ihr Erstpasswort</div>
+       <div style="font-family:Verdana,Geneva,sans-serif;font-size:18px;color:${M.CS_DUNKEL};font-weight:bold;letter-spacing:.12em;margin:4px 0 6px;">${M.esc(passwort)}</div>` +
+      M.knopf("Jetzt anmelden", portal)) +
+    M.absatz("Beim ersten Anmelden legen Sie ein eigenes Passwort fest, danach bleiben Sie auf Ihrem Gerät angemeldet. Absagen, Terminverschiebungen, Reklamationen und Schadenmeldungen nehmen wir künftig ausschliesslich über das Kundenportal entgegen. So gelangt Ihr Anliegen ohne Umweg an die richtige Stelle, und Sie sehen jederzeit, wie weit die Bearbeitung ist.") +
+    M.absatz("Vielen Dank für Ihr Vertrauen. Für Rückfragen stehe ich Ihnen gerne persönlich zur Verfügung.", 0);
+  return M.rahmen("Ihr Zugang zum Kundenportal", inhalt, {
+    hinweis: "Diese Zugangsdaten sind ausschliesslich für Sie bestimmt. Bitte geben Sie sie nicht weiter.",
+  });
 }

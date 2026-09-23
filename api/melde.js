@@ -16,6 +16,7 @@ const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
 const R = require("./_regeln.js");
+const BK = require("./_beekeeper.js");
 
 const ABSENDER = process.env.MAIL_FROM || "Clean Service Scaramuzzo AG <noreply@clean-service.ch>";
 const ABSENDER_INTERN = process.env.MAIL_FROM_INTERN || "Kundenportal <noreply@clean-service.ch>";
@@ -177,6 +178,7 @@ async function sendeTeamMail(meldung, d, pdf) {
        <strong>E-Mail:</strong> ${esc(meldung.email) || "-"}</p>
     <pre style="white-space:pre-wrap; font-family:inherit; background:#F2F9F9; padding:12px 14px;">${esc(meldung.details)}</pre>
     ${pdf ? '<p style="color:#12797A;">Das vollständige Dokument mit Fotos liegt als PDF im Anhang.</p>' : ""}
+    ${meldung._bk_hinweis ? `<p style="color:#b3541e;"><strong>Achtung: Die Raumpflegerin wurde NICHT über Beekeeper informiert</strong> (${esc(meldung._bk_hinweis)}). Bitte Bot in den Kundenchat aufnehmen bzw. im Admin unter „Beekeeper“ zuordnen und die Raumpflegerin direkt informieren.</p>` : ""}
     </div>`;
 
   const mail = {
@@ -227,9 +229,6 @@ async function sendeKundenBestaetigung(meldung, text) {
 }
 
 /* --------------------------------------------------------------- Beekeeper */
-const BK_URL = (process.env.BEEKEEPER_TENANT_URL || "").replace(/\/$/, "");
-const BK_TOKEN = process.env.BEEKEEPER_API_TOKEN || "";
-
 // Nur was die feste Raumpflegerin für ihre Planung wissen muss. Reklamationen
 // gehen bewusst nicht in den Chat - die klärt zuerst das Büro.
 const BEEKEEPER_KATEGORIEN = ["absage", "verschiebung"];
@@ -262,19 +261,6 @@ function beekeeperText(kategorie, m, d) {
   if (d.kommentar) z.push("", `Bemerkung der Kundschaft: ${d.kommentar}`);
   z.push("", "Gemeldet über das Kundenportal.");
   return z.join("\n");
-}
-
-async function sendGroupMessage(chatId, body) {
-  if (!BK_URL) throw new Error("BEEKEEPER_TENANT_URL ist nicht gesetzt.");
-  if (!BK_TOKEN) throw new Error("BEEKEEPER_API_TOKEN ist nicht gesetzt.");
-  // Pfad bestätigt durch Beekeeper-Support (Ticket #90097, 29.07.2026)
-  const resp = await fetch(`${BK_URL}/api/2/chats/groups/${chatId}/messages`, {
-    method: "POST",
-    headers: { Authorization: `Token ${BK_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ body }),
-  });
-  if (!resp.ok) throw new Error(`Beekeeper ${resp.status} ${await resp.text()}`);
-  return resp.json();
 }
 
 /* ------------------------------------------------------------------ Handler */
@@ -335,12 +321,12 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  let zuordnung = null;
-  if (konto.objekt_id) {
-    const { data } = await supabase.from("objekt_beekeeper_mapping")
-      .select("objekt_id, beekeeper_chat_id, status").eq("objekt_id", konto.objekt_id).maybeSingle();
-    zuordnung = data;
-  }
+  /* Kundenchat finden - bei Bedarf automatisch über den Chatnamen
+     ("… PFS <Kundennummer>") zuordnen. Eine Beekeeper-Störung darf die
+     Meldung nie blockieren. */
+  let chat;
+  try { chat = await BK.chatFuerObjekt(supabase, konto.objekt_id); }
+  catch (err) { chat = { fehlt: err.message }; }
 
   const meldung = {
     kategorie,
@@ -351,7 +337,7 @@ module.exports = async function handler(req, res) {
     details: R.detailsText(kategorie, d),
     ip,
     status: START_STATUS[kategorie],
-    zuordnung_offen: !zuordnung,
+    zuordnung_offen: !chat.chatId,
     termin_datum: d.termin_datum || null,
     termin_neu: d.termin_neu || null,
     zeitraum_bis: d.zeitraum_bis || null,
@@ -414,6 +400,19 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  let bkStatus = null;
+  if (BEEKEEPER_KATEGORIEN.includes(kategorie)) {
+    if (chat.chatId) {
+      try { await BK.senden(chat.chatId, beekeeperText(kategorie, meldung, d)); bkStatus = "sent"; }
+      catch (err) { bkStatus = "error"; chat.fehlt = err.message; console.error("Beekeeper:", err.message); }
+    } else {
+      bkStatus = "no_mapping";
+    }
+  }
+  ergebnis.beekeeper = bkStatus || undefined;
+  // Die Teammail sagt, wenn die Raumpflegerin NICHT informiert wurde
+  meldung._bk_hinweis = (bkStatus === "no_mapping" || bkStatus === "error") ? chat.fehlt : null;
+
   const [team, kunde] = await Promise.allSettled([
     sendeTeamMail(meldung, d, pdf),
     sendeKundenBestaetigung(meldung, text),
@@ -422,20 +421,6 @@ module.exports = async function handler(req, res) {
   ergebnis.kunden_mail = kunde.status === "fulfilled" ? "sent" : "error";
   if (team.status === "rejected") console.error("Teammail:", team.reason && team.reason.message);
   if (kunde.status === "rejected") console.error("Kundenmail:", kunde.reason && kunde.reason.message);
-
-  if (BEEKEEPER_KATEGORIEN.includes(kategorie)) {
-    try {
-      if (zuordnung && zuordnung.status === "matched" && zuordnung.beekeeper_chat_id) {
-        await sendGroupMessage(zuordnung.beekeeper_chat_id, beekeeperText(kategorie, meldung, d));
-        ergebnis.beekeeper = "sent";
-      } else {
-        ergebnis.beekeeper = "no_mapping";
-      }
-    } catch (err) {
-      ergebnis.beekeeper = "error";
-      console.error("Beekeeper:", err.message);
-    }
-  }
 
   res.status(200).json(ergebnis);
 };

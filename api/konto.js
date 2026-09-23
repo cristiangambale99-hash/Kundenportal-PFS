@@ -141,9 +141,11 @@ function adminSign(value) {
   return crypto.createHmac("sha256", process.env.ADMIN_PASSWORD || "").update(value).digest("hex");
 }
 
+// Format wie in admin.js: <ablauf>.<name>.<signatur>. Der Name bleibt hier
+// leer - er wird im Adminbereich direkt nach der Anmeldung gewählt.
 function adminCookie() {
   const ablauf = Date.now() + ADMIN_STUNDEN * 60 * 60 * 1000;
-  const wert = `${ablauf}.${adminSign(String(ablauf))}`;
+  const wert = `${ablauf}..${adminSign(`${ablauf}.`)}`;
   return `${ADMIN_COOKIE}=${wert}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${ADMIN_STUNDEN * 3600}`;
 }
 

@@ -7,6 +7,16 @@
  *   GET  /api/admin?action=customers  (pro Kunde gruppiert, mit Ampel)
  *   GET  /api/admin?action=stats      (Kennzahlen der letzten 30 Tage)
  *   POST /api/admin?action=reply      { id, action: akzeptieren|ablehnen|erledigt|nachricht, nachricht }
+ *   GET  /api/admin?action=namen      (Namensliste für die Anmeldung, ohne Sitzung)
+ *   GET  /api/admin?action=ich        (angemeldeter Name)
+ *   POST /api/admin?action=name       { name }  Namen für die laufende Sitzung wählen
+ *   POST /api/admin?action=konten-import   { kunden: [{objekt_id, name, email, adresse}] }
+ *   GET  /api/admin?action=welle-status
+ *   POST /api/admin?action=zugang-welle    { anzahl }  Zugangsdaten per Mail versenden
+ *
+ * Wer etwas bearbeitet, steht in der Sitzung: Beim Anmelden wählt man seinen
+ * Namen, danach wird er automatisch bei Notizen, Übernahmen und Antworten
+ * eingetragen. Ein gemeinsames Passwort, aber nachvollziehbar pro Person.
  *
  * Bewusst in einer Datei zusammengefasst, damit das Projekt ohne verschachtelte
  * Ordner auskommt und sich leicht hochladen lässt.
@@ -39,24 +49,38 @@ function getSupabase() {
 const COOKIE_NAME = "admin_session";
 const SESSION_HOURS = 12;
 
+/* Wer sich anmelden kann. Über ADMIN_NAMEN (kommagetrennt) ohne Codeänderung
+   anpassbar, z.B. wenn jemand Neues ins Team kommt. */
+function adminNamen() {
+  const env = (process.env.ADMIN_NAMEN || "").split(",").map(n => n.trim()).filter(Boolean);
+  return env.length ? env : ["Cristian Gambale", "Fiorella Scalone", "Tayron Moreno", "Lina"];
+}
+
 function sign(value) {
   return crypto.createHmac("sha256", process.env.ADMIN_PASSWORD || "").update(value).digest("hex");
 }
 
-function createSessionCookie() {
+// Format: <ablauf>.<name base64url>.<signatur>  - Name leer = noch nicht gewählt
+function createSessionCookie(name) {
   const expires = Date.now() + SESSION_HOURS * 60 * 60 * 1000;
-  const value = `${expires}.${sign(String(expires))}`;
+  const n = Buffer.from(name || "", "utf8").toString("base64url");
+  const value = `${expires}.${n}.${sign(`${expires}.${n}`)}`;
   return `${COOKIE_NAME}=${value}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${SESSION_HOURS * 3600}`;
 }
 
-function isValidSession(req) {
+/** null = keine gültige Sitzung, sonst { name } (name kann leer sein). */
+function readSession(req) {
   const cookieHeader = req.headers.cookie || "";
   const match = cookieHeader.split(";").map(c => c.trim()).find(c => c.startsWith(`${COOKIE_NAME}=`));
-  if (!match) return false;
-  const [expires, signature] = match.split("=")[1].split(".");
-  if (!expires || !signature) return false;
-  if (sign(expires) !== signature) return false;
-  return Date.now() <= Number(expires);
+  if (!match) return null;
+  const teile = match.slice(COOKIE_NAME.length + 1).split(".");
+  if (teile.length !== 3) return null;
+  const [expires, n, signature] = teile;
+  const a = Buffer.from(sign(`${expires}.${n}`));
+  const b = Buffer.from(signature || "");
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (Date.now() > Number(expires)) return null;
+  return { name: Buffer.from(n, "base64url").toString("utf8") };
 }
 
 /* ------------------------------------------------------------------ E-Mail */
@@ -158,7 +182,7 @@ function hashen(passwort, salt) {
 const AMPEL_REGELN = {
   rot: [
     { schluessel: "rs90_3",      text: "3 oder mehr Reklamationen/Schäden in 90 Tagen" },
-    { schluessel: "absagen30_1", text: "mindestens 1 Absage in 30 Tagen" },
+    { schluessel: "absagen30_1", text: "mindestens 1 Einzelabsage in 30 Tagen (Ferien zählen nicht)" },
   ],
   gelb: [
     { schluessel: "rs90_1",   text: "1 Reklamation oder Schaden in 90 Tagen" },
@@ -171,7 +195,8 @@ function berechneAmpel(meldungen) {
   const tage = (m) => (jetzt - new Date(m.created_at).getTime()) / 86400000;
 
   const rs90 = meldungen.filter(m => (m.kategorie === "reklamation" || m.kategorie === "schaden") && tage(m) <= 90).length;
-  const absagen30 = meldungen.filter(m => m.kategorie === "absage" && tage(m) <= 30).length;
+  // Ferien-Abwesenheiten (Absage mit Zeitraum) sind kein Warnsignal
+  const absagen30 = meldungen.filter(m => m.kategorie === "absage" && !m.zeitraum_bis && tage(m) <= 30).length;
   const versch90 = meldungen.filter(m => m.kategorie === "verschiebung" && tage(m) <= 90).length;
 
   const zahlen = { rs90, absagen30, versch90 };
@@ -194,6 +219,12 @@ const STANDARD_TEXTE = {
 module.exports = async function handler(req, res) {
   const action = (req.query && req.query.action) || "";
 
+  /* --- Namensliste für die Anmeldemaske (ohne Sitzung) --- */
+  if (action === "namen") {
+    res.status(200).json({ namen: adminNamen() });
+    return;
+  }
+
   /* --- Anmelden (einzige Aktion ohne bestehende Sitzung) --- */
   if (action === "login") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
@@ -208,13 +239,39 @@ module.exports = async function handler(req, res) {
       });
       return;
     }
-    res.setHeader("Set-Cookie", createSessionCookie());
-    res.status(200).json({ ok: true });
+    const name = String((req.body || {}).name || "").trim();
+    if (!adminNamen().includes(name)) {
+      res.status(400).json({ error: "Bitte wählen Sie Ihren Namen aus." });
+      return;
+    }
+    res.setHeader("Set-Cookie", createSessionCookie(name));
+    res.status(200).json({ ok: true, name });
     return;
   }
 
   /* --- Ab hier ist eine gültige Sitzung Pflicht --- */
-  if (!isValidSession(req)) { res.status(401).json({ error: "Nicht angemeldet." }); return; }
+  const sitzung = readSession(req);
+  if (!sitzung) { res.status(401).json({ error: "Nicht angemeldet." }); return; }
+
+  /* --- Wer ist angemeldet --- */
+  if (action === "ich") {
+    res.status(200).json({ name: sitzung.name || null, namen: adminNamen() });
+    return;
+  }
+
+  /* --- Namen wählen/wechseln (z.B. nach Anmeldung über die Kundenmaske) --- */
+  if (action === "name") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const name = String((req.body || {}).name || "").trim();
+    if (!adminNamen().includes(name)) { res.status(400).json({ error: "Unbekannter Name." }); return; }
+    res.setHeader("Set-Cookie", createSessionCookie(name));
+    res.status(200).json({ ok: true, name });
+    return;
+  }
+
+  // Alles Folgende braucht einen Namen - sonst wäre nicht nachvollziehbar, wer was tat.
+  if (!sitzung.name) { res.status(403).json({ error: "Bitte zuerst Ihren Namen wählen.", name_fehlt: true }); return; }
+  const ICH = sitzung.name;
 
   const supabase = getSupabase();
 
@@ -320,7 +377,8 @@ module.exports = async function handler(req, res) {
   /* --- Antworten / Status setzen --- */
   if (action === "reply") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-    const { id, action: aktion, nachricht, bearbeiter } = req.body || {};
+    const { id, action: aktion, nachricht } = req.body || {};
+    const bearbeiter = ICH;
     if (!id || !aktion) { res.status(400).json({ error: "id und action sind erforderlich." }); return; }
 
     const { data: meldung, error: fetchError } = await supabase
@@ -367,7 +425,8 @@ module.exports = async function handler(req, res) {
      landet nicht in admin_note - das ist das Feld, das im Portal sichtbar ist. */
   if (action === "notiz") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-    const { id, text, autor } = req.body || {};
+    const { id, text } = req.body || {};
+    const autor = ICH;
     if (!id || !text || !String(text).trim()) {
       res.status(400).json({ error: "id und text sind erforderlich." });
       return;
@@ -405,14 +464,15 @@ module.exports = async function handler(req, res) {
      Status sieht sie im Portal trotzdem. */
   if (action === "status") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-    const { id, status, bearbeiter } = req.body || {};
+    const { id, status } = req.body || {};
+    const bearbeiter = ICH;
     const erlaubt = ["neu", "abklaerung", "akzeptieren", "ablehnen", "erledigt"];
     if (!id || !erlaubt.includes(status)) {
       res.status(400).json({ error: "id und ein gültiger Status sind erforderlich." });
       return;
     }
     const felder = { status, aktualisiert_am: new Date().toISOString() };
-    if (bearbeiter !== undefined) felder.bearbeiter = bearbeiter || null;
+    felder.bearbeiter = bearbeiter;
 
     /* "In Abklärung" ist der einzige Statuswechsel, der die Kundschaft
        benachrichtigt. Sie soll wissen, dass die Sache gesehen wurde und
@@ -453,10 +513,10 @@ module.exports = async function handler(req, res) {
   /* --- Bearbeitung uebernehmen --- */
   if (action === "uebernehmen") {
     if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-    const { id, bearbeiter } = req.body || {};
+    const { id } = req.body || {};
     if (!id) { res.status(400).json({ error: "id ist erforderlich." }); return; }
     const { error } = await supabase.from("meldungen")
-      .update({ bearbeiter: bearbeiter || null, aktualisiert_am: new Date().toISOString() })
+      .update({ bearbeiter: ICH, aktualisiert_am: new Date().toISOString() })
       .eq("id", id);
     if (error) { res.status(500).json({ error: error.message }); return; }
     res.status(200).json({ ok: true });
@@ -554,5 +614,156 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  /* --- Bestandskunden importieren (ohne Passwort, ohne Mail) ---
+     Legt nur die Konten an. Die Zugangsdaten gehen erst mit der Welle raus -
+     so entsteht das Erstpasswort im Moment des Versands und steht nirgends
+     im Klartext herum. Bestehende Konten werden nie überschrieben. */
+  if (action === "konten-import") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const liste = Array.isArray((req.body || {}).kunden) ? req.body.kunden : [];
+    if (!liste.length) { res.status(400).json({ error: "Keine Kunden übermittelt." }); return; }
+    if (liste.length > 1000) { res.status(400).json({ error: "Höchstens 1000 Kunden pro Import." }); return; }
+
+    const gueltig = [], fehler = [];
+    const gesehen = new Set();
+    liste.forEach((k, i) => {
+      const email = String(k.email || "").trim().toLowerCase();
+      const objekt = String(k.objekt_id || "").trim();
+      const name = String(k.name || "").trim();
+      if (!objekt || !name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        fehler.push({ zeile: i + 1, name, grund: "Objektnummer, Name oder gültige E-Mail fehlt" });
+        return;
+      }
+      if (gesehen.has(email)) { fehler.push({ zeile: i + 1, name, grund: `E-Mail ${email} doppelt in der Liste` }); return; }
+      gesehen.add(email);
+      gueltig.push({ objekt_id: objekt, name, email, adresse: String(k.adresse || "").trim() || null });
+    });
+
+    const { data: vorhanden } = await supabase.from("kundenzugaenge").select("email");
+    const bekannt = new Set((vorhanden || []).map(v => String(v.email).toLowerCase()));
+    const neu = gueltig.filter(k => !bekannt.has(k.email));
+    const uebersprungen = gueltig.length - neu.length;
+
+    if (neu.length) {
+      const { error } = await supabase.from("kundenzugaenge").insert(
+        neu.map(k => ({ ...k, passwort_gesetzt: false, aktiv: true, fehlversuche: 0 })));
+      if (error) { res.status(500).json({ error: error.message }); return; }
+    }
+    res.status(200).json({ ok: true, angelegt: neu.length, bereits_vorhanden: uebersprungen, fehler });
+    return;
+  }
+
+  /* --- Stand des Rollouts --- */
+  if (action === "welle-status") {
+    const { data, error } = await supabase.from("kundenzugaenge")
+      .select("aktiv, passwort_gesetzt, info_gesendet_am");
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    const aktiv = (data || []).filter(k => k.aktiv);
+    res.status(200).json({
+      total: aktiv.length,
+      gesendet: aktiv.filter(k => k.info_gesendet_am).length,
+      offen: aktiv.filter(k => !k.info_gesendet_am && !k.passwort_gesetzt).length,
+      aktiviert: aktiv.filter(k => k.passwort_gesetzt).length,
+      portal_url: process.env.PORTAL_URL || null,
+    });
+    return;
+  }
+
+  /* --- Zugangsdaten in Wellen versenden ---
+     Pro Aufruf höchstens 100 Konten, damit der Support nach dem Versand
+     nicht überrollt wird und die Funktion im Zeitlimit bleibt. */
+  if (action === "zugang-welle") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const portal = (process.env.PORTAL_URL || "").replace(/\/$/, "");
+    if (!portal) {
+      res.status(400).json({ error: "PORTAL_URL ist bei Vercel nicht gesetzt. Ohne sie würden die Links in den Mails ins Leere führen." });
+      return;
+    }
+    if (!process.env.RESEND_API_KEY) { res.status(500).json({ error: "RESEND_API_KEY ist nicht gesetzt." }); return; }
+    const anzahl = Math.max(1, Math.min(100, Number((req.body || {}).anzahl) || 50));
+
+    const { data: konten, error } = await supabase.from("kundenzugaenge")
+      .select("id, name, email")
+      .eq("aktiv", true).eq("passwort_gesetzt", false).is("info_gesendet_am", null)
+      .order("erstellt_am", { ascending: true })
+      .limit(anzahl);
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    if (!konten.length) { res.status(200).json({ ok: true, gesendet: 0, hinweis: "Alle Kunden haben ihre Zugangsdaten bereits erhalten." }); return; }
+
+    const mails = [], updates = [];
+    for (const k of konten) {
+      const pw = erstpasswortErzeugen();
+      const salt = crypto.randomBytes(16).toString("hex");
+      updates.push({ id: k.id, passwort_salt: salt, passwort_hash: hashen(pw, salt) });
+      mails.push({
+        from: ABSENDER, to: k.email,
+        subject: "Ihr persönlicher Zugang zum Clean Service Kundenportal",
+        html: willkommensMail(k.name, k.email, pw, portal),
+      });
+    }
+
+    // Erst die Passwörter speichern, dann senden - sonst käme ein Passwort an,
+    // das nicht gilt.
+    for (const u of updates) {
+      await supabase.from("kundenzugaenge")
+        .update({ passwort_salt: u.passwort_salt, passwort_hash: u.passwort_hash, fehlversuche: 0, gesperrt_bis: null })
+        .eq("id", u.id);
+    }
+
+    try {
+      await new Resend(process.env.RESEND_API_KEY).batch.send(mails);
+    } catch (err) {
+      res.status(500).json({ error: `Versand fehlgeschlagen: ${err.message}. Es wurde nichts als gesendet markiert.` });
+      return;
+    }
+
+    await supabase.from("kundenzugaenge")
+      .update({ info_gesendet_am: new Date().toISOString() })
+      .in("id", konten.map(k => k.id));
+
+    res.status(200).json({ ok: true, gesendet: konten.length, von: ICH });
+    return;
+  }
+
   res.status(400).json({ error: `Unbekannte action: "${action}"` });
 };
+
+/* ------------------------------------------------------- Willkommensmail */
+function willkommensMail(name, email, passwort, portal) {
+  const e = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const leiter = process.env.ABTEILUNGSLEITER || "Cristian Gambale";
+  return `
+  <div style="font-family:Verdana,Geneva,sans-serif; color:#333; max-width:580px; font-size:14px; line-height:1.7;">
+    <p>Guten Tag ${e(name)}</p>
+    <p>Ab sofort erledigen Sie alle Anliegen rund um Ihre Reinigung bequem online. Im neuen Clean Service
+    Kundenportal sagen Sie Termine ab, melden Ferienabwesenheiten, verschieben eine Reinigung auf einen
+    Ersatztermin mit unserem Springerteam, erfassen Reklamationen und Schäden und fragen Zusatzarbeiten wie
+    eine Fensterreinigung an. Das dauert rund zwei Minuten, und Sie erhalten sofort eine Bestätigung.</p>
+
+    <div style="margin:24px 0; padding:18px 20px; background:#F2F9F9; border-left:3px solid #2BB6B7;">
+      <div style="font-size:12px; color:#767676;">Portal</div>
+      <div style="font-weight:bold; margin-bottom:10px;"><a href="${e(portal)}" style="color:#12797A;">${e(portal.replace(/^https?:\/\//, ""))}</a></div>
+      <div style="font-size:12px; color:#767676;">Anmelde-ID</div>
+      <div style="font-weight:bold; margin-bottom:10px;">${e(email)}</div>
+      <div style="font-size:12px; color:#767676;">Ihr Erstpasswort</div>
+      <div style="font-weight:bold; font-size:18px; letter-spacing:2px; font-family:Consolas,monospace;">${e(passwort)}</div>
+    </div>
+
+    <p style="margin:24px 0;">
+      <a href="${e(portal)}" style="background:#2BB6B7; color:#fff; text-decoration:none;
+         padding:13px 24px; border-radius:8px; font-weight:bold; display:inline-block;">Jetzt anmelden</a>
+    </p>
+
+    <p>Beim ersten Anmelden legen Sie ein eigenes Passwort fest, danach bleiben Sie auf Ihrem Gerät angemeldet.
+    Absagen, Terminverschiebungen, Reklamationen und Schadenmeldungen nehmen wir künftig ausschliesslich über
+    das Kundenportal entgegen. So gelangt Ihr Anliegen ohne Umweg an die richtige Stelle, und Sie sehen jederzeit,
+    wie weit die Bearbeitung ist.</p>
+
+    <p>Vielen Dank für Ihr Vertrauen. Bei Fragen erreichen Sie uns unter 0844 355 355.</p>
+
+    <p>Freundliche Grüsse<br><br>${e(leiter)}<br>Abteilungsleiter Putzfrauenservice<br>Clean Service Scaramuzzo AG</p>
+    <p style="color:#767676; font-size:12px; margin-top:20px;">
+      Clean Service Scaramuzzo AG · Industriestrasse 5 · 8307 Effretikon · 0844 355 355</p>
+  </div>`;
+}

@@ -9,7 +9,7 @@
     },
     "api/admin.js": {
       "memory": 512,
-      "maxDuration": 30
+      "maxDuration": 60
     },
     "api/zugang.js": {
       "memory": 256,

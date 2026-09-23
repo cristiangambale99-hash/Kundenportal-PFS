@@ -479,7 +479,7 @@ tr:hover td{background:var(--line-2);}
       <div class="zn-row" style="align-items:end;">
         <div><label for="import-datei">Kundenliste (CSV)</label><input type="file" id="import-datei" accept=".csv,text/csv" onchange="importLesen(this)"></div>
         <button class="btn btn-hell" id="import-knopf" onclick="importStarten()" disabled>Import starten</button>
-        <div><label for="welle-anzahl">Kunden pro Welle</label><input type="text" id="welle-anzahl" value="50" inputmode="numeric"></div>
+        <div><label for="welle-anzahl">Kunden pro Welle</label><input type="text" id="welle-anzahl" value="50" inputmode="numeric" title="höchstens 50 pro Welle"></div>
         <button class="btn btn-primary" onclick="welleSenden()">Nächste Welle senden</button>
       </div>
       <div id="rollout-result" class="zn-result" style="display:none;"></div>
@@ -1214,7 +1214,7 @@ async function welleSenden(){
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d.error || 'Versand fehlgeschlagen');
-    out.textContent = d.hinweis || `${d.gesendet} Zugangsmails verschickt.`;
+    out.textContent = d.hinweis || (`${d.gesendet} Zugangsmails verschickt.` + ((d.fehler || []).length ? ` ${d.fehler.length} fehlgeschlagen (kommen in der nächsten Welle wieder dran): ` + d.fehler.map(f => f.email).join(', ') : ''));
     welleStatus(); loadZugaenge();
   }catch(e){ out.className = 'zn-result err'; out.textContent = 'Fehler: ' + e.message; }
 }

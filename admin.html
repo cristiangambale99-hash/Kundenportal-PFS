@@ -345,8 +345,12 @@ tr:hover td{background:var(--line-2);}
   <div class="anmeldung-box">
     <h1>Verwaltung</h1>
     <p>Kundenportal Putzfrauenservice</p>
-    <label for="login-password">Passwort</label>
-    <input type="password" id="login-password" onkeydown="if(event.key==='Enter')login()">
+    <label for="login-name">Wer arbeitet?</label>
+    <select id="login-name"><option value="">Bitte Namen wählen …</option></select>
+    <div id="login-pw-wrap">
+      <label for="login-password" style="margin-top:var(--s4);">Passwort</label>
+      <input type="password" id="login-password" onkeydown="if(event.key==='Enter')login()">
+    </div>
     <button class="btn btn-primary btn-block" style="margin-top:var(--s4);" onclick="login()">Anmelden</button>
     <div id="login-error" class="meldung err" role="alert"></div>
   </div>
@@ -357,7 +361,7 @@ tr:hover td{background:var(--line-2);}
 
   <header class="kopf">
     <div class="kopf-in">
-      <div class="kopf-titel">Verwaltung<span>Kundenportal Putzfrauenservice</span></div>
+      <div class="kopf-titel">Verwaltung<span>Kundenportal Putzfrauenservice · angemeldet als <b id="ich-name"></b> · <a href="#" onclick="nameWechseln();return false;" style="color:inherit;">wechseln</a></span></div>
       <div class="bereiche">
         <button id="tab-pendenzen" class="bereich active" onclick="showTab('pendenzen')">Pendenzen</button>
         <button id="tab-meldungen" class="bereich" onclick="showTab('meldungen')">Kundenübersicht</button>
@@ -410,7 +414,7 @@ tr:hover td{background:var(--line-2);}
             </ul>
             <div class="oder">oder</div>
             <ul>
-              <li>mindestens 1 Absage in 30 Tagen</li>
+              <li>mindestens 1 Einzelabsage in 30 Tagen (Ferien zählen nicht)</li>
             </ul>
           </div>
 
@@ -435,7 +439,7 @@ tr:hover td{background:var(--line-2);}
 
         <div class="grenze">
           <b>Was die Ampel nicht kann</b>
-          Sie sieht nur Meldungen aus dem Portal. Wer weiterhin per E-Mail oder telefonisch absagt, bleibt grün — unabhängig davon, wie oft. Ausserdem ist die Schwelle bei Absagen derzeit sehr tief angesetzt: Bereits eine einzelne Absage innert 30 Tagen färbt rot, obwohl Ferienabwesenheiten gemäss AGB bis zu vier Wochen pro Jahr vorgesehen sind. Die Ampel ist damit eher ein Hinweis, wo sich ein Gespräch lohnt, als eine Aussage über eine drohende Kündigung.
+          Sie sieht nur Meldungen aus dem Portal. Wer weiterhin per E-Mail oder telefonisch absagt, bleibt grün — unabhängig davon, wie oft. Ferienabwesenheiten, die über das Portal als Zeitraum gemeldet werden, zählen nicht als Absage. Die Ampel ist damit eher ein Hinweis, wo sich ein Gespräch lohnt, als eine Aussage über eine drohende Kündigung.
         </div>
       </div>
     </div>
@@ -462,6 +466,22 @@ tr:hover td{background:var(--line-2);}
     <div class="raum-kopf">
       <h1>Kundenkonten</h1>
       <p>Zugänge zum Portal. Für Bestandskunden ohne neuen Vertrag legen Sie hier ein Konto an; das Erstpasswort geben Sie der Kundschaft weiter.</p>
+    </div>
+
+    <div class="zugang-neu" style="margin-bottom:var(--s5);">
+      <h3 style="margin:0 0 var(--s2);">Rollout Bestandskunden</h3>
+      <p style="font-size:13px; color:var(--grey); margin:0 0 var(--s4);">
+        1. Kundenliste als CSV importieren (Spalten: Objektnummer; Name; E-Mail; Adresse — aus Excel „Speichern unter → CSV“).
+        Bestehende Konten werden nie überschrieben.<br>
+        2. Zugangsdaten in Wellen versenden. Jede Mail enthält ein persönliches Erstpasswort.</p>
+      <div id="welle-status" style="font-size:13.5px; margin-bottom:var(--s4);">Lade Stand …</div>
+      <div class="zn-row" style="align-items:end;">
+        <div><label for="import-datei">Kundenliste (CSV)</label><input type="file" id="import-datei" accept=".csv,text/csv" onchange="importLesen(this)"></div>
+        <button class="btn btn-hell" id="import-knopf" onclick="importStarten()" disabled>Import starten</button>
+        <div><label for="welle-anzahl">Kunden pro Welle</label><input type="text" id="welle-anzahl" value="50" inputmode="numeric"></div>
+        <button class="btn btn-primary" onclick="welleSenden()">Nächste Welle senden</button>
+      </div>
+      <div id="rollout-result" class="zn-result" style="display:none;"></div>
     </div>
 
     <div class="zugang-neu">
@@ -515,40 +535,86 @@ function datumZeit(iso){
 }
 
 /* ------------------------------------------------------------- Anmeldung */
-async function sitzungPruefen(){
+let ICH = null;
+
+async function namenLaden(ausgewaehlt){
   try{
-    const r = await fetch('/api/admin?action=stats');
+    const r = await fetch('/api/admin?action=namen');
+    const d = await r.json();
+    const sel = document.getElementById('login-name');
+    sel.innerHTML = '<option value="">Bitte Namen wählen …</option>' +
+      (d.namen || []).map(n => `<option ${n === ausgewaehlt ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  }catch(e){}
+}
+
+async function sitzungPruefen(){
+  await namenLaden();
+  try{
+    const r = await fetch('/api/admin?action=ich');
     if(!r.ok) throw new Error('keine Sitzung');
+    const d = await r.json();
+    if(!d.name){ nurNameWaehlen(); return; }
+    ICH = d.name;
     starten();
   }catch(e){
+    document.getElementById('login-pw-wrap').style.display = 'block';
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
   }
 }
 document.addEventListener('DOMContentLoaded', sitzungPruefen);
 
+/* Angemeldet (z.B. über die Kundenmaske), aber noch ohne Namen */
+function nurNameWaehlen(){
+  document.getElementById('login-pw-wrap').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+async function nameWechseln(){
+  await namenLaden(ICH);
+  nurNameWaehlen();
+}
+
 function starten(){
+  document.getElementById('ich-name').textContent = ICH || '';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
   showTab('pendenzen');
 }
 
 async function login(){
+  const name = document.getElementById('login-name').value;
+  const nurName = document.getElementById('login-pw-wrap').style.display === 'none';
   const password = document.getElementById('login-password').value.trim();
   const err = document.getElementById('login-error');
   err.style.display = 'none';
   try{
-    const resp = await fetch('/api/admin?action=login', {
+    if(!name) throw new Error('Bitte wählen Sie Ihren Namen.');
+    const resp = await fetch('/api/admin?action=' + (nurName ? 'name' : 'login'), {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ password })
+      body: JSON.stringify(nurName ? { name } : { password, name })
     });
     const data = await resp.json();
     if(!resp.ok) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
+    ICH = data.name;
     starten();
   }catch(e){
     err.textContent = e.message;
     err.style.display = 'block';
   }
+}
+
+/* Zusatzangaben, die das Portal automatisch ermittelt hat */
+const VERR = { '50':'Verrechnung 50 % (AGB)', '100':'Verrechnung 100 % (AGB)', pruefen:'Verrechnung prüfen (kurzfristig)' };
+const ADUNA = { ausstehend:'Aduna: ausstehend', uebertragen:'Aduna: übertragen', fehler:'Aduna: Fehler' };
+function infoZeile(m){
+  const t = [];
+  if(m.reklamation_wunsch === 'nachreinigung') t.push('<span class="pill pill-abklaerung">Nachreinigung Springerteam · Zeit der Raumpflegerin abziehen</span>');
+  if(m.reklamation_wunsch === 'gespraech') t.push('<span class="pill pill-neu">Gespräch mit Abteilungsleiter gewünscht</span>');
+  if(VERR[m.verrechnung]) t.push(`<span class="pill pill-neu">${VERR[m.verrechnung]}</span>`);
+  if(ADUNA[m.aduna_status]) t.push(`<span class="pill">${ADUNA[m.aduna_status]}${m.aduna_fehler ? ' – ' + esc(m.aduna_fehler) : ''}</span>`);
+  return t.length ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin:10px 0;">${t.join('')}</div>` : '';
 }
 
 /* ------------------------------------------------------------- Bereiche */
@@ -649,6 +715,7 @@ function zeichnePendenz(m){
 
     <div class="pend-inhalt">
       <div class="pend-text">${esc(m.details) || '—'}</div>
+      ${infoZeile(m)}
 
       <div class="statusreihe">
         ${['neu','abklaerung','akzeptieren','ablehnen','erledigt'].map(s => `
@@ -677,10 +744,6 @@ function zeichnePendenz(m){
 
           <label for="notiz-${m.id}">Neue Notiz</label>
           <textarea id="notiz-${m.id}" placeholder="z.B. Rückruf bei Frau Bösiger, wartet auf Rückmeldung der Raumpflegerin"></textarea>
-          <div style="margin-top:var(--s3);">
-            <label for="autor-${m.id}">Ihr Name</label>
-            <input type="text" id="autor-${m.id}" value="${esc(m.bearbeiter || '')}" placeholder="z.B. Fiorella">
-          </div>
           <div class="knopfreihe">
             <button class="btn btn-dunkel btn-klein" onclick="notizSpeichern(${m.id})">Notiz speichern</button>
             <button class="btn btn-hell btn-klein" onclick="uebernehmen(${m.id})">Bearbeitung übernehmen</button>
@@ -733,16 +796,14 @@ function pendMeldung(id, text, art){
 /* --- Interne Notiz: geht nie an die Kundschaft --- */
 async function notizSpeichern(id){
   const feld = document.getElementById('notiz-' + id);
-  const autorFeld = document.getElementById('autor-' + id);
   const text = feld ? feld.value.trim() : '';
-  const autor = autorFeld ? autorFeld.value.trim() : '';
 
   if(!text){ pendMeldung(id, 'Bitte zuerst eine Notiz eingeben.', 'err'); return; }
 
   try{
     const r = await fetch('/api/admin?action=notiz', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ id, text, autor })
+      body: JSON.stringify({ id, text })
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d.error || 'Speichern fehlgeschlagen');
@@ -754,12 +815,10 @@ async function notizSpeichern(id){
 
 /* --- Status ohne Mail: Zwischenstände festhalten --- */
 async function statusSetzen(id, status){
-  const autorFeld = document.getElementById('autor-' + id);
-  const bearbeiter = autorFeld ? autorFeld.value.trim() : '';
   try{
     const r = await fetch('/api/admin?action=status', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ id, status, bearbeiter: bearbeiter || undefined })
+      body: JSON.stringify({ id, status })
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d.error || 'Fehlgeschlagen');
@@ -779,13 +838,10 @@ async function statusSetzen(id, status){
 }
 
 async function uebernehmen(id){
-  const autorFeld = document.getElementById('autor-' + id);
-  const bearbeiter = autorFeld ? autorFeld.value.trim() : '';
-  if(!bearbeiter){ pendMeldung(id, 'Bitte tragen Sie zuerst Ihren Namen ein.', 'err'); return; }
   try{
     const r = await fetch('/api/admin?action=uebernehmen', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ id, bearbeiter })
+      body: JSON.stringify({ id })
     });
     if(!r.ok) throw new Error('Fehlgeschlagen');
     await ladePendenzen();
@@ -797,9 +853,7 @@ async function uebernehmen(id){
 /* --- Antwort an die Kundschaft: löst eine E-Mail aus --- */
 async function pendAntwort(id, aktion){
   const feld = document.getElementById('antw-' + id);
-  const autorFeld = document.getElementById('autor-' + id);
   const nachricht = feld ? feld.value.trim() : '';
-  const bearbeiter = autorFeld ? autorFeld.value.trim() : '';
 
   if(aktion === 'nachricht' && !nachricht){
     pendMeldung(id, 'Bitte zuerst eine Nachricht eingeben.', 'err');
@@ -809,7 +863,7 @@ async function pendAntwort(id, aktion){
   try{
     const r = await fetch('/api/admin?action=reply', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ id, action: aktion, nachricht, bearbeiter: bearbeiter || undefined })
+      body: JSON.stringify({ id, action: aktion, nachricht })
     });
     const d = await r.json();
     if(!r.ok) throw new Error(d.error || 'Fehlgeschlagen');
@@ -866,6 +920,7 @@ function erklaerungUmschalten(){
   box.querySelector('.erkl-kopf').setAttribute('aria-expanded', auf ? 'true' : 'false');
 }
 
+let kundenDaten = [];
 async function loadCustomers(){
   const resp = await fetch('/api/admin?action=customers');
   if(!resp.ok) return;
@@ -876,10 +931,10 @@ async function loadCustomers(){
     <tr class="kunde-row" onclick="openDetail(${i})">
       <td><span class="dot ${k.ampel}"></span></td>
       <td>
-        ${k.name}${k.offen > 0 ? ` <span class="badge-offen">${k.offen} offen</span>` : ''}
+        ${esc(k.name)}${k.offen > 0 ? ` <span class="badge-offen">${k.offen} offen</span>` : ''}
         ${k.ampel_grund ? `<div class="ampel-grund">${k.ampel_grund}</div>` : ''}
       </td>
-      <td>${k.objekt_id}</td>
+      <td>${esc(k.objekt_id)}</td>
       <td class="num-cell">${k.zaehler.verschiebung || 0}</td>
       <td class="num-cell">${k.zaehler.absage || 0}</td>
       <td class="num-cell">${k.zaehler.reklamation || 0}</td>
@@ -895,7 +950,7 @@ function openDetail(i){
   const k = kundenDaten[i];
   document.getElementById('detail-name').textContent = k.name;
   document.getElementById('detail-meta').innerHTML =
-    `Objekt-/Kundennummer ${k.objekt_id} · ${k.email || 'keine E-Mail'} · ${k.total} Meldungen insgesamt`;
+    `Objekt-/Kundennummer ${esc(k.objekt_id)} · ${esc(k.email) || 'keine E-Mail'} · ${k.total} Meldungen insgesamt`;
 
   document.getElementById('detail-history').innerHTML = k.meldungen.map(m => renderHistoryItem(m)).join('');
   document.getElementById('detail-overlay').style.display = 'block';
@@ -929,12 +984,12 @@ function renderHistoryItem(m){
 
   return `<div class="history-item">
     <div class="top-row">
-      <span class="kat">${KAT_LABEL[m.kategorie] || m.kategorie}</span>
+      <span class="kat">${KAT[m.kategorie] || m.kategorie}</span>
       <span class="badge ${m.status || 'neu'}">${m.status || 'neu'}</span>
     </div>
     <div class="datum">${datum}${m.zuordnung_offen ? ' <span class="badge-zuordnung">Zuordnung offen</span>' : ''}</div>
-    ${m.adresse ? `<div class="datum">${m.adresse}</div>` : ''}
-    <div class="details">${(m.details || '').slice(0, 300)}</div>
+    ${m.adresse ? `<div class="datum">${esc(m.adresse)}</div>` : ''}
+    <div class="details">${esc((m.details || '').slice(0, 300))}</div>
     ${actions}
   </div>`;
 }
@@ -968,7 +1023,100 @@ async function kontoAnlegen(){
   }
 }
 
+/* ---------------------------------------------------------- Rollout */
+let IMPORT = [];
+
+/* CSV aus Excel: Trennzeichen ; oder , - Kopfzeile wird erkannt und übersprungen */
+function csvZeilen(text){
+  const zeilen = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(z => z.trim());
+  if(!zeilen.length) return [];
+  const trenner = (zeilen[0].split(';').length >= zeilen[0].split(',').length) ? ';' : ',';
+  const teile = z => {
+    const out = []; let cur = '', q = false;
+    for(let i = 0; i < z.length; i++){
+      const c = z[i];
+      if(c === '"'){ if(q && z[i+1] === '"'){ cur += '"'; i++; } else q = !q; }
+      else if(c === trenner && !q){ out.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    out.push(cur.trim()); return out;
+  };
+  let daten = zeilen.map(teile);
+  if(!/@/.test(daten[0].join(' '))) daten = daten.slice(1);   // Kopfzeile
+  return daten.map(t => {
+    // E-Mail-Spalte suchen, falls die Reihenfolge abweicht
+    const ei = t.findIndex(x => /@/.test(x));
+    return ei === 2 || ei === -1
+      ? { objekt_id: t[0], name: t[1], email: t[2], adresse: t[3] }
+      : { objekt_id: t[0], name: t[1], email: t[ei], adresse: t.filter((_, i) => i > 1 && i !== ei).join(', ') };
+  });
+}
+
+function importLesen(feld){
+  const datei = feld.files && feld.files[0];
+  const out = document.getElementById('rollout-result');
+  if(!datei) return;
+  const leser = new FileReader();
+  leser.onload = () => {
+    let text = leser.result;
+    // Excel speichert CSV oft als Windows-1252: Umlaute sind dann kaputt
+    if(/\uFFFD/.test(text)){ const l2 = new FileReader(); l2.onload = () => fertig(l2.result); l2.readAsText(datei, 'windows-1252'); return; }
+    fertig(text);
+  };
+  const fertig = text => {
+    IMPORT = csvZeilen(text);
+    out.className = 'zn-result'; out.style.display = 'block';
+    out.innerHTML = `${IMPORT.length} Kunden erkannt. Beispiel: <code>${esc(JSON.stringify(IMPORT[0] || {}))}</code><br>Stimmt die Zuordnung? Dann „Import starten“.`;
+    document.getElementById('import-knopf').disabled = !IMPORT.length;
+  };
+  leser.readAsText(datei, 'utf-8');
+}
+
+async function importStarten(){
+  const out = document.getElementById('rollout-result');
+  out.className = 'zn-result'; out.textContent = 'Importiere …';
+  try{
+    const r = await fetch('/api/admin?action=konten-import', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ kunden: IMPORT })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Import fehlgeschlagen');
+    out.innerHTML = `<b>${d.angelegt}</b> Konten angelegt, ${d.bereits_vorhanden} bereits vorhanden.` +
+      (d.fehler.length ? `<br>${d.fehler.length} Zeilen übersprungen:<br>` +
+        d.fehler.slice(0, 30).map(f => `Zeile ${f.zeile} (${esc(f.name) || '—'}): ${esc(f.grund)}`).join('<br>') : '');
+    document.getElementById('import-knopf').disabled = true;
+    welleStatus(); loadZugaenge();
+  }catch(e){ out.className = 'zn-result err'; out.textContent = 'Fehler: ' + e.message; }
+}
+
+async function welleStatus(){
+  const box = document.getElementById('welle-status');
+  try{
+    const r = await fetch('/api/admin?action=welle-status');
+    const d = await r.json();
+    box.innerHTML = `<b>${d.total}</b> Konten · <b>${d.gesendet}</b> Zugangsdaten verschickt · <b>${d.offen}</b> noch offen · <b>${d.aktiviert}</b> haben ihr eigenes Passwort gesetzt` +
+      (d.portal_url ? '' : '<br><span style="color:var(--stop-fg);">PORTAL_URL ist nicht gesetzt – Versand gesperrt.</span>');
+  }catch(e){ box.textContent = ''; }
+}
+
+async function welleSenden(){
+  const anzahl = parseInt(document.getElementById('welle-anzahl').value, 10) || 50;
+  if(!confirm(`Zugangsdaten an die nächsten ${anzahl} Kunden per E-Mail senden?`)) return;
+  const out = document.getElementById('rollout-result');
+  out.className = 'zn-result'; out.style.display = 'block'; out.textContent = 'Sende …';
+  try{
+    const r = await fetch('/api/admin?action=zugang-welle', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ anzahl })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Versand fehlgeschlagen');
+    out.textContent = d.hinweis || `${d.gesendet} Zugangsmails verschickt.`;
+    welleStatus(); loadZugaenge();
+  }catch(e){ out.className = 'zn-result err'; out.textContent = 'Fehler: ' + e.message; }
+}
+
 async function loadZugaenge(){
+  welleStatus();
   const resp = await fetch('/api/admin?action=zugaenge');
   if(!resp.ok) return;
   const { zugaenge } = await resp.json();
@@ -978,12 +1126,12 @@ async function loadZugaenge(){
       : '<span style="color:#b8791f;">Erstpasswort offen</span>';
     return `
     <tr style="${z.aktiv ? '' : 'opacity:.45;'}">
-      <td>${z.name}<br><span style="color:var(--grey); font-size:11.5px;">${z.email}</span></td>
-      <td>${z.objekt_id}</td>
+      <td>${esc(z.name)}<br><span style="color:var(--grey); font-size:11.5px;">${esc(z.email)}</span></td>
+      <td>${esc(z.objekt_id)}</td>
       <td>${status}</td>
       <td>${z.letzter_login ? new Date(z.letzter_login).toLocaleDateString('de-CH') : '<span style="color:var(--grey);">noch nie</span>'}</td>
       <td>${z.aktiv ? `
-        <button class="tab" onclick="passwortZuruecksetzen(${z.id}, '${z.name.replace(/'/g, "\\'")}')">Passwort zurücksetzen</button>
+        <button class="tab" onclick="passwortZuruecksetzen(${z.id}, this.dataset.name)" data-name="${esc(z.name)}">Passwort zurücksetzen</button>
         <button class="tab" onclick="kontoDeaktivieren(${z.id})">Deaktivieren</button>` : 'inaktiv'}</td>
     </tr>`;
   }).join('');

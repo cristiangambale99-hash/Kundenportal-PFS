@@ -428,6 +428,7 @@
     border-left:3px solid var(--teal); border-radius:0 8px 8px 0;
     font-size:13px; line-height:1.6; color:var(--text-teal-dark);
   }
+  .kat-hinweis.warn{background:#FFF4E5; border-left-color:#D98A1E; color:#7A4A0B;}
   .foto-liste{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;}
   .foto-kachel{
     position:relative; width:84px; height:84px; border-radius:9px;
@@ -1335,41 +1336,44 @@
 
       <div class="feldgruppe">
         <div class="field-group" data-cat="verschiebung">
-          <label for="v-alt" data-i18n="v.alt">Betroffener Termin</label>
-          <input type="date" id="v-alt">
           <div class="row">
-            <div><label for="v-neu" data-i18n="v.neu">Gewünschter neuer Termin</label>
+            <div><label for="v-alt" data-i18n="v.alt">Betroffener Termin</label>
+          <input type="date" id="v-alt"></div>
+            <div><label for="v-neu" data-i18n="v.neu">Gewünschter Ersatztermin</label>
           <input type="date" id="v-neu"></div>
-            <div><label for="v-zeit" data-i18n="v.zeit">Uhrzeit</label>
-          <input type="time" id="v-zeit"></div>
           </div>
-          <div class="kat-hinweis" data-i18n="v.hinweis">Der neue Termin wird durch unser Springerteam ausgeführt. Die Reinigung findet zwischen 08.00 und 17.00 Uhr statt — die genaue Uhrzeit teilen wir Ihnen am Vortag mit.</div>
+          <div class="kat-hinweis" data-i18n="v.hinweis">Der Ersatztermin wird durch unser Springerteam ausgeführt, zwischen 08.00 und 17.00 Uhr. Die genaue Uhrzeit teilen wir Ihnen am Vortag mit. Eine Verschiebung mit Ihrer festen Raumpflegerin ist nicht möglich.</div>
           <label for="v-kommentar" data-i18n="v.kommentar">Kommentar <span class="opt" data-i18n="opt">(optional)</span></label>
           <textarea id="v-kommentar" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
         </div>
         <div class="field-group" data-cat="absage">
-          <label for="a-datum" data-i18n="v.alt">Betroffener Termin</label>
-          <input type="date" id="a-datum">
-          <label data-i18n="a.weitere">Sollen weitere Termine ebenfalls entfallen?</label>
+          <label data-i18n="a.art">Was möchten Sie absagen?</label>
           <div class="cat-grid">
-            <label><input type="radio" name="a-weitere" onclick="toggleAbsageFolge(true)"> <span data-i18n="yes">Ja</span></label>
-            <label><input type="radio" name="a-weitere" checked onclick="toggleAbsageFolge(false)"> <span data-i18n="no">Nein</span></label>
+            <label><input type="radio" name="a-art" value="einzeln" checked onchange="absageArt()"> <span data-i18n="a.einzeln">Einen Termin</span></label>
+            <label><input type="radio" name="a-art" value="zeitraum" onchange="absageArt()"> <span data-i18n="a.zeitraum">Abwesenheit (z. B. Ferien)</span></label>
           </div>
-          <div id="a-bis-wrap">
-            <label data-i18n="a.weitereTermine">Welche weiteren Termine sollen entfallen? <span class="opt" data-i18n="a.upTo4">(bis zu 4)</span></label>
-            <div class="row"><div><input type="date" id="a-weiterer-1" placeholder="Termin 2"></div><div><input type="date" id="a-weiterer-2" placeholder="Termin 3"></div></div>
-            <div class="row" style="margin-top:10px;"><div><input type="date" id="a-weiterer-3" placeholder="Termin 4"></div><div><input type="date" id="a-weiterer-4" placeholder="Termin 5"></div></div>
+          <div class="row">
+            <div><label for="a-datum" id="a-datum-label" data-i18n="v.alt">Betroffener Termin</label>
+          <input type="date" id="a-datum" onchange="absageFristHinweis()"></div>
+            <div id="a-bis-wrap" style="display:none;"><label for="a-bis" data-i18n="a.bis">Bis und mit</label>
+          <input type="date" id="a-bis"></div>
           </div>
-          <div id="a-bemerkung-wrap">
-            <label for="a-bemerkung" data-i18n="a.bemerkung">Bemerkung <span class="opt" data-i18n="opt">(optional)</span></label>
-            <textarea id="a-bemerkung" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
-          </div>
+          <div class="kat-hinweis" id="a-agb" data-i18n="a.agb">Absagen sind bis 24 Stunden vor dem Einsatz kostenlos. Gemäss unseren AGB werden spätere Absagen zu 50 %, Absagen weniger als 4 Stunden vorher zu 100 % verrechnet.</div>
+          <div class="kat-hinweis warn" id="a-frist" style="display:none;"></div>
+          <label for="a-bemerkung" data-i18n="a.bemerkung">Bemerkung <span class="opt" data-i18n="opt">(optional)</span></label>
+          <textarea id="a-bemerkung" placeholder="Ergänzende Angaben …" data-i18n-ph="misc.details.ph"></textarea>
         </div>
         <div class="field-group" data-cat="reklamation">
+          <div class="kat-hinweis" data-i18n="r.frist">Reklamationen nehmen wir innert 24 Stunden nach der Reinigung entgegen.</div>
           <label for="r-datum" data-i18n="rs.datum">Datum der betroffenen Reinigung</label>
           <input type="date" id="r-datum">
           <label for="r-text" data-i18n="rs.what">Was ist vorgefallen?</label>
           <textarea id="r-text" placeholder="Kurz beschreiben, worum es geht …" data-i18n-ph="rs.what.ph"></textarea>
+          <label data-i18n="r.wunsch">Wie sollen wir vorgehen?</label>
+          <div class="cat-grid">
+            <label><input type="radio" name="r-wunsch" value="nachreinigung"> <span data-i18n="r.nachreinigung">Nachreinigung durch das Springerteam</span></label>
+            <label><input type="radio" name="r-wunsch" value="gespraech"> <span data-i18n="r.gespraech">Gespräch mit dem Abteilungsleiter</span></label>
+          </div>
           <label for="r-foto" data-i18n="rs.photos">Fotos <span class="opt" data-i18n="rs.photos.hint">(bis zu 8)</span></label>
           <input type="file" id="r-foto" accept="image/*" multiple onchange="fotosGewaehlt(this,'r')">
           <div class="foto-liste" id="r-foto-liste"></div>
@@ -1396,7 +1400,7 @@
           <input type="date" id="z-datum">
           <label for="z-details" data-i18n="z.details">Details <span class="opt" data-i18n="opt">(optional)</span></label>
           <textarea id="z-details" placeholder="z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …" data-i18n-ph="z.details.ph"></textarea>
-          <div class="kat-hinweis" data-i18n="z.hinweis">Wir versuchen, Ihren Wunschtermin zu halten, und melden uns bezüglich des definitiven Termins.</div>
+          <div class="kat-hinweis" data-i18n="z.hinweis">Ihre Anfrage geht direkt an unsere Spezialreinigung. Sie bereitet Ihre Offerte vor und meldet sich bei Ihnen.</div>
         </div>
       </div>
 
@@ -1858,6 +1862,11 @@ rechtliche Schritte vor.</p>
 <script>
 const translations = {
   de: {
+    'a.art': 'Was möchten Sie absagen?', 'a.einzeln': 'Einen Termin', 'a.zeitraum': 'Abwesenheit (z. B. Ferien)',
+    'a.bis': 'Bis und mit', 'a.von': 'Erster Tag der Abwesenheit',
+    'a.agb': 'Absagen sind bis 24 Stunden vor dem Einsatz kostenlos. Gemäss unseren AGB werden spätere Absagen zu 50 %, Absagen weniger als 4 Stunden vorher zu 100 % verrechnet.',
+    'r.frist': 'Reklamationen nehmen wir innert 24 Stunden nach der Reinigung entgegen.',
+    'r.wunsch': 'Wie sollen wir vorgehen?', 'r.nachreinigung': 'Nachreinigung durch das Springerteam', 'r.gespraech': 'Gespräch mit dem Abteilungsleiter',
     'ueb.objekt.marke': 'Ihr Reinigungsobjekt', 'ueb.objekt.nr': 'Kundennummer', 'ueb.objekt.mail': 'E-Mail',
     'ueb.team.h': 'Ihr Ansprechpartner', 'ueb.team.sub': 'Bei Fragen ist unser Team gerne für Sie da.',
     'rolle.sach': 'Sachbearbeiterin', 'rolle.team': 'Teamleiterin', 'rolle.leitung': 'Abteilungsleitung',
@@ -1875,8 +1884,8 @@ const translations = {
     'konto.person': 'Persönliche Angaben', 'konto.objekt': 'Objekt', 'konto.sicherheit': 'Sicherheit',
     'step.angaben': 'Angaben', 'step.pruefen': 'Prüfen',
     'form.fuss': 'Ihre Meldung geht direkt an das zuständige Team.',
-    'sub.versch': 'Wählen Sie den betroffenen Termin und Ihr Wunschdatum.',
-    'sub.absage': 'Der betroffene Termin entfällt ersatzlos.',
+    'sub.versch': 'Ihr Ersatztermin wird automatisch mit unserem Springerteam eingeplant.',
+    'sub.absage': 'Ein einzelner Termin oder eine längere Abwesenheit – beides entfällt ersatzlos.',
     'sub.rekl': 'Was ist bei Ihrer Reinigung nicht wie erwartet gelaufen?',
     'sub.schaden': 'Beschreiben Sie den Schaden möglichst genau und laden Sie, wenn möglich, Fotos hoch.',
     'sub.zusatz': 'Sagen Sie uns, was gereinigt werden soll — wir melden uns mit einem Termin.',
@@ -1885,8 +1894,8 @@ const translations = {
     'ok.btn1': 'Zur Übersicht', 'ok.btn2': 'Meine Meldungen',
     'rs.datum': 'Datum der betroffenen Reinigung',
     'rs.photos': 'Fotos', 'rs.photos.hint': '(bis zu 8)',
-    'v.hinweis': 'Der neue Termin wird durch unser Springerteam ausgeführt. Die Reinigung findet zwischen 08.00 und 17.00 Uhr statt — die genaue Uhrzeit teilen wir Ihnen am Vortag mit.',
-    'z.hinweis': 'Wir versuchen, Ihren Wunschtermin zu halten, und melden uns bezüglich des definitiven Termins.',
+    'v.hinweis': 'Der Ersatztermin wird durch unser Springerteam ausgeführt, zwischen 08.00 und 17.00 Uhr. Die genaue Uhrzeit teilen wir Ihnen am Vortag mit. Eine Verschiebung mit Ihrer festen Raumpflegerin ist nicht möglich.',
+    'z.hinweis': 'Ihre Anfrage geht direkt an unsere Spezialreinigung. Sie bereitet Ihre Offerte vor und meldet sich bei Ihnen.',
     'nav.ueb': 'Übersicht', 'nav.melden': 'Anliegen melden', 'nav.meine': 'Meine Meldungen',
     'nav.konto': 'Mein Konto', 'nav.kontakt': 'Kontakt',
     'ueb.offen': 'In Bearbeitung', 'ueb.gesamt': 'Meldungen insgesamt', 'ueb.objekt': 'Ihre Kundennummer',
@@ -1944,7 +1953,7 @@ const translations = {
     're.2.title': 'Sie bekommen eine Bestätigung', 're.2.text': 'Per E-Mail, damit Sie wissen, dass Ihre Meldung angekommen ist.',
     're.3.title': 'Alles an einem Ort', 're.3.text': 'Termine, Reklamationen und Anfragen laufen über denselben Weg — nachvollziehbar für Sie und uns.',
     'pick.versch.desc': 'Bestehenden Termin auf ein neues Datum legen',
-    'pick.absage.desc': 'Einen oder mehrere Termine ersatzlos streichen',
+    'pick.absage.desc': 'Einen Termin oder eine Abwesenheit (z. B. Ferien) melden',
     'pick.reklamation.desc': 'Etwas war nicht wie vereinbart — mit Foto',
     'pick.schaden.desc': 'Ein Schaden ist entstanden — mit Foto',
     'pick.zusatz.desc': 'Fenster, Grundreinigung, Umzug und weitere Arbeiten',
@@ -1953,7 +1962,7 @@ const translations = {
     'z.art': 'Art der Zusatzreinigung', 'z.fenster': 'Fensterreinigung', 'z.grund': 'Grundreinigung', 'z.umzug': 'Umzugsreinigung', 'z.teppich': 'Teppich-/Polsterreinigung', 'z.sonstiges': 'Sonstiges',
     'z.wunschtermin': 'Wunschtermin', 'z.details': 'Details', 'z.details.ph': 'z.B. Anzahl Zimmer, ungefähre Fläche, besondere Wünsche …',
     'form.back': '← Zurück zur Übersicht',
-    'v.alt': 'Betroffener Termin', 'v.neu': 'Gewünschter neuer Termin', 'v.zeit': 'Uhrzeit', 'v.kommentar': 'Kommentar',
+    'v.alt': 'Betroffener Termin', 'v.neu': 'Gewünschter Ersatztermin', 'v.zeit': 'Uhrzeit', 'v.kommentar': 'Kommentar',
     'opt': '(optional)', 'misc.details.ph': 'Ergänzende Angaben …',
     'a.weitere': 'Sollen weitere Termine ebenfalls entfallen?', 'yes': 'Ja', 'no': 'Nein',
     'a.weitereTermine': 'Welche weiteren Termine sollen entfallen?', 'a.upTo4': '(bis zu 4)',
@@ -1977,6 +1986,11 @@ const translations = {
     'photo.alert': 'Bitte fügen Sie ein Foto hinzu — dieses Feld ist für diese Meldungsart erforderlich.'
   },
   en: {
+    'a.art': 'What would you like to cancel?', 'a.einzeln': 'One appointment', 'a.zeitraum': 'Absence (e.g. holidays)',
+    'a.bis': 'Until and including', 'a.von': 'First day of absence',
+    'a.agb': 'Cancellations are free of charge up to 24 hours before the appointment. According to our terms, later cancellations are charged at 50 %, cancellations less than 4 hours before at 100 %.',
+    'r.frist': 'We accept complaints within 24 hours after the cleaning.',
+    'r.wunsch': 'How should we proceed?', 'r.nachreinigung': 'Follow-up cleaning by our stand-in team', 'r.gespraech': 'Conversation with the head of department',
     'ueb.objekt.marke': 'Your property', 'ueb.objekt.nr': 'Customer number', 'ueb.objekt.mail': 'Email',
     'ueb.team.h': 'Your contacts', 'ueb.team.sub': 'Our team is happy to help with any questions.',
     'rolle.sach': 'Administration', 'rolle.team': 'Team lead', 'rolle.leitung': 'Head of department',
@@ -1994,8 +2008,8 @@ const translations = {
     'konto.person': 'Personal details', 'konto.objekt': 'Property', 'konto.sicherheit': 'Security',
     'step.angaben': 'Details', 'step.pruefen': 'Review',
     'form.fuss': 'Your request goes straight to the responsible team.',
-    'sub.versch': 'Choose the appointment concerned and your preferred new date.',
-    'sub.absage': 'The appointment concerned will be cancelled without replacement.',
+    'sub.versch': 'Your replacement appointment is scheduled automatically with our stand-in team.',
+    'sub.absage': 'A single appointment or a longer absence – both are cancelled without replacement.',
     'sub.rekl': 'What did not go as expected during your cleaning?',
     'sub.schaden': 'Please describe the damage as precisely as possible and upload photos if you can.',
     'sub.zusatz': 'Tell us what needs cleaning — we will get back to you with a date.',
@@ -2004,8 +2018,8 @@ const translations = {
     'ok.btn1': 'To overview', 'ok.btn2': 'My requests',
     'rs.datum': 'Date of the cleaning concerned',
     'rs.photos': 'Photos', 'rs.photos.hint': '(up to 8)',
-    'v.hinweis': 'The new appointment will be carried out by our stand-in team. The cleaning takes place between 08:00 and 17:00 — we will confirm the exact time the day before.',
-    'z.hinweis': 'We will try to keep your preferred date and will contact you about the final appointment.',
+    'v.hinweis': 'The replacement appointment will be carried out by our stand-in team between 08:00 and 17:00. We will confirm the exact time the day before. Rescheduling with your regular cleaner is not possible.',
+    'z.hinweis': 'Your request goes directly to our special cleaning team. They will prepare your quote and get back to you.',
     'nav.ueb': 'Overview', 'nav.melden': 'Send a request', 'nav.meine': 'My requests',
     'nav.konto': 'My account', 'nav.kontakt': 'Contact',
     'ueb.offen': 'In progress', 'ueb.gesamt': 'Requests in total', 'ueb.objekt': 'Your customer number',
@@ -2063,7 +2077,7 @@ const translations = {
     're.2.title': 'You get a confirmation', 're.2.text': 'By email, so you know your report has arrived.',
     're.3.title': 'Everything in one place', 're.3.text': 'Appointments, complaints and requests all follow the same path — traceable for you and for us.',
     'pick.versch.desc': 'Move an existing appointment to a new date',
-    'pick.absage.desc': 'Cancel one or more appointments outright',
+    'pick.absage.desc': 'Cancel an appointment or report an absence (e.g. holidays)',
     'pick.reklamation.desc': 'Something wasn\'t as agreed — with photo',
     'pick.schaden.desc': 'Damage has occurred — with photo',
     'pick.zusatz.desc': 'Windows, deep cleaning, move-out and more',
@@ -2072,7 +2086,7 @@ const translations = {
     'z.art': 'Type of additional cleaning', 'z.fenster': 'Window cleaning', 'z.grund': 'Deep cleaning', 'z.umzug': 'Move-out/move-in cleaning', 'z.teppich': 'Carpet/upholstery cleaning', 'z.sonstiges': 'Other',
     'z.wunschtermin': 'Preferred date', 'z.details': 'Details', 'z.details.ph': 'e.g. number of rooms, approximate size, special requests …',
     'form.back': '← Choose a different category',
-    'v.alt': 'Affected appointment', 'v.neu': 'Preferred new date', 'v.zeit': 'Time', 'v.kommentar': 'Comment',
+    'v.alt': 'Affected appointment', 'v.neu': 'Preferred replacement date', 'v.zeit': 'Time', 'v.kommentar': 'Comment',
     'opt': '(optional)', 'misc.details.ph': 'Any additional details …',
     'a.weitere': 'Should further appointments be cancelled too?', 'yes': 'Yes', 'no': 'No',
     'a.weitereTermine': 'Which further appointments should be cancelled?', 'a.upTo4': '(up to 4)',
@@ -2122,6 +2136,7 @@ function setLang(lang){
   document.getElementById('dsg-en').style.display = (lang === 'en') ? 'block' : 'none';
   const activeCat = document.getElementById('view-kunde').dataset.activeCat;
   if(activeCat) document.getElementById('form-title').textContent = catTitles()[activeCat];
+  if(activeCat === 'absage') absageArt();
 }
 
 function catTitles(){
@@ -2158,6 +2173,8 @@ function chooseCategory(cat){
   document.getElementById('knopf-weiter').textContent =
     translations[currentLang][mehrstufig ? 'step.weiter' : 'submit'];
   zurueckZuAngaben();
+  datumsGrenzen();
+  if(cat === 'absage') absageArt();
 
   applyKnownCustomer();
   window.scrollTo(0, 0);
@@ -2167,12 +2184,44 @@ function backToCategory(){
   clearFormError();
   zeigePortal('uebersicht');
 }
-function toggleAbsageFolge(weitereJa){
-  document.getElementById('a-bis-wrap').style.display = weitereJa ? 'block' : 'none';
-  document.getElementById('a-bemerkung-wrap').style.display = weitereJa ? 'none' : 'block';
+/* ---- Datumsgrenzen nach den Geschäftsregeln ----
+   Der Server prüft dieselben Regeln; hier verhindern sie nur Fehleingaben. */
+function isoHeute(offset){
+  const d = new Date(); d.setDate(d.getDate() + (offset || 0));
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(d);
 }
-// Startzustand: "Nein" ist vorausgewählt -> Bemerkung zeigen, Bis-Feld verstecken
-toggleAbsageFolge(false);
+function datumsGrenzen(){
+  const heute = isoHeute(0), morgen = isoHeute(1), gestern = isoHeute(-1);
+  const setz = (id, min, max) => { const el = document.getElementById(id); if(!el) return;
+    if(min) el.min = min; else el.removeAttribute('min');
+    if(max) el.max = max; else el.removeAttribute('max'); };
+  setz('v-alt', heute); setz('v-neu', morgen);
+  setz('a-datum', heute); setz('a-bis', heute);
+  setz('r-datum', gestern, heute);       // Reklamation: innert 24 Stunden
+  setz('s-datum', null, heute);
+  setz('z-datum', morgen);
+}
+
+function absageArt(){
+  const zeitraum = (document.querySelector('input[name="a-art"]:checked') || {}).value === 'zeitraum';
+  document.getElementById('a-bis-wrap').style.display = zeitraum ? 'block' : 'none';
+  document.getElementById('a-datum-label').textContent =
+    translations[currentLang][zeitraum ? 'a.von' : 'v.alt'];
+  absageFristHinweis();
+}
+
+/* Warnt sofort, wenn eine Absage in die kostenpflichtige Frist fällt -
+   die Kundschaft soll es vor dem Absenden wissen, nicht erst auf der Rechnung. */
+function absageFristHinweis(){
+  const box = document.getElementById('a-frist');
+  const d = document.getElementById('a-datum').value;
+  if(!box) return;
+  const kurz = d && (d === isoHeute(0) || d === isoHeute(1));
+  box.style.display = kurz ? 'block' : 'none';
+  if(kurz) box.textContent = currentLang === 'de'
+    ? 'Achtung: Dieser Termin liegt möglicherweise weniger als 24 Stunden in der Zukunft. Je nach Einsatzzeit wird er gemäss AGB zu 50 % bzw. 100 % verrechnet.'
+    : 'Please note: this appointment may be less than 24 hours away. Depending on the scheduled time it will be charged at 50 % or 100 % according to our terms.';
+}
 
 /* --- Angaben aus dem Kundenkonto im Formular anzeigen --- */
 function applyKnownCustomer(){
@@ -2731,20 +2780,33 @@ function fotosZuruecksetzen(){
 /* Baut den Inhalt der Meldung. Identität kommt vom Server aus der Sitzung -
    hier gehen nur die Angaben zum Anliegen mit. */
 function meldungsBody(cat){
-  const body = { kategorie: cat, details: gatherDetails(cat) };
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const body = { kategorie: cat };
 
   if(cat === 'verschiebung'){
-    body.alt_datum = datumLesbar(document.getElementById('v-alt').value);
-    body.neu_datum = datumLesbar(document.getElementById('v-neu').value);
+    body.termin_datum = v('v-alt');
+    body.termin_neu = v('v-neu');
+    body.kommentar = v('v-kommentar').trim();
   }
   if(cat === 'absage'){
-    body.alt_datum = datumLesbar(document.getElementById('a-datum').value);
+    const zeitraum = (document.querySelector('input[name="a-art"]:checked') || {}).value === 'zeitraum';
+    body.termin_datum = v('a-datum');
+    if(zeitraum) body.zeitraum_bis = v('a-bis');
+    body.kommentar = v('a-bemerkung').trim();
   }
   if(cat === 'reklamation' || cat === 'schaden'){
     const p = cat === 'reklamation' ? 'r' : 's';
-    body.reinigungsdatum = datumLesbar(document.getElementById(p + '-datum').value);
-    body.beschreibung = document.getElementById(p + '-text').value.trim();
+    body.reinigungsdatum = v(p + '-datum');
+    body.beschreibung = v(p + '-text').trim();
     body.fotos = FOTOS[p];
+    if(cat === 'reklamation'){
+      body.reklamation_wunsch = (document.querySelector('input[name="r-wunsch"]:checked') || {}).value || '';
+    }
+  }
+  if(cat === 'zusatz'){
+    body.art = v('z-art');
+    body.wunschdatum = v('z-datum');
+    body.kommentar = v('z-details').trim();
   }
   return body;
 }
@@ -2777,6 +2839,11 @@ function weiterZumPruefen(){
     [L === 'de' ? 'Ihre Schilderung' : 'Your description',
      document.getElementById(p + '-text').value.trim()],
   ];
+  if(cat === 'reklamation'){
+    const w = (document.querySelector('input[name="r-wunsch"]:checked') || {}).value;
+    zeilen.push([L === 'de' ? 'Gewünschtes Vorgehen' : 'Preferred next step',
+                 translations[L][w === 'nachreinigung' ? 'r.nachreinigung' : 'r.gespraech']]);
+  }
 
   let html = zeilen.map(([k, v]) =>
     `<div class="z"><dt>${k}</dt><dd>${escapeHtml(v)}</dd></div>`).join('');
@@ -2815,19 +2882,33 @@ function zurueckZuAngaben(){
 /* Pflichtprüfung, getrennt damit sie in beiden Wegen gilt. */
 function pflichtfelderOk(cat){
   clearFormError();
-  if(!istMehrstufig(cat)) return true;
-  const p = cat === 'reklamation' ? 'r' : 's';
-  if(!document.getElementById(p + '-datum').value){
-    showFormError(currentLang === 'de'
-      ? 'Bitte geben Sie das Datum der betroffenen Reinigung an.'
-      : 'Please enter the date of the cleaning concerned.');
-    return false;
+  const de = currentLang === 'de';
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const fehler = t => { showFormError(t); return false; };
+
+  if(cat === 'verschiebung'){
+    if(!v('v-alt')) return fehler(de ? 'Bitte wählen Sie den Termin, der verschoben werden soll.' : 'Please select the appointment to be rescheduled.');
+    if(!v('v-neu')) return fehler(de ? 'Bitte wählen Sie Ihr Wunschdatum für den Ersatztermin.' : 'Please select your preferred replacement date.');
+    return true;
   }
-  if(!document.getElementById(p + '-text').value.trim()){
-    showFormError(currentLang === 'de'
-      ? 'Bitte beschreiben Sie kurz, was vorgefallen ist.'
-      : 'Please briefly describe what happened.');
-    return false;
+  if(cat === 'absage'){
+    const zeitraum = (document.querySelector('input[name="a-art"]:checked') || {}).value === 'zeitraum';
+    if(!v('a-datum')) return fehler(de ? 'Bitte wählen Sie den Termin, der entfallen soll.' : 'Please select the appointment to be cancelled.');
+    if(zeitraum && !v('a-bis')) return fehler(de ? 'Bitte geben Sie an, bis wann Sie abwesend sind.' : 'Please enter the end of your absence.');
+    if(zeitraum && v('a-bis') < v('a-datum')) return fehler(de ? 'Das Enddatum liegt vor dem Startdatum.' : 'The end date is before the start date.');
+    return true;
+  }
+  if(!istMehrstufig(cat)) return true;
+
+  const p = cat === 'reklamation' ? 'r' : 's';
+  if(!v(p + '-datum')) return fehler(de ? 'Bitte geben Sie das Datum der betroffenen Reinigung an.' : 'Please enter the date of the cleaning concerned.');
+  if(cat === 'reklamation' && v('r-datum') < isoHeute(-1)){
+    return fehler(de ? 'Reklamationen nehmen wir innert 24 Stunden nach der Reinigung entgegen. Für diese Reinigung ist die Frist leider abgelaufen.'
+                     : 'We accept complaints within 24 hours after the cleaning. Unfortunately the deadline for this cleaning has passed.');
+  }
+  if(!v(p + '-text').trim()) return fehler(de ? 'Bitte beschreiben Sie kurz, was vorgefallen ist.' : 'Please briefly describe what happened.');
+  if(cat === 'reklamation' && !document.querySelector('input[name="r-wunsch"]:checked')){
+    return fehler(de ? 'Bitte wählen Sie, wie wir vorgehen sollen.' : 'Please choose how we should proceed.');
   }
   return true;
 }
@@ -2894,39 +2975,6 @@ function naechsteFeiertage(anzahl){
     .slice(0, anzahl);
 }
 
-function gatherDetails(cat){
-  if(cat === 'verschiebung'){
-    return `Betroffener Termin: ${document.getElementById('v-alt').value || '-'}\n` +
-           `Neuer Termin: ${document.getElementById('v-neu').value || '-'} ${document.getElementById('v-zeit').value || ''}\n` +
-           `Kommentar: ${document.getElementById('v-kommentar').value || '-'}`;
-  }
-  if(cat === 'absage'){
-    const weitereJa = document.getElementById('a-bis-wrap').style.display === 'block';
-    let text = `Betroffener Termin: ${document.getElementById('a-datum').value || '-'}\n`;
-    if(weitereJa){
-      const weitere = ['a-weiterer-1','a-weiterer-2','a-weiterer-3','a-weiterer-4']
-        .map(id => document.getElementById(id).value).filter(Boolean);
-      text += `Weitere Termine: ${weitere.length ? weitere.join(', ') : '-'}`;
-    } else {
-      text += `Bemerkung: ${document.getElementById('a-bemerkung').value || '-'}`;
-    }
-    return text;
-  }
-  if(cat === 'reklamation' || cat === 'schaden'){
-    const p = cat === 'reklamation' ? 'r' : 's';
-    const anzahl = FOTOS[p].length;
-    return `Datum der Reinigung: ${datumLesbar(document.getElementById(p + '-datum').value) || '-'}\n` +
-           `Beschreibung: ${document.getElementById(p + '-text').value || '-'}\n` +
-           `Fotos: ${anzahl ? anzahl + ' angehängt (im PDF)' : 'keine'}`;
-  }
-  if(cat === 'zusatz'){
-    return `Art: ${document.getElementById('z-art').value}\n` +
-           `Wunschtermin: ${document.getElementById('z-datum').value || '-'}\n` +
-           `Details: ${document.getElementById('z-details').value || '-'}`;
-  }
-  return '';
-}
-
 function showFormError(message){
   const box = document.getElementById('form-error');
   box.innerHTML = `<span class="fe-icon">⚠</span><span>${message}</span>`;
@@ -2944,18 +2992,18 @@ const PHONE_HINT_EN = 'If this keeps happening, please call us directly: <a href
 
 const NEXT_STEPS = {
   de: {
-    verschiebung: 'Ihr neuer Termin ist eingeplant und wird vom Springerteam ausgeführt — zwischen 08.00 und 17.00 Uhr, die genaue Zeit erhalten Sie am Vortag.',
-    absage: 'Sie erhalten in Kürze eine Bestätigung der Absage per E-Mail.',
-    reklamation: 'Wir melden uns innert 2 Arbeitstagen mit einer Rückmeldung zu Ihrer Reklamation.',
+    verschiebung: 'Ihr Ersatztermin ist eingeplant und wird vom Springerteam ausgeführt. Die Bestätigung erhalten Sie per E-Mail.',
+    absage: 'Die Absage ist bestätigt. Sie erhalten eine Bestätigung per E-Mail.',
+    reklamation: 'Ihre Reklamation ist eingegangen. Sie erhalten eine Bestätigung per E-Mail.',
     schaden: 'Wir melden uns innert 2 Arbeitstagen mit einer ersten Einschätzung zur Schadenmeldung.',
-    zusatz: 'Wir melden uns mit einer Offerte bzw. einem Terminvorschlag bei Ihnen.'
+    zusatz: 'Unsere Spezialreinigung bereitet Ihre Offerte vor und meldet sich bei Ihnen.'
   },
   en: {
-    verschiebung: 'We will check your preferred date and confirm it by email shortly.',
-    absage: 'You will receive a confirmation of the cancellation by email shortly.',
-    reklamation: 'We will get back to you regarding your complaint within 2 business days.',
+    verschiebung: 'Your replacement appointment is scheduled and will be carried out by our stand-in team. You will receive a confirmation by email.',
+    absage: 'Your cancellation is confirmed. You will receive a confirmation by email.',
+    reklamation: 'We have received your complaint. You will receive a confirmation by email.',
     schaden: 'We will get back to you with an initial assessment within 2 business days.',
-    zusatz: 'We will get back to you with a quote or a suggested date.'
+    zusatz: 'Our special cleaning team will prepare your quote and get back to you.'
   }
 };
 
@@ -2991,6 +3039,7 @@ async function submitForm(){
     }
     console.log('Meldung gesendet:', result); // email/beekeeper Status zu Testzwecken
     document.getElementById('ok-text').textContent =
+      (currentLang === 'de' && result.naechster_schritt) ||
       NEXT_STEPS[currentLang][cat] || translations[currentLang]['ok.p'];
     zeigePortal('erfolg');
   } catch(err){

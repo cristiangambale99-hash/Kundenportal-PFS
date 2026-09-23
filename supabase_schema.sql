@@ -101,3 +101,41 @@ create table if not exists passwort_reset_log (
 );
 
 create index if not exists idx_reset_log_email on passwort_reset_log (lower(email), created_at desc);
+
+-- ============================================================
+-- Stand September 2026: Arbeitsstand, Notizen, Aduna-Abgleich
+-- (in der Live-Datenbank bereits ausgeführt)
+-- ============================================================
+alter table meldungen drop constraint if exists meldungen_status_check;
+alter table meldungen add constraint meldungen_status_check
+  check (status in ('neu','abklaerung','akzeptieren','ablehnen','erledigt'));
+alter table meldungen add column if not exists bearbeiter text;
+alter table meldungen add column if not exists aktualisiert_am timestamptz;
+
+create table if not exists meldung_notizen (
+    id bigint generated always as identity primary key,
+    meldung_id bigint references meldungen(id) on delete cascade,
+    autor text,
+    text text not null,
+    created_at timestamptz not null default now()
+);
+
+alter table kundenzugaenge add column if not exists info_gesendet_am timestamptz;  -- Zugangsdaten verschickt
+
+-- Strukturierte Felder: Aduna-tauglich statt Freitext
+alter table meldungen
+  add column if not exists termin_datum date,            -- Absage/Verschiebung: betroffener Termin, Ferien: erster Tag
+  add column if not exists termin_neu date,              -- Verschiebung: Ersatztermin (Springerteam)
+  add column if not exists zeitraum_bis date,            -- Ferien: letzter Tag (ohne Maximum)
+  add column if not exists reinigungsdatum date,         -- Reklamation/Schaden
+  add column if not exists reklamation_wunsch text,      -- nachreinigung | gespraech
+  add column if not exists vorlauf_stunden numeric,      -- Vorlauf bis 08.00 Uhr am Termin
+  add column if not exists verrechnung text,             -- kostenlos | 50 | 100 | pruefen (AGB Ziff. 4)
+  add column if not exists aduna_status text not null default 'ausstehend',  -- ausstehend | uebertragen | fehler | nicht_relevant
+  add column if not exists aduna_ref text,
+  add column if not exists aduna_uebertragen_am timestamptz,
+  add column if not exists aduna_fehler text;
+create index if not exists idx_meldungen_aduna_offen on meldungen (created_at) where aduna_status in ('ausstehend','fehler');
+
+-- Vorbereitet für spätere Ausbauschritte (noch ohne Code):
+-- dokumente (Rechnungen/Dokumente im Portal), empfehlungen (Empfehlungsprogramm)

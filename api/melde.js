@@ -236,26 +236,32 @@ const BEEKEEPER_KATEGORIEN = ["absage", "verschiebung"];
 
 function beekeeperText(kategorie, m, d) {
   const kunde = `${m.name}${m.objekt_id ? ` (Objekt ${m.objekt_id})` : ""}`;
+
+  /* Verschiebung: Für die feste Raumpflegerin ist das eine Terminabsage -
+     der Ersatztermin läuft über das Springerteam, nicht über sie. */
   if (kategorie === "verschiebung") {
-    return [
-      `🔄 Terminverschiebung — ${kunde}`, "",
-      `Die Reinigung vom ${R.datumCH(d.termin_datum)} findet NICHT statt.`,
-      `Sie wird am ${R.datumCH(d.termin_neu)} durch das Springerteam ausgeführt.`, "",
-      "Für dich ändert sich sonst nichts — die weiteren Termine bleiben wie gewohnt.", "",
-      "Gemeldet über das Kundenportal.",
-    ].join("\n");
+    const z = [
+      `❌ Terminabsage — ${kunde}`, "",
+      `Die Reinigung vom ${R.datumCH(d.termin_datum)} findet für dich NICHT statt.`,
+      "Die Kundschaft hat den Termin verschoben, den Ersatztermin übernimmt das Springerteam.", "",
+      "Alle weiteren Termine bleiben für dich wie gewohnt.",
+    ];
+    if (d.kommentar) z.push("", `Bemerkung der Kundschaft: ${d.kommentar}`);
+    z.push("", "Gemeldet über das Kundenportal.");
+    return z.join("\n");
   }
-  const zeilen = [`❌ Terminabsage — ${kunde}`, ""];
+
+  const z = [`❌ Reinigungsabsage — ${kunde}`, ""];
   if (d.zeitraum_bis) {
-    zeilen.push(`Vom ${R.datumCH(d.termin_datum)} bis ${R.datumCH(d.zeitraum_bis)} entfallen ALLE Reinigungen (Abwesenheit).`,
-                "Danach geht es wie gewohnt weiter.");
+    z.push(`Vom ${R.datumCH(d.termin_datum)} bis und mit ${R.datumCH(d.zeitraum_bis)} entfallen ALLE Reinigungen (Abwesenheit der Kundschaft).`,
+           "Danach geht es wie gewohnt weiter.");
   } else {
-    zeilen.push(`Die Reinigung vom ${R.datumCH(d.termin_datum)} entfällt ersatzlos.`,
-                "Es wird kein Ersatztermin eingeplant.");
+    z.push(`Die Reinigung vom ${R.datumCH(d.termin_datum)} entfällt ersatzlos.`,
+           "Alle weiteren Termine bleiben wie gewohnt.");
   }
-  if (d.kommentar) zeilen.push("", `Bemerkung der Kundschaft: ${d.kommentar}`);
-  zeilen.push("", "Gemeldet über das Kundenportal.");
-  return zeilen.join("\n");
+  if (d.kommentar) z.push("", `Bemerkung der Kundschaft: ${d.kommentar}`);
+  z.push("", "Gemeldet über das Kundenportal.");
+  return z.join("\n");
 }
 
 async function sendGroupMessage(chatId, body) {

@@ -725,8 +725,106 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  /* --- Beekeeper: Gruppenchats des Bots mit Zuordnung ---
+     Zeigt alle Chats, in denen der Bot Mitglied ist. Aus dem Chatnamen
+     ("… PFS 80") wird die Objektnummer vorgeschlagen. So pflegt das Team die
+     Zuordnung direkt hier statt über eine Excel-Liste. */
+  if (action === "beekeeper-chats") {
+    let chats;
+    try { chats = await bkChatsLaden(); }
+    catch (err) { res.status(502).json({ error: err.message }); return; }
+
+    const { data: map } = await supabase.from("objekt_beekeeper_mapping").select("objekt_id, beekeeper_chat_id, status");
+    const proChat = {};
+    (map || []).forEach(m => { if (m.beekeeper_chat_id) proChat[m.beekeeper_chat_id] = m.objekt_id; });
+
+    res.status(200).json({
+      chats: chats.map(c => {
+        const vorschlag = (String(c.name).match(/PFS\s*[-:#]?\s*(\d{1,6})\b/i) || [])[1] || null;
+        return { id: c.id, name: c.name, objekt_id: proChat[c.id] || null, vorschlag };
+      }).sort((a, b) => String(a.name).localeCompare(String(b.name), "de")),
+      zugeordnet: Object.keys(proChat).length,
+    });
+    return;
+  }
+
+  /* --- Chat einer Objektnummer zuordnen (leer = Zuordnung entfernen) --- */
+  if (action === "beekeeper-zuordnen") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const chatId = String((req.body || {}).chat_id || "").trim();
+    const objekt = String((req.body || {}).objekt_id || "").trim();
+    const name = String((req.body || {}).name || "").trim();
+    if (!chatId) { res.status(400).json({ error: "chat_id fehlt." }); return; }
+
+    // Ein Chat gehört zu genau einem Objekt: alte Zuordnung dieses Chats lösen
+    await supabase.from("objekt_beekeeper_mapping")
+      .update({ beekeeper_chat_id: null, status: "unmatched", updated_at: new Date().toISOString() })
+      .eq("beekeeper_chat_id", chatId);
+
+    if (objekt) {
+      const { error } = await supabase.from("objekt_beekeeper_mapping").upsert({
+        objekt_id: objekt, kunde: name || `Objekt ${objekt}`, beekeeper_chat_id: chatId,
+        status: "matched", updated_at: new Date().toISOString(),
+      }, { onConflict: "objekt_id" });
+      if (error) { res.status(500).json({ error: error.message }); return; }
+      await supabase.from("meldungen").update({ zuordnung_offen: false }).eq("objekt_id", objekt);
+    }
+    res.status(200).json({ ok: true, von: ICH });
+    return;
+  }
+
+  /* --- Testnachricht in einen Chat --- */
+  if (action === "beekeeper-test") {
+    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+    const chatId = String((req.body || {}).chat_id || "").trim();
+    if (!chatId) { res.status(400).json({ error: "chat_id fehlt." }); return; }
+    try {
+      await bkSenden(chatId, `✅ Testnachricht aus dem Kundenportal (ausgelöst von ${ICH}). Diese Nachricht kann ignoriert werden.`);
+      res.status(200).json({ ok: true });
+    } catch (err) { res.status(502).json({ error: err.message }); }
+    return;
+  }
+
   res.status(400).json({ error: `Unbekannte action: "${action}"` });
 };
+
+/* --------------------------------------------------------------- Beekeeper */
+function bkBasis() {
+  const url = (process.env.BEEKEEPER_TENANT_URL || "").replace(/\/$/, "");
+  const token = process.env.BEEKEEPER_API_TOKEN || "";
+  if (!url || !token) throw new Error("BEEKEEPER_TENANT_URL oder BEEKEEPER_API_TOKEN ist bei Vercel nicht gesetzt.");
+  return { url, headers: { Authorization: `Token ${token}`, "Content-Type": "application/json" } };
+}
+
+// Endpunkt bestätigt durch Beekeeper-Support: GET /api/2/chats/groups
+// listet alle Gruppenchats, in denen der Bot Mitglied ist.
+async function bkChatsLaden() {
+  const { url, headers } = bkBasis();
+  const alle = [];
+  for (let offset = 0, runde = 0; runde < 20; runde++, offset += 100) {
+    const r = await fetch(`${url}/api/2/chats/groups?limit=100&offset=${offset}`, { headers });
+    if (r.status === 401 || r.status === 403) throw new Error(`Beekeeper lehnt den Token ab (${r.status}). Bitte BEEKEEPER_API_TOKEN prüfen.`);
+    if (!r.ok) throw new Error(`Beekeeper ${r.status}: ${(await r.text()).slice(0, 200)}`);
+    const d = await r.json();
+    const liste = Array.isArray(d) ? d : (d.data || d.results || d.chats || d.groups || []);
+    liste.forEach(c => alle.push({
+      id: String(c.id || c.chat_id || c.uuid || ""),
+      name: c.name || c.title || c.display_name || "(ohne Namen)",
+    }));
+    if (liste.length < 100) break;
+  }
+  // doppelte Einträge (falls die Schnittstelle offset ignoriert) entfernen
+  const gesehen = new Set();
+  return alle.filter(c => c.id && !gesehen.has(c.id) && gesehen.add(c.id));
+}
+
+async function bkSenden(chatId, text) {
+  const { url, headers } = bkBasis();
+  const r = await fetch(`${url}/api/2/chats/groups/${encodeURIComponent(chatId)}/messages`, {
+    method: "POST", headers, body: JSON.stringify({ body: text }),
+  });
+  if (!r.ok) throw new Error(`Beekeeper ${r.status}: ${(await r.text()).slice(0, 200)}`);
+}
 
 /* ------------------------------------------------------- Willkommensmail */
 function willkommensMail(name, email, passwort, portal) {

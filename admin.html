@@ -366,6 +366,7 @@ tr:hover td{background:var(--line-2);}
         <button id="tab-pendenzen" class="bereich active" onclick="showTab('pendenzen')">Pendenzen</button>
         <button id="tab-meldungen" class="bereich" onclick="showTab('meldungen')">Kundenübersicht</button>
         <button id="tab-zugaenge" class="bereich" onclick="showTab('zugaenge')">Kundenkonten</button>
+        <button id="tab-beekeeper" class="bereich" onclick="showTab('beekeeper')">Beekeeper</button>
       </div>
     </div>
   </header>
@@ -501,6 +502,26 @@ tr:hover td{background:var(--line-2);}
     </table>
   </div>
 
+  <!-- ---------------- Beekeeper ---------------- -->
+  <div id="view-beekeeper" class="raum" style="display:none;">
+    <div class="raum-kopf">
+      <h1>Beekeeper-Chats</h1>
+      <p>Alle Kunden-Gruppenchats, in denen der Portal-Bot Mitglied ist. Tragen Sie zu jedem Chat die Objektnummer ein —
+         danach landen Absagen und Verschiebungen dieses Kunden automatisch im richtigen Chat.
+         Fehlt ein Chat in der Liste, ist der Bot dort noch nicht Mitglied.</p>
+    </div>
+    <div style="display:flex; gap:var(--s3); align-items:center; margin-bottom:var(--s4); flex-wrap:wrap;">
+      <input type="text" id="bk-suche" placeholder="Chat oder Objektnummer suchen …" oninput="bkZeichnen()" style="max-width:320px;">
+      <label style="display:flex; gap:6px; align-items:center; margin:0;"><input type="checkbox" id="bk-offen" onchange="bkZeichnen()" style="width:auto;"> nur ohne Zuordnung</label>
+      <span id="bk-stand" style="font-size:13px; color:var(--grey);"></span>
+    </div>
+    <div id="bk-meldung" class="zn-result" style="display:none;"></div>
+    <table>
+      <thead><tr><th>Chat</th><th>Objektnummer</th><th></th></tr></thead>
+      <tbody id="bk-tbody"><tr><td colspan="3">Lade …</td></tr></tbody>
+    </table>
+  </div>
+
 </div>
 
 <div id="detail-overlay" onclick="closeDetail()"></div>
@@ -619,9 +640,9 @@ function infoZeile(m){
 
 /* ------------------------------------------------------------- Bereiche */
 function showTab(tab){
-  const titel = { pendenzen:'Pendenzen', meldungen:'Kundenübersicht', zugaenge:'Kundenkonten' };
+  const titel = { pendenzen:'Pendenzen', meldungen:'Kundenübersicht', zugaenge:'Kundenkonten', beekeeper:'Beekeeper' };
   if(!titel[tab]) tab = 'pendenzen';
-  ['pendenzen','meldungen','zugaenge'].forEach(t => {
+  ['pendenzen','meldungen','zugaenge','beekeeper'].forEach(t => {
     const v = document.getElementById('view-' + t);
     if(v) v.style.display = (t === tab) ? 'block' : 'none';
     const b = document.getElementById('tab-' + t);
@@ -630,6 +651,7 @@ function showTab(tab){
   if(tab === 'pendenzen') ladePendenzen();
   if(tab === 'meldungen') loadAll();
   if(tab === 'zugaenge')  loadZugaenge();
+  if(tab === 'beekeeper') bkLaden();
 }
 
 /* ------------------------------------------------------------ Pendenzen */
@@ -1021,6 +1043,73 @@ async function kontoAnlegen(){
     out.className = 'zn-result err';
     out.textContent = 'Fehler: ' + err.message;
   }
+}
+
+/* ---------------------------------------------------------- Beekeeper */
+let BK = [];
+function bkHinweis(text, fehler){
+  const el = document.getElementById('bk-meldung');
+  el.className = 'zn-result' + (fehler ? ' err' : '');
+  el.textContent = text; el.style.display = text ? 'block' : 'none';
+}
+async function bkLaden(){
+  bkHinweis('');
+  document.getElementById('bk-tbody').innerHTML = '<tr><td colspan="3">Lade Chats aus Beekeeper …</td></tr>';
+  try{
+    const r = await fetch('/api/admin?action=beekeeper-chats');
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Laden fehlgeschlagen');
+    BK = d.chats || [];
+    bkZeichnen();
+  }catch(e){
+    document.getElementById('bk-tbody').innerHTML = '';
+    bkHinweis('Fehler: ' + e.message, true);
+  }
+}
+function bkZeichnen(){
+  const q = document.getElementById('bk-suche').value.trim().toLowerCase();
+  const nurOffen = document.getElementById('bk-offen').checked;
+  const liste = BK.filter(c => (!nurOffen || !c.objekt_id) &&
+    (!q || String(c.name).toLowerCase().includes(q) || String(c.objekt_id || '').includes(q)));
+  document.getElementById('bk-stand').textContent =
+    `${BK.length} Chats · ${BK.filter(c => c.objekt_id).length} zugeordnet · ${BK.filter(c => !c.objekt_id).length} offen`;
+  document.getElementById('bk-tbody').innerHTML = liste.map(c => {
+    const i = BK.indexOf(c);
+    return `<tr>
+      <td>${esc(c.name)}<br><span style="color:var(--grey); font-size:11px;">${esc(c.id)}</span></td>
+      <td><input type="text" id="bk-obj-${i}" value="${esc(c.objekt_id || '')}" placeholder="${c.vorschlag ? 'Vorschlag: ' + esc(c.vorschlag) : 'z.B. 80'}"
+           style="max-width:140px;" inputmode="numeric">
+        ${!c.objekt_id && c.vorschlag ? `<button class="tab" onclick="document.getElementById('bk-obj-${i}').value='${esc(c.vorschlag)}'">${esc(c.vorschlag)} übernehmen</button>` : ''}</td>
+      <td style="white-space:nowrap;">
+        <button class="tab" onclick="bkSpeichern(${i})">Speichern</button>
+        <button class="tab" onclick="bkTest(${i})">Test senden</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="3">Keine Chats gefunden.</td></tr>';
+}
+async function bkSpeichern(i){
+  const c = BK[i]; const objekt = document.getElementById('bk-obj-' + i).value.trim();
+  try{
+    const r = await fetch('/api/admin?action=beekeeper-zuordnen', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chat_id: c.id, objekt_id: objekt, name: c.name })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Speichern fehlgeschlagen');
+    bkHinweis(objekt ? `„${c.name}“ ist jetzt Objekt ${objekt} zugeordnet.` : `Zuordnung für „${c.name}“ entfernt.`);
+    await bkLaden();
+  }catch(e){ bkHinweis('Fehler: ' + e.message, true); }
+}
+async function bkTest(i){
+  const c = BK[i];
+  if(!confirm(`Testnachricht in den Chat „${c.name}“ senden?`)) return;
+  try{
+    const r = await fetch('/api/admin?action=beekeeper-test', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: c.id })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Senden fehlgeschlagen');
+    bkHinweis(`Testnachricht an „${c.name}“ gesendet.`);
+  }catch(e){ bkHinweis('Fehler: ' + e.message, true); }
 }
 
 /* ---------------------------------------------------------- Rollout */
